@@ -90,9 +90,3 @@ src/main/resources
 3. Pelo menos 1 aprovação de outro integrante antes do merge.
 4. Preferir PRs pequenos e focados numa única funcionalidade.
 5. Usar "Squash and merge" pra manter o histórico da `main` limpo.
-
-## Escopo do projeto
-
-- Versão mínima garantida: `docs/Especificacao_Farmacia_ProgWeb.md`
-- Versão meta (objetivo até 28/10): `docs/Especificacao_Farmacia_Meta.md`
-- Guia de setup completo + diagramas: `docs/Guia_Setup_e_Diagramas.md`

@@ -1,0 +1,21 @@
+:root {
+  --cor-branco: #FFFFFF;      /* fixa — não alterar */
+  --cor-azul: #1D4ED8;        /* pode ser trocada livremente */
+  --cor-azul-hover: #1E3A8A;  /* estado hover/active dos botões */
+  --cor-azul-suave: #DBEAFE;  /* fundos leves, badges, hover de linha de tabela */
+  --cor-texto: #1F2937;       /* corpo de texto — quase preto, garante contraste alto */
+  --cor-erro: #DC2626;        /* estoque baixo, mensagens de erro */
+  --cor-sucesso: #16A34A;     /* status "entregue", confirmações */
+}
+
+body {
+  background-color: var(--cor-branco);
+  color: var(--cor-texto);
+}
+
+/* .btn-primario {                            ideia pros botões
+  background-color: var(--cor-azul);
+  color: var(--cor-branco);
+}
+.btn-primario:hover {
+  background-color: var(--cor-azul-hover); */

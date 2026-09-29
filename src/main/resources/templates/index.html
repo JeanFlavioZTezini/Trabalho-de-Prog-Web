@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Farma++</title>
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+</head>
+<body>
+
+<header class="topo">
+    <div class="container">
+        <a class="logo" th:href="@{/}">
+            <span aria-hidden="true">✚</span>
+            <span>Farma++</span>
+        </a>
+
+        <form class="busca" role="search" th:action="@{/produtos}" method="get">
+            <label for="busca" class="visually-hidden" style="position:absolute;left:-9999px;">Buscar produto</label>
+            <input type="search" id="busca" name="q" placeholder="Buscar produto...">
+        </form>
+
+        <a class="btn-login" th:href="@{/login}">Entrar ou cadastre-se</a>
+    </div>
+</header>
+
+<main class="container">
+
+    <section class="banner" aria-labelledby="titulo-banner">
+        <h1 id="titulo-banner">Cuidado que você merece</h1>
+        <p>Medicamentos, bem-estar e saúde com entrega rápida.</p>
+    </section>
+
+    <section class="beneficios" aria-label="Nossos diferenciais">
+        <div class="beneficio">Entrega rápida</div>
+        <div class="beneficio">Aqui você encontra os melhores preços</div>
+        <div class="beneficio">Descontos e benefícios em medicamentos</div>
+        <div class="beneficio">Tudo o que você precisa em um só lugar</div>
+    </section>
+
+    <section class="secao" aria-labelledby="titulo-mais-comprados">
+        <h2 id="titulo-mais-comprados">Mais comprados</h2>
+        <div class="grade">
+            <!-- Quando os produtos vierem do banco, trocar por:
+                 <article class="card" th:each="produto : ${produtos}"> ... -->
+            <article class="card">
+                <div class="imagem">
+                    <img th:src="@{/images/produtos/DipironaMono500mg20cp.png}" alt="Dipirona Monohidratada 500mg, caixa com 20 comprimidos">
+                </div>
+                <p class="nome">Dipirona Monohidratada 500mg</p>
+                <p class="qtd">20 comprimidos</p>
+                <div class="rodape">
+                    <span class="preco">R$ 12,90</span>
+                    <button class="btn-carrinho" type="button" aria-label="Adicionar Dipirona Monohidratada 500mg ao carrinho">🛒</button>
+                </div>
+            </article>
+
+            <article class="card">
+                <div class="imagem"></div>
+                <p class="nome">Álcool em Gel 70%</p>
+                <p class="qtd">500ml</p>
+                <div class="rodape">
+                    <span class="preco">R$ 9,50</span>
+                    <button class="btn-carrinho" type="button" aria-label="Adicionar Álcool em Gel ao carrinho">🛒</button>
+                </div>
+            </article>
+
+            <article class="card">
+                <div class="imagem"></div>
+                <p class="nome">Fralda Infantil P</p>
+                <p class="qtd">30 unidades</p>
+                <div class="rodape">
+                    <span class="preco">R$ 34,90</span>
+                    <button class="btn-carrinho" type="button" aria-label="Adicionar Fralda Infantil P ao carrinho">🛒</button>
+                </div>
+            </article>
+
+            <article class="card">
+                <div class="imagem"></div>
+                <p class="nome">Curativo Adesivo</p>
+                <p class="qtd">40 unidades</p>
+                <div class="rodape">
+                    <span class="preco">R$ 7,20</span>
+                    <button class="btn-carrinho" type="button" aria-label="Adicionar Curativo Adesivo ao carrinho">🛒</button>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <section class="secao" aria-labelledby="titulo-mais-vistos">
+        <h2 id="titulo-mais-vistos">Mais vistos</h2>
+        <div class="grade">
+            <article class="card">
+                <div class="imagem"></div>
+                <p class="nome">Vitamina C 1g</p>
+                <p class="qtd">10 comprimidos efervescentes</p>
+                <div class="rodape">
+                    <span class="preco">R$ 24,90</span>
+                    <button class="btn-carrinho" type="button" aria-label="Adicionar Vitamina C ao carrinho">🛒</button>
+                </div>
+            </article>
+
+            <article class="card">
+                <div class="imagem"></div>
+                <p class="nome">Protetor Solar FPS 50</p>
+                <p class="qtd">120ml</p>
+                <div class="rodape">
+                    <span class="preco">R$ 49,90</span>
+                    <button class="btn-carrinho" type="button" aria-label="Adicionar Protetor Solar ao carrinho">🛒</button>
+                </div>
+            </article>
+
+            <article class="card">
+                <div class="imagem"></div>
+                <p class="nome">Shampoo Anticaspa</p>
+                <p class="qtd">200ml</p>
+                <div class="rodape">
+                    <span class="preco">R$ 27,50</span>
+                    <button class="btn-carrinho" type="button" aria-label="Adicionar Shampoo Anticaspa ao carrinho">🛒</button>
+                </div>
+            </article>
+
+            <article class="card">
+                <div class="imagem"></div>
+                <p class="nome">Termômetro Digital</p>
+                <p class="qtd">1 unidade</p>
+                <div class="rodape">
+                    <span class="preco">R$ 32,00</span>
+                    <button class="btn-carrinho" type="button" aria-label="Adicionar Termômetro Digital ao carrinho">🛒</button>
+                </div>
+            </article>
+        </div>
+    </section>
+
+    <section class="secao" aria-labelledby="titulo-categorias">
+        <h2 id="titulo-categorias">Outras categorias</h2>
+        <nav class="categorias" aria-label="Categorias de produtos">
+            <a class="categoria" th:href="@{/produtos(categoria='medicamentos')}">
+                Medicamentos
+                <span class="imagem"></span>
+            </a>
+            <a class="categoria" th:href="@{/produtos(categoria='higiene')}">
+                Higiene Pessoal
+                <span class="imagem"></span>
+            </a>
+            <a class="categoria" th:href="@{/produtos(categoria='cabelos')}">
+                Cabelos
+                <span class="imagem"></span>
+            </a>
+            <a class="categoria" th:href="@{/produtos(categoria='vitaminas')}">
+                Vitaminas e Suplementos
+                <span class="imagem"></span>
+            </a>
+        </nav>
+    </section>
+
+</main>
+
+<footer class="rodape">
+    <div class="container">
+        <div>
+            <p class="logo" style="margin-top:0;">✚ Farma++</p>
+            <p style="color: var(--cor-texto-hint); margin:0;">A drogaria digital que melhor te atende.</p>
+        </div>
+        <div>
+            <h3>Serviços</h3>
+            <ul>
+                <li>Entrega</li>
+                <li>Atendimento ao cliente</li>
+            </ul>
+        </div>
+        <div>
+            <h3>Institucional</h3>
+            <ul>
+                <li>Nossa história</li>
+                <li>Missão, visão e valores</li>
+                <li>Boas práticas</li>
+            </ul>
+        </div>
+    </div>
+</footer>
+
+</body>
+</html>

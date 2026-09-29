@@ -1,0 +1,221 @@
+:root {
+  --cor-branco: #FFFFFF;      /* fixa — não alterar */
+  --cor-azul: #0F4C81;        /* pode ser trocada livremente */
+  --cor-azul-hover: #0B3961;  /* estado hover/active dos botões */
+  --cor-azul-suave: #DBE4EC;  /* fundos leves, badges, hover de linha de tabela */
+  --cor-texto: #1F2937;       /* corpo de texto — quase preto */
+  --cor-texto-hint: #526B7A;  /* placeholder, textos de apoio */
+  --cor-erro: #DC2626;
+  --cor-sucesso: #16A34A;
+  --cor-fundo: #F5F6F8;       /* fundo cinza claro da página */
+  --cor-borda: #E3E6EA;
+  --raio: 8px;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+  line-height: 1.5;
+}
+
+.container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 16px;
+}
+
+/* ---------- Cabeçalho ---------- */
+.topo {
+  background-color: var(--cor-branco);
+  border-bottom: 1px solid var(--cor-borda);
+  padding: 12px 0;
+}
+
+.topo .container {
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.logo {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+  font-size: 20px;
+  color: var(--cor-azul);
+  text-decoration: none;
+}
+
+.busca {
+  flex: 1;
+  min-width: 200px;
+}
+
+.busca input {
+  width: 100%;
+  padding: 10px 14px;
+  border: 1px solid var(--cor-borda);
+  border-radius: 20px;
+  font-size: 14px;
+  color: var(--cor-texto);
+}
+
+.busca input::placeholder { color: var(--cor-texto-hint); }
+
+.btn-login {
+  background-color: var(--cor-azul);
+  color: var(--cor-branco);
+  border: none;
+  border-radius: var(--raio);
+  padding: 8px 18px;
+  font-size: 14px;
+  cursor: pointer;
+  text-decoration: none;
+  display: inline-block;
+}
+
+.btn-login:hover { background-color: var(--cor-azul-hover); }
+
+/* ---------- Banner ---------- */
+.banner {
+  background-color: var(--cor-azul);
+  color: var(--cor-branco);
+  border-radius: 12px;
+  padding: 48px 32px;
+  margin: 24px 0;
+}
+
+.banner h1 { margin: 0 0 8px; font-size: 32px; }
+.banner p  { margin: 0; opacity: 0.9; }
+
+/* ---------- Faixa de benefícios ---------- */
+.beneficios {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 16px;
+  margin-bottom: 40px;
+}
+
+.beneficio {
+  background-color: var(--cor-azul-suave);
+  border-radius: var(--raio);
+  padding: 18px;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cor-azul);
+}
+
+/* ---------- Seções de produto ---------- */
+.secao { margin-bottom: 40px; }
+.secao h2 { font-size: 20px; margin: 0 0 16px; }
+
+.grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 16px;
+}
+
+.card {
+  background-color: var(--cor-branco);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 12px;
+}
+
+.card .imagem {
+  background-color: #E9EBEE;
+  border-radius: var(--raio);
+  height: 130px;
+  margin-bottom: 12px;
+}
+
+.card .imagem img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border-radius: var(--raio);
+}
+
+.card .nome { font-size: 14px; margin: 0; }
+.card .qtd  { font-size: 12px; color: var(--cor-texto-hint); margin: 0 0 12px; }
+
+.card .rodape {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.card .preco { font-size: 16px; font-weight: 700; }
+
+.btn-carrinho {
+  background-color: var(--cor-azul);
+  color: var(--cor-branco);
+  border: none;
+  border-radius: 50%;
+  width: 34px;
+  height: 34px;
+  cursor: pointer;
+  font-size: 15px;
+}
+
+.btn-carrinho:hover { background-color: var(--cor-azul-hover); }
+
+/* ---------- Categorias ---------- */
+.categorias {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+  gap: 16px;
+}
+
+.categoria {
+  background-color: var(--cor-branco);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  padding: 12px;
+  text-align: center;
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+  color: var(--cor-texto);
+  display: block;
+}
+
+.categoria .imagem {
+  background-color: #E9EBEE;
+  border-radius: var(--raio);
+  height: 90px;
+  margin-top: 10px;
+}
+
+/* ---------- Rodapé ---------- */
+.rodape {
+  background-color: var(--cor-branco);
+  border-top: 1px solid var(--cor-borda);
+  padding: 32px 0;
+  margin-top: 48px;
+  font-size: 14px;
+}
+
+.rodape .container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 24px;
+}
+
+.rodape h3 { font-size: 14px; margin: 0 0 8px; }
+.rodape ul { list-style: none; padding: 0; margin: 0; }
+.rodape li { margin-bottom: 4px; color: var(--cor-texto-hint); }
+
+/* ---------- Acessibilidade: foco visível ---------- */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible {
+  outline: 3px solid var(--cor-azul);
+  outline-offset: 2px;
+}

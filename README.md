@@ -32,13 +32,14 @@ Programação Web (ProgWeb 2026/2), usando Spring Boot + Thymeleaf.
    ```bash
    docker compose up -d
    ```
-   Isso sobe um Postgres em `localhost:5432` com um volume persistente
+   Isso sobe um Postgres em `localhost:5433` com um volume persistente
    (os dados não se perdem ao reiniciar o container).
+   Ao abrir esse link no navegador, nenhuma página deve ser carregada: apenas irá aparecer um aviso do próprio navegador de que "localhost não enviou quaisquer dados".
 
 3. Rodar a aplicação:
    ```bash
    ./mvnw spring-boot:run        # Linux/Mac
-   mvnw.cmd spring-boot:run      # Windows
+   .\mvnw.cmd spring-boot:run      # Windows
    ```
    Ou, pela IDE, rodar a classe principal `FarmaciaOnlineApplication`.
 

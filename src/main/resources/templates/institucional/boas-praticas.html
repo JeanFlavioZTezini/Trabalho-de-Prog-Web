@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Boas práticas e regulamentação | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1>Boas práticas e regulamentação</h1>
+    <p class="pagina-texto__intro">
+        O Farma++ é um projeto acadêmico de uma farmácia fictícia: nenhum medicamento é vendido de verdade.
+        O site foi pensado seguindo, como referência, as regras que valem para farmácias e drogarias no Brasil.
+    </p>
+
+    <section id="rdc-44-2009" aria-labelledby="titulo-rdc-44-2009">
+        <h2 id="titulo-rdc-44-2009">Venda de medicamentos pela internet (RDC nº 44/2009)</h2>
+        <ul>
+            <li>Só farmácias e drogarias abertas ao público, com Autorização de Funcionamento (AFE) da Anvisa, podem vender medicamentos pela internet, e o pedido deve ser feito pelo site do próprio estabelecimento ou da sua rede.</li>
+            <li>O site deve informar os dados do estabelecimento: razão social, nome fantasia, CNPJ, endereço, horário de funcionamento, AFE e farmacêutico responsável.</li>
+            <li>Medicamentos que exigem prescrição não podem ser divulgados com imagens ou propaganda no site.</li>
+            <li>Medicamentos de tarja preta e de controle especial não podem ser vendidos pela internet.</li>
+        </ul>
+    </section>
+
+    <section id="uso-responsavel" aria-labelledby="titulo-uso-responsavel">
+        <h2 id="titulo-uso-responsavel">Uso responsável de medicamentos</h2>
+        <p>
+            Medicamentos podem causar efeitos indesejados. Evite a automedicação: leia a bula e fale com o
+            farmacêutico. Se os sintomas persistirem, procure um médico.
+        </p>
+    </section>
+
+    <section id="receitas" aria-labelledby="titulo-receitas">
+        <h2 id="titulo-receitas">Receitas e medicamentos controlados</h2>
+        <p>
+            Medicamentos que exigem prescrição só podem ser entregues mediante apresentação da receita.
+            Medicamentos de controle especial não são vendidos pelo site.
+        </p>
+    </section>
+
+    <section id="privacidade" aria-labelledby="titulo-privacidade">
+        <h2 id="titulo-privacidade">Privacidade e proteção de dados (LGPD)</h2>
+        <p>
+            Coletamos apenas o necessário para cadastro, entrega e atendimento (como nome, e-mail e endereço),
+            conforme a Lei nº 13.709/2018. Senhas são armazenadas com hash. Você pode pedir acesso, correção
+            ou exclusão dos seus dados.
+        </p>
+    </section>
+
+    <section id="trocas" aria-labelledby="titulo-trocas">
+        <h2 id="titulo-trocas">Trocas e devoluções</h2>
+        <p>
+            Pelo Código de Defesa do Consumidor (Lei nº 8.078/1990, art. 49), compras feitas fora do
+            estabelecimento, como pela internet, podem ser desfeitas em até 7 dias após o recebimento.
+        </p>
+    </section>
+
+    <section aria-labelledby="titulo-duvidas">
+        <h2 id="titulo-duvidas">Dúvidas sobre medicamentos</h2>
+        <p>
+            Fale com a Central de Atendimento da Anvisa pelo telefone 0800 642 9782 ou consulte o
+            <a th:href="@{https://www.gov.br/anvisa}" target="_blank" rel="noopener noreferrer">site da Anvisa<span class="visually-hidden"> (abre em nova aba)</span></a>.
+        </p>
+    </section>
+
+</div>
+</body>
+</html>

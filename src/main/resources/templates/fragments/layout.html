@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<!--
+    Layout-base de todas as páginas. NÃO copie cabeçalho/rodapé: use este fragment.
+
+    Exemplo de página:
+        <!DOCTYPE html>
+        <html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+        <head><title>Minha página | Farma++</title></head>
+        <body>
+            <div id="pagina"> ...conteúdo (um único <h1>)... </div>
+        </body>
+        </html>
+-->
+<html lang="pt-BR"
+      th:fragment="layout(titulo, conteudo)"
+      xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title th:replace="${titulo}">Farma++</title>
+    <link rel="stylesheet" th:href="@{/css/tokens.css}">
+    <link rel="stylesheet" th:href="@{/css/style.css}">
+    <script>document.documentElement.classList.add('js');</script>
+    <script th:src="@{/js/menu.js}" defer></script>
+</head>
+<body>
+
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+
+<header class="topo">
+    <div class="container topo__linha">
+        <a class="logo" th:href="@{/}">
+            <img th:src="@{/images/logo.png}" alt="Farma++ – página inicial" width="36" height="40">
+            <span aria-hidden="true">Farma++</span>
+        </a>
+
+        <form class="busca" role="search" th:action="@{/produtos}" method="get">
+            <label for="busca" class="visually-hidden">Buscar produto</label>
+            <input type="search" id="busca" name="q" placeholder="Buscar produto..." autocomplete="off">
+            <button type="submit" class="busca__botao" aria-label="Buscar">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none"
+                     stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"
+                     aria-hidden="true" focusable="false">
+                    <circle cx="11" cy="11" r="7"/>
+                    <line x1="16.5" y1="16.5" x2="21" y2="21"/>
+                </svg>
+            </button>
+        </form>
+
+        <!--/* Visitante: convite para entrar/cadastrar. */-->
+        <div class="usuario" sec:authorize="isAnonymous()">
+            <span class="usuario__saudacao">Seja bem-vindo!</span>
+            <a th:href="@{/login}">Entrar</a> ou <a th:href="@{/cadastro}">cadastrar-se</a>
+        </div>
+
+        <!--/* Logado: nome do usuário. A F1-09 troca "name" pelo primeiro nome. */-->
+        <div class="usuario usuario--logado" sec:authorize="isAuthenticated()">
+            Olá, <strong sec:authentication="name">usuário</strong>
+        </div>
+    </div>
+
+    <!--/* Estático por enquanto; a F1-12 liga as categorias ao banco. */-->
+    <nav class="menu-categorias" aria-label="Categorias">
+        <div class="container">
+            <button type="button" class="menu-categorias__toggle"
+                    aria-expanded="false" aria-controls="menu-categorias">Categorias</button>
+            <ul id="menu-categorias" class="menu-categorias__lista">
+                <li><a th:href="@{/produtos(categoria='medicamentos')}">Medicamentos</a></li>
+                <li><a th:href="@{/produtos(categoria='higiene')}">Higiene Pessoal</a></li>
+                <li><a th:href="@{/produtos(categoria='cabelos')}">Cabelos</a></li>
+                <li><a th:href="@{/produtos(categoria='vitaminas')}">Vitaminas e Suplementos</a></li>
+            </ul>
+        </div>
+    </nav>
+</header>
+
+<main id="conteudo" class="container" tabindex="-1">
+    <div th:replace="${conteudo}">Conteúdo da página</div>
+</main>
+
+<footer class="site-rodape">
+    <div class="container site-rodape__colunas">
+        <div>
+            <p class="logo">
+                <img th:src="@{/images/logo.png}" alt="" width="36" height="40">
+                <span>Farma++</span>
+            </p>
+            <p class="site-rodape__slogan">A drogaria digital que melhor te atende.</p>
+        </div>
+
+        <div>
+            <h2 class="site-rodape__titulo">Serviços</h2>
+            <ul>
+                <li>Entrega</li>
+                <li>Atendimento ao cliente</li>
+            </ul>
+        </div>
+
+        <div>
+            <h2 class="site-rodape__titulo">Institucional</h2>
+            <ul>
+                <li>Nossa história</li>
+                <li>Missão, visão e valores</li>
+                <li><a th:href="@{/institucional/boas-praticas}">Boas práticas</a></li>
+            </ul>
+        </div>
+
+        <div>
+            <h2 class="site-rodape__titulo">Regulamentação e legal</h2>
+            <ul>
+                <li><a th:href="@{/institucional/boas-praticas#rdc-44-2009}">Venda de medicamentos pela internet (RDC nº 44/2009)</a></li>
+                <li><a th:href="@{/institucional/boas-praticas#uso-responsavel}">Uso responsável de medicamentos</a></li>
+                <li><a th:href="@{/institucional/boas-praticas#receitas}">Receitas e medicamentos controlados</a></li>
+                <li><a th:href="@{/institucional/boas-praticas#privacidade}">Privacidade e proteção de dados (LGPD)</a></li>
+                <li><a th:href="@{/institucional/boas-praticas#trocas}">Trocas e devoluções</a></li>
+                <li><a th:href="@{https://www.gov.br/anvisa}" target="_blank" rel="noopener noreferrer">Anvisa (gov.br)<span class="visually-hidden"> (abre em nova aba)</span></a></li>
+            </ul>
+        </div>
+
+        <p class="site-rodape__aviso">Farma++ é um projeto acadêmico (ProgWeb): farmácia fictícia, sem venda real de medicamentos.</p>
+    </div>
+</footer>
+
+</body>
+</html>

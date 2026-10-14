@@ -4,14 +4,12 @@
   --cor-azul-hover: #0B3961;  /* estado hover/active dos botões */
   --cor-azul-suave: #DBE4EC;  /* fundos leves, badges, hover de linha de tabela */
   --cor-texto: #1F2937;       /* corpo de texto — quase preto, garante contraste alto */
-  --cor-texto-hint: #526B7A;
+  --cor-texto-hint: #526B7A;  /* placeholder, textos de apoio (5,6:1 sobre branco) */
   --cor-erro: #DC2626;        /* estoque baixo, mensagens de erro */
   --cor-sucesso: #16A34A;     /* status "entregue", confirmações */
-}
-
-body {
-  background-color: var(--cor-branco);
-  color: var(--cor-texto);
+  --cor-fundo: #F5F6F8;       /* fundo cinza claro da página */
+  --cor-borda: #E3E6EA;       /* divisórias e bordas decorativas (cards, rodapé) */
+  --cor-borda-controle: #7D8E9A; /* borda de campos de formulário (3,4:1 — WCAG 1.4.11) */
 }
 
 /* .btn-primario {                            ideia pros botões

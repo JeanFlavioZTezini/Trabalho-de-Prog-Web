@@ -78,11 +78,43 @@ com.farmacia.farmaciaonline
 └── FarmaciaOnlineApplication.java
 
 src/main/resources
-├── db/migration     (scripts Flyway: V1__init.sql, V2__seed.sql...)
-├── static/css       (design tokens / estilos globais)
-├── templates        (arquivos .html do Thymeleaf)
+├── db/migration       (scripts Flyway: V1__init.sql, V2__seed.sql...)
+├── static
+│   ├── css            (tokens.css = cores; style.css = estilos globais — carregar nessa ordem)
+│   ├── images
+│   └── js             (menu.js: menu de categorias no mobile)
+├── templates
+│   ├── fragments      (layout.html: cabeçalho, rodapé e "Pular para o conteúdo" compartilhados)
+│   ├── institucional  (páginas de texto, ex.: boas-praticas.html)
+│   └── index.html
 └── application.properties
 ```
+
+## Como criar uma página nova
+
+Toda página usa o layout `templates/fragments/layout.html` (cabeçalho com busca, menu de
+categorias e área do usuário, rodapé e link "Pular para o conteúdo"). **Não copie cabeçalho nem
+rodapé** — crie o arquivo assim:
+
+```html
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Minha página | Farma++</title>
+</head>
+<body>
+<div id="pagina">
+    <h1>Título da página</h1>
+    <!-- conteúdo -->
+</div>
+</body>
+</html>
+```
+
+Regras: um único `<h1>` por página (sem pular nível nos demais títulos); links com
+`th:href="@{...}"`; toda imagem com `alt` (decorativa: `alt=""`); todo campo com `<label for>`;
+cores sempre via `var(--cor-...)` do `tokens.css`, nunca hexadecimal solto. O teste
+`LayoutTest` confere o layout das páginas existentes — adicione a nova página nele.
 
 ## Fluxo de Pull Request
 

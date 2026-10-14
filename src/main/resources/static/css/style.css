@@ -1,15 +1,12 @@
+/* =========================================================
+   Farma++ — estilos globais
+   As cores vêm de tokens.css, que deve ser carregado ANTES
+   deste arquivo (ver templates/fragments/layout.html).
+   ========================================================= */
+
 :root {
-  --cor-branco: #FFFFFF;      /* fixa — não alterar */
-  --cor-azul: #0F4C81;        /* pode ser trocada livremente */
-  --cor-azul-hover: #0B3961;  /* estado hover/active dos botões */
-  --cor-azul-suave: #DBE4EC;  /* fundos leves, badges, hover de linha de tabela */
-  --cor-texto: #1F2937;       /* corpo de texto — quase preto */
-  --cor-texto-hint: #526B7A;  /* placeholder, textos de apoio */
-  --cor-erro: #DC2626;
-  --cor-sucesso: #16A34A;
-  --cor-fundo: #F5F6F8;       /* fundo cinza claro da página */
-  --cor-borda: #E3E6EA;
   --raio: 8px;
+  --altura-logo: 40px;
 }
 
 * { box-sizing: border-box; }
@@ -28,14 +25,65 @@ body {
   padding: 0 16px;
 }
 
+/* ---------- Acessibilidade: utilitários ---------- */
+
+/* Esconde só visualmente; leitores de tela continuam lendo. */
+.visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* Link "Pular para o conteúdo": fora da tela até receber foco. */
+.skip-link {
+  position: absolute;
+  top: -100px;
+  left: 8px;
+  z-index: 100;
+  background-color: var(--cor-azul);
+  color: var(--cor-branco);
+  padding: 10px 16px;
+  border-radius: var(--raio);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.skip-link:focus {
+  top: 8px;
+}
+
+.skip-link:focus-visible {
+  outline-color: var(--cor-texto);
+}
+
+/* O <,main> recebe foco programático ao usar o skip-link; não é um controle. */
+#conteudo:focus { outline: none; }
+
+/* Foco visível para todos os controles. */
+a:focus-visible,
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+textarea:focus-visible {
+  outline: 3px solid var(--cor-azul);
+  outline-offset: 2px;
+}
+
 /* ---------- Cabeçalho ---------- */
 .topo {
   background-color: var(--cor-branco);
   border-bottom: 1px solid var(--cor-borda);
-  padding: 12px 0;
+  padding-top: 12px;
 }
 
-.topo .container {
+.topo__linha {
   display: flex;
   align-items: center;
   gap: 24px;
@@ -46,41 +94,149 @@ body {
   display: flex;
   align-items: center;
   gap: 8px;
+  margin: 0;
   font-weight: 700;
   font-size: 20px;
   color: var(--cor-azul);
   text-decoration: none;
 }
 
+.logo img {
+  display: block;
+  height: var(--altura-logo);
+  width: auto;
+}
+
+/* Busca */
 .busca {
+  position: relative;
   flex: 1;
   min-width: 200px;
 }
 
 .busca input {
   width: 100%;
-  padding: 10px 14px;
-  border: 1px solid var(--cor-borda);
+  padding: 10px 44px 10px 14px;
+  border: 1px solid var(--cor-borda-controle);
   border-radius: 20px;
+  background-color: var(--cor-branco);
   font-size: 14px;
   color: var(--cor-texto);
 }
 
 .busca input::placeholder { color: var(--cor-texto-hint); }
 
-.btn-login {
-  background-color: var(--cor-azul);
-  color: var(--cor-branco);
+.busca__botao {
+  position: absolute;
+  top: 50%;
+  right: 4px;
+  transform: translateY(-50%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
   border: none;
-  border-radius: var(--raio);
-  padding: 8px 18px;
-  font-size: 14px;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--cor-azul);
   cursor: pointer;
-  text-decoration: none;
-  display: inline-block;
 }
 
-.btn-login:hover { background-color: var(--cor-azul-hover); }
+.busca__botao:hover { background-color: var(--cor-azul-suave); }
+
+/* Área do usuário (anônimo: convite; logado: nome) */
+.usuario {
+  max-width: 240px;
+  padding: 6px 16px;
+  border-radius: var(--raio);
+  background-color: var(--cor-azul);
+  color: var(--cor-branco);
+  font-size: 13px;
+  line-height: 1.35;
+}
+
+.usuario__saudacao { display: block; }
+
+.usuario a {
+  color: var(--cor-branco);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.usuario a:hover { text-decoration-thickness: 2px; }
+
+.usuario a:focus-visible { outline-color: var(--cor-branco); }
+
+.usuario--logado {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-top: 10px;
+  padding-bottom: 10px;
+  font-size: 14px;
+}
+
+/* Menu de categorias */
+.menu-categorias {
+  margin-top: 12px;
+  border-top: 1px solid var(--cor-borda);
+}
+
+.menu-categorias__lista {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 24px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.menu-categorias__lista a {
+  display: block;
+  padding: 10px 0;
+  color: var(--cor-texto);
+  font-size: 14px;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.menu-categorias__lista a:hover {
+  color: var(--cor-azul);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+/* O botão só existe visualmente no mobile (e só com JS ligado). */
+.menu-categorias__toggle {
+  display: none;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 12px 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--cor-texto);
+  cursor: pointer;
+}
+
+.menu-categorias__toggle::after {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-right: 2px solid currentColor;
+  border-bottom: 2px solid currentColor;
+  transform: rotate(45deg);
+}
+
+.menu-categorias__toggle[aria-expanded="true"]::after {
+  transform: rotate(-135deg);
+}
 
 /* ---------- Banner ---------- */
 .banner {
@@ -145,7 +301,8 @@ body {
 .card .nome { font-size: 14px; margin: 0; }
 .card .qtd  { font-size: 12px; color: var(--cor-texto-hint); margin: 0 0 12px; }
 
-.card .rodape {
+/* Linha de preço + botão do carrinho (antes era .rodape e colidia com o rodapé do site) */
+.card-rodape {
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -166,14 +323,20 @@ body {
 
 .btn-carrinho:hover { background-color: var(--cor-azul-hover); }
 
-/* ---------- Categorias ---------- */
+/* ---------- Categorias (seção da home) ---------- */
 .categorias {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
   gap: 16px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
 }
 
+.categorias li { display: flex; }
+
 .categoria {
+  flex: 1;
   background-color: var(--cor-branco);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
@@ -193,8 +356,37 @@ body {
   margin-top: 10px;
 }
 
-/* ---------- Rodapé ---------- */
-.rodape {
+/* ---------- Páginas de texto (institucional) ---------- */
+.pagina-texto {
+  max-width: 760px;
+  margin: 32px auto 0;
+  padding: 28px 32px;
+  background-color: var(--cor-branco);
+  border: 1px solid var(--cor-borda);
+  border-radius: 12px;
+}
+
+.pagina-texto h1 { margin: 0 0 12px; font-size: 28px; line-height: 1.25; }
+.pagina-texto h2 { margin: 0 0 8px; font-size: 18px; }
+.pagina-texto p  { margin: 0 0 12px; }
+.pagina-texto ul { margin: 0 0 12px; padding-left: 20px; }
+.pagina-texto li { margin-bottom: 6px; }
+.pagina-texto a  { color: var(--cor-azul); text-underline-offset: 2px; }
+
+.pagina-texto__intro {
+  color: var(--cor-texto-hint);
+  margin-bottom: 8px;
+}
+
+.pagina-texto section {
+  padding-top: 20px;
+  margin-top: 20px;
+  border-top: 1px solid var(--cor-borda);
+  scroll-margin-top: 16px;
+}
+
+/* ---------- Rodapé do site ---------- */
+.site-rodape {
   background-color: var(--cor-branco);
   border-top: 1px solid var(--cor-borda);
   padding: 32px 0;
@@ -202,20 +394,80 @@ body {
   font-size: 14px;
 }
 
-.rodape .container {
+.site-rodape__colunas {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
   gap: 24px;
 }
 
-.rodape h3 { font-size: 14px; margin: 0 0 8px; }
-.rodape ul { list-style: none; padding: 0; margin: 0; }
-.rodape li { margin-bottom: 4px; color: var(--cor-texto-hint); }
+.site-rodape__titulo { font-size: 14px; margin: 0 0 8px; }
+.site-rodape__slogan { margin: 8px 0 0; color: var(--cor-texto-hint); }
+.site-rodape ul { list-style: none; padding: 0; margin: 0; }
+.site-rodape li { margin-bottom: 4px; color: var(--cor-texto-hint); }
 
-/* ---------- Acessibilidade: foco visível ---------- */
-a:focus-visible,
-button:focus-visible,
-input:focus-visible {
-  outline: 3px solid var(--cor-azul);
-  outline-offset: 2px;
+.site-rodape li a {
+  color: var(--cor-azul);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.site-rodape li a:hover { color: var(--cor-azul-hover); }
+
+.site-rodape__aviso {
+  grid-column: 1 / -1;
+  margin: 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--cor-borda);
+  font-size: 13px;
+  color: var(--cor-texto-hint);
+}
+
+/* =========================================================
+   Responsivo
+   desktop: acima de 1023px · tablet: 768–1023px · mobile: até 767px
+   ========================================================= */
+
+@media (max-width: 1023px) {
+  .topo__linha { gap: 16px; }
+  .banner { padding: 40px 24px; }
+  .banner h1 { font-size: 28px; }
+
+  /* 4 itens cabem em 4 colunas no tablet (evita 3 + 1 sobrando na linha de baixo) */
+  .grade,
+  .categorias { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .beneficios { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .site-rodape__colunas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 767px) {
+  .topo__linha { gap: 12px; }
+
+  /* Linha 1: logo + usuário. Linha 2: busca sozinha. */
+  .logo    { order: 1; font-size: 18px; }
+  .usuario { order: 2; margin-left: auto; padding: 6px 12px; font-size: 12px; }
+  .usuario--logado { padding-top: 10px; padding-bottom: 10px; font-size: 13px; }
+  .busca   { order: 3; flex: 1 1 100%; }
+
+  .banner { padding: 32px 20px; }
+  .banner h1 { font-size: 24px; }
+
+  .grade,
+  .categorias {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 12px;
+  }
+
+  .beneficios { grid-template-columns: 1fr; }
+
+  .pagina-texto { margin-top: 16px; padding: 20px 16px; }
+  .pagina-texto h1 { font-size: 24px; }
+
+  /* Menu de categorias vira um botão que abre/fecha (só com JS; sem JS a lista fica visível). */
+  .js .menu-categorias__toggle { display: flex; }
+  .js .menu-categorias__lista { display: none; flex-direction: column; padding-bottom: 8px; }
+  .js .menu-categorias__lista.is-open { display: flex; }
+}
+
+@media (max-width: 479px) {
+  .site-rodape__colunas { grid-template-columns: 1fr; }
 }

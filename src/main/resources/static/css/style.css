@@ -4,9 +4,11 @@
    deste arquivo (ver templates/fragments/layout.html).
    ========================================================= */
 
+/* Tamanhos em rem (1rem = fonte do navegador), para respeitar zoom e fonte maior.
+   Só bordas, contornos e breakpoints de @media ficam em px. */
 :root {
-  --raio: 8px;
-  --altura-logo: 40px;
+  --raio: 0.5rem;
+  --altura-logo: 2.5rem;
 }
 
 * { box-sizing: border-box; }
@@ -20,9 +22,9 @@ body {
 }
 
 .container {
-  max-width: 1100px;
+  max-width: 68.75rem;
   margin: 0 auto;
-  padding: 0 16px;
+  padding: 0 1rem;
 }
 
 /* ---------- Acessibilidade: utilitários ---------- */
@@ -44,19 +46,19 @@ body {
 /* Link "Pular para o conteúdo": fora da tela até receber foco. */
 .skip-link {
   position: absolute;
-  top: -100px;
-  left: 8px;
+  top: -6.25rem;
+  left: 0.5rem;
   z-index: 100;
   background-color: var(--cor-azul);
   color: var(--cor-branco);
-  padding: 10px 16px;
+  padding: 0.625rem 1rem;
   border-radius: var(--raio);
   font-weight: 600;
   text-decoration: none;
 }
 
 .skip-link:focus {
-  top: 8px;
+  top: 0.5rem;
 }
 
 .skip-link:focus-visible {
@@ -80,23 +82,23 @@ textarea:focus-visible {
 .topo {
   background-color: var(--cor-branco);
   border-bottom: 1px solid var(--cor-borda);
-  padding-top: 12px;
+  padding-top: 0.75rem;
 }
 
 .topo__linha {
   display: flex;
   align-items: center;
-  gap: 24px;
+  gap: 1.5rem;
   flex-wrap: wrap;
 }
 
 .logo {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 0.5rem;
   margin: 0;
   font-weight: 700;
-  font-size: 20px;
+  font-size: 1.25rem;
   color: var(--cor-azul);
   text-decoration: none;
 }
@@ -111,16 +113,16 @@ textarea:focus-visible {
 .busca {
   position: relative;
   flex: 1;
-  min-width: 200px;
+  min-width: 12.5rem;
 }
 
 .busca input {
   width: 100%;
-  padding: 10px 44px 10px 14px;
+  padding: 0.625rem 2.75rem 0.625rem 0.875rem;
   border: 1px solid var(--cor-borda-controle);
-  border-radius: 20px;
+  border-radius: 1.25rem;
   background-color: var(--cor-branco);
-  font-size: 14px;
+  font-size: 0.875rem;
   color: var(--cor-texto);
 }
 
@@ -129,13 +131,13 @@ textarea:focus-visible {
 .busca__botao {
   position: absolute;
   top: 50%;
-  right: 4px;
+  right: 0.25rem;
   transform: translateY(-50%);
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 34px;
-  height: 34px;
+  width: 2.125rem;
+  height: 2.125rem;
   padding: 0;
   border: none;
   border-radius: 50%;
@@ -148,12 +150,12 @@ textarea:focus-visible {
 
 /* Área do usuário (anônimo: convite; logado: nome) */
 .usuario {
-  max-width: 240px;
-  padding: 6px 16px;
+  max-width: 15rem;
+  padding: 0.375rem 1rem;
   border-radius: var(--raio);
   background-color: var(--cor-azul);
   color: var(--cor-branco);
-  font-size: 13px;
+  font-size: 0.8125rem;
   line-height: 1.35;
 }
 
@@ -174,21 +176,21 @@ textarea:focus-visible {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-  padding-top: 10px;
-  padding-bottom: 10px;
-  font-size: 14px;
+  padding-top: 0.625rem;
+  padding-bottom: 0.625rem;
+  font-size: 0.875rem;
 }
 
 /* Menu de categorias */
 .menu-categorias {
-  margin-top: 12px;
+  margin-top: 0.75rem;
   border-top: 1px solid var(--cor-borda);
 }
 
 .menu-categorias__lista {
   display: flex;
   flex-wrap: wrap;
-  gap: 0 24px;
+  gap: 0 1.5rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -196,9 +198,9 @@ textarea:focus-visible {
 
 .menu-categorias__lista a {
   display: block;
-  padding: 10px 0;
+  padding: 0.625rem 0;
   color: var(--cor-texto);
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
 }
@@ -206,7 +208,7 @@ textarea:focus-visible {
 .menu-categorias__lista a:hover {
   color: var(--cor-azul);
   text-decoration: underline;
-  text-underline-offset: 4px;
+  text-underline-offset: 0.25rem;
 }
 
 /* O botão só existe visualmente no mobile (e só com JS ligado). */
@@ -215,11 +217,11 @@ textarea:focus-visible {
   align-items: center;
   justify-content: space-between;
   width: 100%;
-  padding: 12px 0;
+  padding: 0.75rem 0;
   border: none;
   background: none;
   font: inherit;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--cor-texto);
   cursor: pointer;
@@ -227,8 +229,8 @@ textarea:focus-visible {
 
 .menu-categorias__toggle::after {
   content: "";
-  width: 8px;
-  height: 8px;
+  width: 0.5rem;
+  height: 0.5rem;
   border-right: 2px solid currentColor;
   border-bottom: 2px solid currentColor;
   transform: rotate(45deg);
@@ -242,53 +244,53 @@ textarea:focus-visible {
 .banner {
   background-color: var(--cor-azul);
   color: var(--cor-branco);
-  border-radius: 12px;
-  padding: 48px 32px;
-  margin: 24px 0;
+  border-radius: 0.75rem;
+  padding: 3rem 2rem;
+  margin: 1.5rem 0;
 }
 
-.banner h1 { margin: 0 0 8px; font-size: 32px; }
+.banner h1 { margin: 0 0 0.5rem; font-size: 2rem; }
 .banner p  { margin: 0; opacity: 0.9; }
 
 /* ---------- Faixa de benefícios ---------- */
 .beneficios {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 16px;
-  margin-bottom: 40px;
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 2.5rem;
 }
 
 .beneficio {
   background-color: var(--cor-azul-suave);
   border-radius: var(--raio);
-  padding: 18px;
-  font-size: 14px;
+  padding: 1.125rem;
+  font-size: 0.875rem;
   font-weight: 600;
   color: var(--cor-azul);
 }
 
 /* ---------- Seções de produto ---------- */
-.secao { margin-bottom: 40px; }
-.secao h2 { font-size: 20px; margin: 0 0 16px; }
+.secao { margin-bottom: 2.5rem; }
+.secao h2 { font-size: 1.25rem; margin: 0 0 1rem; }
 
 .grade {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(11.875rem, 1fr));
+  gap: 1rem;
 }
 
 .card {
   background-color: var(--cor-branco);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
-  padding: 12px;
+  padding: 0.75rem;
 }
 
 .card .imagem {
   background-color: #E9EBEE;
   border-radius: var(--raio);
-  height: 130px;
-  margin-bottom: 12px;
+  height: 8.125rem;
+  margin-bottom: 0.75rem;
 }
 
 .card .imagem img {
@@ -298,8 +300,8 @@ textarea:focus-visible {
   border-radius: var(--raio);
 }
 
-.card .nome { font-size: 14px; margin: 0; }
-.card .qtd  { font-size: 12px; color: var(--cor-texto-hint); margin: 0 0 12px; }
+.card .nome { font-size: 0.875rem; margin: 0; }
+.card .qtd  { font-size: 0.75rem; color: var(--cor-texto-hint); margin: 0 0 0.75rem; }
 
 /* Linha de preço + botão do carrinho (antes era .rodape e colidia com o rodapé do site) */
 .card-rodape {
@@ -308,17 +310,17 @@ textarea:focus-visible {
   justify-content: space-between;
 }
 
-.card .preco { font-size: 16px; font-weight: 700; }
+.card .preco { font-size: 1rem; font-weight: 700; }
 
 .btn-carrinho {
   background-color: var(--cor-azul);
   color: var(--cor-branco);
   border: none;
   border-radius: 50%;
-  width: 34px;
-  height: 34px;
+  width: 2.125rem;
+  height: 2.125rem;
   cursor: pointer;
-  font-size: 15px;
+  font-size: 0.9375rem;
 }
 
 .btn-carrinho:hover { background-color: var(--cor-azul-hover); }
@@ -326,8 +328,8 @@ textarea:focus-visible {
 /* ---------- Categorias (seção da home) ---------- */
 .categorias {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(11.875rem, 1fr));
+  gap: 1rem;
   margin: 0;
   padding: 0;
   list-style: none;
@@ -340,9 +342,9 @@ textarea:focus-visible {
   background-color: var(--cor-branco);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
-  padding: 12px;
+  padding: 0.75rem;
   text-align: center;
-  font-size: 14px;
+  font-size: 0.875rem;
   font-weight: 600;
   text-decoration: none;
   color: var(--cor-texto);
@@ -352,58 +354,94 @@ textarea:focus-visible {
 .categoria .imagem {
   background-color: #E9EBEE;
   border-radius: var(--raio);
-  height: 90px;
-  margin-top: 10px;
+  height: 5.625rem;
+  margin-top: 0.625rem;
 }
 
 /* ---------- Páginas de texto (institucional) ---------- */
 .pagina-texto {
-  max-width: 760px;
-  margin: 32px auto 0;
-  padding: 28px 32px;
+  max-width: 47.5rem;
+  margin: 2rem auto 0;
+  padding: 1.75rem 2rem;
   background-color: var(--cor-branco);
   border: 1px solid var(--cor-borda);
-  border-radius: 12px;
+  border-radius: 0.75rem;
 }
 
-.pagina-texto h1 { margin: 0 0 12px; font-size: 28px; line-height: 1.25; }
-.pagina-texto h2 { margin: 0 0 8px; font-size: 18px; }
-.pagina-texto p  { margin: 0 0 12px; }
-.pagina-texto ul { margin: 0 0 12px; padding-left: 20px; }
-.pagina-texto li { margin-bottom: 6px; }
+.pagina-texto h1 { margin: 0 0 0.75rem; font-size: 1.75rem; line-height: 1.25; }
+.pagina-texto h2 { margin: 0 0 0.5rem; font-size: 1.125rem; }
+.pagina-texto p  { margin: 0 0 0.75rem; }
+.pagina-texto ul { margin: 0 0 0.75rem; padding-left: 1.25rem; }
+.pagina-texto li { margin-bottom: 0.375rem; }
 .pagina-texto a  { color: var(--cor-azul); text-underline-offset: 2px; }
 
 .pagina-texto__intro {
   color: var(--cor-texto-hint);
-  margin-bottom: 8px;
+  margin-bottom: 0.5rem;
 }
 
 .pagina-texto section {
-  padding-top: 20px;
-  margin-top: 20px;
+  padding-top: 1.25rem;
+  margin-top: 1.25rem;
   border-top: 1px solid var(--cor-borda);
-  scroll-margin-top: 16px;
+  scroll-margin-top: 1rem;
 }
+
+/* ---------- Campo de formulário (ver templates/fragments/campo.html) ---------- */
+.campo { margin-bottom: 1rem; }
+
+.campo label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+}
+
+.campo__ajuda,
+.campo__erro {
+  margin: 0 0 0.25rem;
+  font-size: 0.8125rem;
+}
+
+.campo__ajuda { color: var(--cor-texto-hint); }
+
+.campo__erro {
+  color: var(--cor-erro);
+  font-weight: 600;
+}
+
+.campo input {
+  width: 100%;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: var(--raio);
+  background-color: var(--cor-branco);
+  font: inherit;
+  font-size: 0.875rem;
+  color: var(--cor-texto);
+}
+
+.campo input[aria-invalid="true"] { border-color: var(--cor-erro); }
 
 /* ---------- Rodapé do site ---------- */
 .site-rodape {
   background-color: var(--cor-branco);
   border-top: 1px solid var(--cor-borda);
-  padding: 32px 0;
-  margin-top: 48px;
-  font-size: 14px;
+  padding: 2rem 0;
+  margin-top: 3rem;
+  font-size: 0.875rem;
 }
 
 .site-rodape__colunas {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 24px;
+  grid-template-columns: repeat(auto-fit, minmax(12.5rem, 1fr));
+  gap: 1.5rem;
 }
 
-.site-rodape__titulo { font-size: 14px; margin: 0 0 8px; }
-.site-rodape__slogan { margin: 8px 0 0; color: var(--cor-texto-hint); }
+.site-rodape__titulo { font-size: 0.875rem; margin: 0 0 0.5rem; }
+.site-rodape__slogan { margin: 0.5rem 0 0; color: var(--cor-texto-hint); }
 .site-rodape ul { list-style: none; padding: 0; margin: 0; }
-.site-rodape li { margin-bottom: 4px; color: var(--cor-texto-hint); }
+.site-rodape li { margin-bottom: 0.25rem; color: var(--cor-texto-hint); }
 
 .site-rodape li a {
   color: var(--cor-azul);
@@ -416,9 +454,9 @@ textarea:focus-visible {
 .site-rodape__aviso {
   grid-column: 1 / -1;
   margin: 0;
-  padding-top: 16px;
+  padding-top: 1rem;
   border-top: 1px solid var(--cor-borda);
-  font-size: 13px;
+  font-size: 0.8125rem;
   color: var(--cor-texto-hint);
 }
 
@@ -428,9 +466,9 @@ textarea:focus-visible {
    ========================================================= */
 
 @media (max-width: 1023px) {
-  .topo__linha { gap: 16px; }
-  .banner { padding: 40px 24px; }
-  .banner h1 { font-size: 28px; }
+  .topo__linha { gap: 1rem; }
+  .banner { padding: 2.5rem 1.5rem; }
+  .banner h1 { font-size: 1.75rem; }
 
   /* 4 itens cabem em 4 colunas no tablet (evita 3 + 1 sobrando na linha de baixo) */
   .grade,
@@ -440,34 +478,51 @@ textarea:focus-visible {
 }
 
 @media (max-width: 767px) {
-  .topo__linha { gap: 12px; }
+  .topo__linha { gap: 0.75rem; }
 
   /* Linha 1: logo + usuário. Linha 2: busca sozinha. */
-  .logo    { order: 1; font-size: 18px; }
-  .usuario { order: 2; margin-left: auto; padding: 6px 12px; font-size: 12px; }
-  .usuario--logado { padding-top: 10px; padding-bottom: 10px; font-size: 13px; }
+  .logo    { order: 1; font-size: 1.125rem; }
+  .usuario { order: 2; margin-left: auto; padding: 0.375rem 0.75rem; font-size: 0.75rem; }
+  .usuario--logado { padding-top: 0.625rem; padding-bottom: 0.625rem; font-size: 0.8125rem; }
   .busca   { order: 3; flex: 1 1 100%; }
 
-  .banner { padding: 32px 20px; }
-  .banner h1 { font-size: 24px; }
+  .banner { padding: 2rem 1.25rem; }
+  .banner h1 { font-size: 1.5rem; }
 
   .grade,
   .categorias {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 12px;
+    gap: 0.75rem;
   }
 
   .beneficios { grid-template-columns: 1fr; }
 
-  .pagina-texto { margin-top: 16px; padding: 20px 16px; }
-  .pagina-texto h1 { font-size: 24px; }
+  .pagina-texto { margin-top: 1rem; padding: 1.25rem 1rem; }
+  .pagina-texto h1 { font-size: 1.5rem; }
 
   /* Menu de categorias vira um botão que abre/fecha (só com JS; sem JS a lista fica visível). */
   .js .menu-categorias__toggle { display: flex; }
-  .js .menu-categorias__lista { display: none; flex-direction: column; padding-bottom: 8px; }
+  .js .menu-categorias__lista { display: none; flex-direction: column; padding-bottom: 0.5rem; }
   .js .menu-categorias__lista.is-open { display: flex; }
 }
 
 @media (max-width: 479px) {
   .site-rodape__colunas { grid-template-columns: 1fr; }
+}
+
+/* =========================================================
+   Redução de movimento
+   Quem pede menos movimento no sistema operacional não vê animações
+   nem transições. Vale para qualquer animação criada no futuro.
+   ========================================================= */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
 }

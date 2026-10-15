@@ -1,0 +1,31 @@
+<!--
+    Campo de formulário acessível: rótulo, texto de ajuda e mensagem de erro já ligados ao campo.
+    NÃO monte <label>/<input> na mão: use este fragment.
+
+    Parâmetros (passe todos; use null quando não houver ajuda ou erro):
+        id      id do campo (o <label for> aponta para ele)
+        nome    atributo name do campo
+        rotulo  texto do rótulo (sempre visível)
+        tipo    type do input (text, email, password, ...)
+        ajuda   texto de ajuda (ou null)
+        erro    mensagem de erro (ou null)
+
+    Exemplo:
+        <div th:replace="~{fragments/campo :: campo(id='email', nome='email', rotulo='E-mail',
+                 tipo='email', ajuda='Ex.: nome@dominio.com', erro=${erroEmail})}"></div>
+
+    O que ele faz:
+        - ajuda e erro ganham id (id-ajuda e id-erro) e entram no aria-describedby do campo;
+        - com erro, o campo recebe aria-invalid="true" e a mensagem tem role="alert",
+          então o leitor de tela a anuncia assim que ela aparece;
+        - sem ajuda nem erro, o aria-describedby nem é escrito.
+-->
+<div class="campo" th:fragment="campo(id, nome, rotulo, tipo, ajuda, erro)"
+     xmlns:th="http://www.thymeleaf.org">
+    <label th:for="${id}" th:text="${rotulo}">Rótulo</label>
+    <p class="campo__ajuda" th:if="${ajuda != null}" th:id="${id + '-ajuda'}" th:text="${ajuda}">Texto de ajuda</p>
+    <input th:type="${tipo}" th:id="${id}" th:name="${nome}"
+           th:aria-describedby="${(ajuda != null ? id + '-ajuda ' : '') + (erro != null ? id + '-erro' : '')}"
+           th:aria-invalid="${erro != null} ? 'true'">
+    <p class="campo__erro" role="alert" th:if="${erro != null}" th:id="${id + '-erro'}" th:text="${erro}">Mensagem de erro</p>
+</div>

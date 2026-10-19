@@ -39,7 +39,7 @@ Programação Web (ProgWeb 2026/2), usando Spring Boot + Thymeleaf.
 3. Rodar a aplicação:
    ```bash
    ./mvnw spring-boot:run        # Linux/Mac
-   .\mvnw.cmd spring-boot:run      # Windows
+   ./mvnw.cmd spring-boot:run      # Windows
    ```
    Ou, pela IDE, rodar a classe principal `FarmaciaOnlineApplication`.
 

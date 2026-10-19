@@ -84,10 +84,14 @@ src/main/resources
 │   ├── images
 │   └── js             (menu.js: menu de categorias no mobile)
 ├── templates
-│   ├── fragments      (layout.html: cabeçalho, rodapé e "Pular para o conteúdo" compartilhados)
+│   ├── fragments      (layout.html: cabeçalho, rodapé e "Pular para o conteúdo" compartilhados;
+│   │                   campo.html: campo de formulário acessível com rótulo, ajuda e erro)
 │   ├── institucional  (páginas de texto, ex.: boas-praticas.html)
 │   └── index.html
 └── application.properties
+
+docs
+└── acessibilidade.md  (checklist de acessibilidade para PRs e como testar)
 ```
 
 ## Como criar uma página nova
@@ -113,7 +117,9 @@ rodapé** — crie o arquivo assim:
 
 Regras: um único `<h1>` por página (sem pular nível nos demais títulos); links com
 `th:href="@{...}"`; toda imagem com `alt` (decorativa: `alt=""`); todo campo com `<label for>`;
-cores sempre via `var(--cor-...)` do `tokens.css`, nunca hexadecimal solto. O teste
+cores sempre via `var(--cor-...)` do `tokens.css`, nunca hexadecimal solto; tamanhos em `rem`;
+campos de formulário com o fragment `fragments/campo`. Veja o checklist completo em
+[`docs/acessibilidade.md`](docs/acessibilidade.md) e cole-o na descrição do PR. O teste
 `LayoutTest` confere o layout das páginas existentes — adicione a nova página nele.
 
 ## Fluxo de Pull Request

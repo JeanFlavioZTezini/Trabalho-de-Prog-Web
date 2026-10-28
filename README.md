@@ -191,6 +191,27 @@ Entidades em `model` (`Carrinho`, `ItemCarrinho`, `Endereco`, `CartaoSalvo`, `Lo
   altera pedidos antigos.
 - `Loja` é o ponto de retirada. Produto que exige receita só pode ser retirado em loja (I3).
 
+## Modelo de pedido
+
+Entidades em `model` (`Pedido`, `ItemPedido`, `Pagamento`, `HistoricoStatusPedido`, `LogAuditoria`); o schema vem da `V1__init.sql`.
+
+- **O pedido guarda cópias (snapshots).** O endereço de entrega vai no `@Embeddable EnderecoEntrega`, que o `Pedido`
+  mapeia para as colunas `entrega_*`, e o `ItemPedido` guarda nome, descrição, SKU, preço e `exigeReceita` do momento
+  da compra. Mudar um `Endereco` salvo ou o catálogo não altera pedidos antigos.
+- **Entrega x retirada:** entrega tem `enderecoEntrega` e não tem `lojaRetirada`; retirada tem `lojaRetirada`, frete zero
+  e `enderecoEntrega` nulo. O banco recusa as outras combinações.
+- **Chame `Pedido#recalcularTotais()` antes de gravar.** O banco exige `total = subtotal + frete`. O método arredonda
+  cada item e o frete para 2 casas (HALF_UP) e depois soma, e trata frete nulo como zero.
+- **Regra que o banco não garante:** pedido com item que exige receita só pode ser RETIRADA. `Pedido#temItemQueExigeReceita()`
+  só consulta; quem valida é o service do checkout (Fase 2), com teste próprio.
+- `Pedido.itens` tem `cascade = ALL`: grave o pedido e os itens vão juntos. Pagamentos e histórico são gravados pelos
+  próprios repositories.
+- Um pedido tem várias tentativas de `Pagamento` (UC08-E2). Do cartão só ficam dados mascarados, e parcelas acima de 1
+  só no crédito.
+- `HistoricoStatusPedido.alteradoPor` nulo significa que a mudança foi do sistema.
+- `PedidoRepository#findByIdAndUsuarioId` é o jeito de buscar um pedido para o cliente: de outro usuário, volta vazio (UC06).
+- `PRONTO_PARA_RETIRADA` é o status do pedido de retirada em loja. Quem decide as transições entre status é o service (Fase 2).
+
 ## Como criar uma página nova
 
 Toda página usa o layout `templates/fragments/layout.html` (cabeçalho com busca, menu de

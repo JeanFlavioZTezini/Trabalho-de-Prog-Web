@@ -53,6 +53,30 @@ Programação Web (ProgWeb 2026/2), usando Spring Boot + Thymeleaf.
    ```
    (os dados continuam salvos no volume; só sobem de novo com `docker compose up -d`)
 
+## Dados de demonstração
+
+Num banco novo, o Flyway aplica `V1__init.sql` (tabelas) e `V2__seed.sql` (categorias, produtos,
+lojas e usuários de teste). Quem subir o banco do zero recebe os mesmos dados.
+
+| E-mail | Perfil | Status | Senha |
+|---|---|---|---|
+| `admin@farma.com` | ADMIN | ATIVA | `Farma@123` |
+| `cliente@farma.com` | CLIENTE | ATIVA | `Farma@123` |
+| `pendente@farma.com` | CLIENTE | PENDENTE (para testar a confirmação de conta) | `Farma@123` |
+
+Essas contas existem só para desenvolvimento e demonstração.
+
+- **Recomeçar do zero:** `docker compose down -v` apaga o volume do banco; depois `docker compose up -d`
+  e suba a aplicação. Quem aplicou uma versão antiga do `V2` localmente precisa disso.
+- **Não edite uma migração que já está na `main`:** o Flyway guarda o checksum e a aplicação deixa de
+  subir em quem já a aplicou. Para mudar dados, crie uma migração nova (`V3__...sql`).
+- **Textos com várias linhas no seed:** use `E'linha 1\nlinha 2'`. Quebrar a linha dentro das aspas
+  grava um fim de linha diferente no Windows e no Linux.
+- **Imagens de produto:** ficam em `src/main/resources/static/images/produtos/`, em WebP de até 800 px,
+  com nome descritivo em minúsculas e hífens (ex.: `dipirona-monoidratada-500mg-20-comprimidos.webp`).
+  A coluna `imagem_produto.arquivo` guarda o caminho a partir da raiz do site (`/images/produtos/...`).
+  Produto sem foto usa `placeholder.svg`. O texto alternativo (`alt`) vem do nome do produto.
+
 ## Testes e integração contínua
 
 ```bash
@@ -110,7 +134,7 @@ src/main/resources
 ├── db/migration       (scripts Flyway: V1__init.sql, V2__seed.sql...)
 ├── static
 │   ├── css            (tokens.css = cores; style.css = estilos globais — carregar nessa ordem)
-│   ├── images
+│   ├── images         (logo.png; produtos/ com as fotos e o placeholder.svg)
 │   └── js             (menu.js: menu de categorias no mobile)
 ├── templates
 │   ├── fragments      (layout.html: cabeçalho, rodapé e "Pular para o conteúdo" compartilhados;
@@ -124,7 +148,8 @@ docs
 
 src/test/java/com/farmacia/farmaciaonline
 ├── TestcontainersConfiguration.java       (PostgreSQL 16 descartável via Docker, para testes com banco)
-└── FarmaciaOnlineApplicationTests.java    (contextLoads: Flyway + validate do Hibernate num Postgres real)
+├── FarmaciaOnlineApplicationTests.java    (contextLoads: Flyway + validate do Hibernate num Postgres real)
+└── SeedDemonstracaoTest.java              (confere o V2: usuários, catálogo, EAN-13, sequences)
 
 .github/workflows
 └── ci.yml             (CI: ./mvnw -B verify em PR e push na main)

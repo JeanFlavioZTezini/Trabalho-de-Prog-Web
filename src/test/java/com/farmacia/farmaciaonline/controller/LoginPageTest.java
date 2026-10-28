@@ -83,7 +83,9 @@ class LoginPageTest {
 
     @Test
     void avisoDeLogoutUsaRoleStatus() throws Exception {
-        String html = pagina("/login?logout");
+        String html = mvc.perform(get("/login").param("logout", ""))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
         assertThat(html).contains("role=\"status\"");
         assertThat(html).contains("Você saiu da sua conta");

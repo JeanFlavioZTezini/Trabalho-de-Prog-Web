@@ -75,7 +75,8 @@ class LoginHandlersTest {
 
         sucesso.onAuthenticationSuccess(login, resposta, autenticado("CLIENTE"));
 
-        assertThat(resposta.getRedirectedUrl()).endsWith("/minha-conta");
+        assertThat(resposta.getRedirectedUrl()).isNotNull();
+        assertThat(new java.net.URI(resposta.getRedirectedUrl()).getPath()).isEqualTo("/minha-conta");
     }
 
     // ---------- login recusado ----------

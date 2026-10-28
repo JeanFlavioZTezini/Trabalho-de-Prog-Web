@@ -1,5 +1,7 @@
 # Farmácia On-line
 
+[![CI](https://github.com/JeanFlavioZTezini/Trabalho-de-Prog-Web/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/JeanFlavioZTezini/Trabalho-de-Prog-Web/actions/workflows/ci.yml)
+
 Aplicação web de vendas de farmácia, desenvolvida como Trabalho Prático de
 Programação Web (ProgWeb 2026/2), usando Spring Boot + Thymeleaf.
 
@@ -17,7 +19,7 @@ Programação Web (ProgWeb 2026/2), usando Spring Boot + Thymeleaf.
 ## Pré-requisitos
 
 - [JDK 17](https://adoptium.net/) instalado
-- [Docker](https://www.docker.com/) e Docker Compose instalados
+- [Docker](https://www.docker.com/) e Docker Compose instalados — o Docker precisa estar **ligado** também para rodar os testes (ver [Testes e integração contínua](#testes-e-integração-contínua))
 - Maven (ou usar o `mvnw`/`mvnw.cmd` incluído no projeto — não precisa instalar Maven à parte)
 
 ## Como rodar o projeto localmente
@@ -50,6 +52,33 @@ Programação Web (ProgWeb 2026/2), usando Spring Boot + Thymeleaf.
    docker compose down
    ```
    (os dados continuam salvos no volume; só sobem de novo com `docker compose up -d`)
+
+## Testes e integração contínua
+
+```bash
+./mvnw verify          # Linux/Mac
+./mvnw.cmd verify      # Windows
+```
+
+**Os testes precisam do Docker ligado** (Docker Desktop aberto no Windows/Mac). Eles usam o
+[Testcontainers](https://java.testcontainers.org/): a cada execução sobe um PostgreSQL 16
+descartável, aplica as migrações do Flyway e roda o `validate` do Hibernate. Ou seja, os testes
+rodam contra um Postgres de verdade, **sem depender do banco do `docker compose`** (pode estar
+desligado) e sem tocar nos seus dados. Na primeira vez o Docker baixa a imagem `postgres:16`.
+
+- `FarmaciaOnlineApplicationTests.contextLoads` é o teste mais importante da Fase 1: falha se uma
+  entidade JPA não bater com as tabelas criadas pelas migrações.
+- Teste que precisa de banco: use `@Import(TestcontainersConfiguration.class)` (com `@SpringBootTest`,
+  ou com `@DataJpaTest` + `@AutoConfigureTestDatabase(replace = Replace.NONE)`). Teste de
+  tela/controller usa `@WebMvcTest` e não precisa de Docker. Não use H2: o schema usa recursos
+  que ele não tem (`CHECK` com `~`, índices em expressão).
+
+Se o teste falhar com `Could not find a valid Docker environment`, o Docker não está rodando.
+Se aparecer `client version ... is too old` ou `too new`, atualize o Docker Desktop.
+
+O **CI** (`.github/workflows/ci.yml`) roda `./mvnw -B verify` em todo PR e em todo push na `main`.
+O resultado aparece no PR e na aba **Actions**; em caso de falha, os relatórios do Surefire ficam
+disponíveis como artefato da execução.
 
 ## Configuração do IDE
 
@@ -92,6 +121,13 @@ src/main/resources
 
 docs
 └── acessibilidade.md  (checklist de acessibilidade para PRs e como testar)
+
+src/test/java/com/farmacia/farmaciaonline
+├── TestcontainersConfiguration.java       (PostgreSQL 16 descartável via Docker, para testes com banco)
+└── FarmaciaOnlineApplicationTests.java    (contextLoads: Flyway + validate do Hibernate num Postgres real)
+
+.github/workflows
+└── ci.yml             (CI: ./mvnw -B verify em PR e push na main)
 ```
 
 ## Como criar uma página nova
@@ -129,3 +165,4 @@ campos de formulário com o fragment `fragments/campo`. Veja o checklist complet
 3. Pelo menos 1 aprovação de outro integrante antes do merge.
 4. Preferir PRs pequenos e focados numa única funcionalidade.
 5. Usar "Squash and merge" pra manter o histórico da `main` limpo.
+6. O CI (GitHub Actions) precisa estar verde para o merge.

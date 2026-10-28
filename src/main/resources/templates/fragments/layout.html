@@ -54,9 +54,13 @@
             <a th:href="@{/login}">Entrar</a> ou <a th:href="@{/cadastro}">cadastrar-se</a>
         </div>
 
-        <!--/* Logado: nome do usuário. A F1-09 troca "name" pelo primeiro nome. */-->
+        <!--/* Logado: primeiro nome (vem do UsuarioLogadoAdvice) e botão Sair.
+             O logout é POST, então o formulário precisa de th:action (ele injeta o token CSRF). */-->
         <div class="usuario usuario--logado" sec:authorize="isAuthenticated()">
-            Olá, <strong sec:authentication="name">usuário</strong>
+            <span class="usuario__nome">Olá, <strong th:text="${primeiroNomeUsuario} ?: ${#authentication.name}">usuário</strong></span>
+            <form class="usuario__sair" th:action="@{/logout}" method="post">
+                <button type="submit" class="usuario__sair-botao">Sair</button>
+            </form>
         </div>
     </div>
 

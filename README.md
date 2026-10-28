@@ -149,7 +149,10 @@ docs
 src/test/java/com/farmacia/farmaciaonline
 ├── TestcontainersConfiguration.java       (PostgreSQL 16 descartável via Docker, para testes com banco)
 ├── FarmaciaOnlineApplicationTests.java    (contextLoads: Flyway + validate do Hibernate num Postgres real)
-└── SeedDemonstracaoTest.java              (confere o V2: usuários, catálogo, EAN-13, sequences)
+├── SeedDemonstracaoTest.java              (confere o V2: usuários, catálogo, EAN-13, sequences)
+├── model/                                 (testes unitários puros, sem Spring nem banco)
+└── repository/                            (testes de integração com @DataJpaTest contra o Postgres real:
+                                            use CatalogoRepositoryTest e CompraRepositoryTest como modelo)
 
 .github/workflows
 └── ci.yml             (CI: ./mvnw -B verify em PR e push na main)
@@ -170,6 +173,23 @@ Entidades em `model` (`Categoria`, `Produto`, `Apresentacao`, `ImagemProduto`); 
 - As coleções de `Produto` (`categorias`, `apresentacoes`, `imagens`) são LAZY. Acesse dentro de transação ou
   com `JOIN FETCH`, senão dá `LazyInitializationException` ou consulta N+1. Não há cascade: grave cada
   `Apresentacao` e `ImagemProduto` pelo próprio repository.
+
+## Modelo de compra
+
+Entidades em `model` (`Carrinho`, `ItemCarrinho`, `Endereco`, `CartaoSalvo`, `Loja`); o schema vem da `V1__init.sql`.
+
+- **O carrinho tem um dono só:** um `Usuario` (logado) **ou** um `token` UUID guardado em cookie (visitante).
+  O banco recusa carrinho sem dono ou com os dois; `Carrinho#isDeVisitante()` diz qual é. Cada usuário tem no
+  máximo um carrinho, e cada apresentação aparece uma vez por carrinho (adicionar de novo soma a quantidade).
+  No login, o carrinho do token é mesclado ao do usuário (I12).
+- **Itens:** `Carrinho.itens` tem `cascade = ALL` e `orphanRemoval = true`. Para adicionar, coloque o item na lista
+  (com `item.setCarrinho(carrinho)`); para remover, tire da lista. Os itens vêm ordenados por `id`.
+- **`ItemCarrinho.precoVisto`** é o preço no momento em que o item entrou no carrinho. `getSubtotal()` usa
+  esse preço; comparar com `Apresentacao.preco` detecta que o preço mudou (UC05-E3).
+- **`CartaoSalvo` guarda só o token do gateway e dados mascarados.** Nunca grave número completo nem CVV (LGPD e PCI DSS).
+- `Endereco` salvo não é o endereço do pedido: o pedido guarda uma cópia, então editar ou excluir um endereço não
+  altera pedidos antigos.
+- `Loja` é o ponto de retirada. Produto que exige receita só pode ser retirado em loja (I3).
 
 ## Como criar uma página nova
 

@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<!--
+    Página de erro 403 (acesso negado). O Spring Boot usa este arquivo sozinho para o status 403:
+    cliente tentando abrir /admin, ou formulário enviado sem o token CSRF.
+-->
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Acesso negado | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1>Acesso negado</h1>
+    <p>Você não tem permissão para acessar esta página.</p>
+    <p>
+        Se você estava preenchendo um formulário, a sessão pode ter expirado:
+        volte, recarregue a página e envie de novo.
+    </p>
+    <p><a th:href="@{/}">Voltar para a página inicial</a></p>
+
+</div>
+</body>
+</html>

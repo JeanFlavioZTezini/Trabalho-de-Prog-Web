@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Entrar | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1>Entrar</h1>
+
+    <!--/* Erro do login: role="alert" faz o leitor de tela anunciar assim que a página abre.
+         A mensagem é genérica de propósito: não diz se o erro foi no usuário ou na senha. */-->
+    <p class="alerta alerta--erro" role="alert" th:if="${erroLogin != null}" th:text="${erroLogin}">
+        Mensagem de erro
+    </p>
+
+    <!--/* Aviso de logout: não é erro, então role="status" (anunciado sem interromper). */-->
+    <p class="alerta alerta--sucesso" role="status" th:if="${saiu}">Você saiu da sua conta.</p>
+
+    <!--/* th:action coloca o token CSRF no formulário; sem ele o POST /login é recusado (403). */-->
+    <form th:action="@{/login}" method="post">
+        <div th:replace="~{fragments/campo :: campo(id='identificador', nome='identificador', rotulo='E-mail ou CPF',
+                 tipo='text', ajuda='Se usar o CPF, pode digitar com ou sem pontos e traço.', erro=null)}"></div>
+
+        <div th:replace="~{fragments/campo :: campo(id='senha', nome='senha', rotulo='Senha',
+                 tipo='password', ajuda=null, erro=null)}"></div>
+
+        <button type="submit" class="btn-primario btn-primario--bloco">Entrar</button>
+    </form>
+
+    <p class="pagina-texto__rodape-form">
+        Ainda não tem conta? <a th:href="@{/cadastro}">Cadastre-se</a>
+    </p>
+
+</div>
+</body>
+</html>

@@ -173,13 +173,42 @@ textarea:focus-visible {
 .usuario a:focus-visible { outline-color: var(--cor-branco); }
 
 .usuario--logado {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
   padding-top: 0.625rem;
   padding-bottom: 0.625rem;
   font-size: 0.875rem;
 }
+
+/* Só o nome corta com reticências; o contêiner não pode ter overflow:hidden
+   senão o contorno de foco do botão "Sair" seria cortado. */
+.usuario__nome {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.usuario__sair { margin: 0; }
+
+/* Botão "Sair" com cara de link (o logout é POST, então precisa ser <button>). */
+.usuario__sair-botao {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--cor-branco);
+  font: inherit;
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.usuario__sair-botao:hover { text-decoration-thickness: 2px; }
+
+/* O contorno padrão é azul, invisível sobre o fundo azul da área do usuário. */
+.usuario__sair-botao:focus-visible { outline-color: var(--cor-branco); }
 
 /* Menu de categorias */
 .menu-categorias {
@@ -386,6 +415,46 @@ textarea:focus-visible {
   border-top: 1px solid var(--cor-borda);
   scroll-margin-top: 1rem;
 }
+
+/* Variação para páginas de formulário curto (login). */
+.pagina-texto--estreita { max-width: 27.5rem; }
+
+.pagina-texto__rodape-form { margin: 1.25rem 0 0; font-size: 0.875rem; }
+
+/* ---------- Avisos de página (erro de login, "você saiu da conta") ---------- */
+/* Texto sempre em --cor-texto (contraste alto); a cor da borda é só reforço visual,
+   a informação está no texto, não depende da cor. */
+.alerta {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--cor-borda);
+  border-left-width: 0.25rem;
+  border-radius: var(--raio);
+  background-color: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-size: 0.875rem;
+}
+
+.alerta--erro { border-left-color: var(--cor-erro); }
+.alerta--sucesso { border-left-color: var(--cor-sucesso); }
+
+/* ---------- Botão primário ---------- */
+.btn-primario {
+  display: inline-block;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: var(--raio);
+  background-color: var(--cor-azul);
+  color: var(--cor-branco);
+  font: inherit;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+}
+
+.btn-primario:hover { background-color: var(--cor-azul-hover); }
+
+.btn-primario--bloco { width: 100%; }
 
 /* ---------- Campo de formulário (ver templates/fragments/campo.html) ---------- */
 .campo { margin-bottom: 1rem; }

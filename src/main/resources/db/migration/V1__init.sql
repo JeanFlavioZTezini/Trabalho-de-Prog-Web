@@ -313,7 +313,7 @@ CREATE TABLE pedido (
     atualizado_em         TIMESTAMPTZ   NOT NULL DEFAULT now(),
 
     CONSTRAINT ck_pedido_status CHECK (status IN
-        ('AGUARDANDO_PAGAMENTO', 'PAGAMENTO_APROVADO', 'EM_SEPARACAO', 'ENVIADO', 'ENTREGUE', 'CANCELADO')),
+        ('AGUARDANDO_PAGAMENTO', 'PAGAMENTO_APROVADO', 'EM_SEPARACAO', 'ENVIADO', 'PRONTO_PARA_RETIRADA', 'ENTREGUE', 'CANCELADO')),
     CONSTRAINT ck_pedido_tipo_entrega CHECK (tipo_entrega IN ('ENTREGA', 'RETIRADA')),
     CONSTRAINT ck_pedido_valores CHECK (subtotal >= 0 AND frete >= 0 AND total = subtotal + frete),
     CONSTRAINT ck_pedido_entrega CHECK (
@@ -385,7 +385,7 @@ CREATE TABLE historico_status_pedido (
     criado_em       TIMESTAMPTZ  NOT NULL DEFAULT now(),
 
     CONSTRAINT ck_historico_status CHECK (status IN
-        ('AGUARDANDO_PAGAMENTO', 'PAGAMENTO_APROVADO', 'EM_SEPARACAO', 'ENVIADO', 'ENTREGUE', 'CANCELADO'))
+        ('AGUARDANDO_PAGAMENTO', 'PAGAMENTO_APROVADO', 'EM_SEPARACAO', 'ENVIADO', 'PRONTO_PARA_RETIRADA', 'ENTREGUE', 'CANCELADO'))
 );
 CREATE INDEX ix_historico_pedido ON historico_status_pedido (pedido_id, criado_em);
 

@@ -155,6 +155,22 @@ src/test/java/com/farmacia/farmaciaonline
 └── ci.yml             (CI: ./mvnw -B verify em PR e push na main)
 ```
 
+## Modelo do catálogo
+
+Entidades em `model` (`Categoria`, `Produto`, `Apresentacao`, `ImagemProduto`); o schema vem da `V1__init.sql`.
+
+- **Preço, SKU, EAN e estoque ficam na `Apresentacao`** (10, 20 ou 30 comprimidos), nunca no `Produto`.
+  O nome completo exibido ao cliente é `produto.nome + " " + apresentacao.descricao`.
+- `Produto#getApresentacaoPadrao()` devolve a de menor `ordem` (sem olhar estoque nem se está ativa;
+  `null` se o produto não tem apresentações). `Apresentacao#isDisponivel()` é "ativa e estoque > 0".
+  `Produto#isIndisponivel()` é "nenhuma apresentação disponível" (sem apresentações também é indisponível).
+- `ImagemProduto.apresentacao` nula significa que a imagem vale para todas as apresentações do produto.
+- `Apresentacao.versao` (`@Version`) é o lock otimista do estoque. No checkout, duas compras simultâneas da
+  mesma apresentação fazem a segunda falhar com `ObjectOptimisticLockingFailureException`: trate esse erro.
+- As coleções de `Produto` (`categorias`, `apresentacoes`, `imagens`) são LAZY. Acesse dentro de transação ou
+  com `JOIN FETCH`, senão dá `LazyInitializationException` ou consulta N+1. Não há cascade: grave cada
+  `Apresentacao` e `ImagemProduto` pelo próprio repository.
+
 ## Como criar uma página nova
 
 Toda página usa o layout `templates/fragments/layout.html` (cabeçalho com busca, menu de

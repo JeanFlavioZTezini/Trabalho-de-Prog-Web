@@ -1,6 +1,7 @@
 package com.farmacia.farmaciaonline.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.time.Instant;
 import java.time.LocalDate;
@@ -12,7 +13,10 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.context.annotation.Import;
+import org.springframework.dao.DataIntegrityViolationException;
 
+import com.farmacia.farmaciaonline.TestcontainersConfiguration;
 import com.farmacia.farmaciaonline.model.Usuario;
 import com.farmacia.farmaciaonline.model.enums.Genero;
 import com.farmacia.farmaciaonline.model.enums.Perfil;
@@ -20,6 +24,7 @@ import com.farmacia.farmaciaonline.model.enums.StatusUsuario;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Import(TestcontainersConfiguration.class)
 class UsuarioRepositoryTest {
 
     @Autowired
@@ -106,5 +111,27 @@ class UsuarioRepositoryTest {
         assertThat(recuperado.getCpf()).isNull();
         assertThat(recuperado.getGenero()).isNull();
         assertThat(recuperado.getCelular()).isNull();
+    }
+
+    @Test
+    @DisplayName("Rejeita segundo usuario com o mesmo e-mail mesmo com maiusculas/minusculas diferentes (RN02)")
+    void rejeitaEmailDuplicadoIgnorandoCaixa() {
+        usuarioRepository.saveAndFlush(criarUsuarioValido("12345678901", "maria@exemplo.com"));
+
+        Usuario outro = criarUsuarioValido("98765432100", "MARIA@Exemplo.com");
+
+        assertThatThrownBy(() -> usuarioRepository.saveAndFlush(outro))
+                .isInstanceOf(DataIntegrityViolationException.class);
+    }
+
+    @Test
+    @DisplayName("Rejeita segundo usuario com o mesmo CPF (RN01)")
+    void rejeitaCpfDuplicado() {
+        usuarioRepository.saveAndFlush(criarUsuarioValido("12345678901", "um@exemplo.com"));
+
+        Usuario outro = criarUsuarioValido("12345678901", "dois@exemplo.com");
+
+        assertThatThrownBy(() -> usuarioRepository.saveAndFlush(outro))
+                .isInstanceOf(DataIntegrityViolationException.class);
     }
 }

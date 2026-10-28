@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.jdbc.AutoConfigureTestDatabase;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.autoconfigure.orm.jpa.TestEntityManager;
+import org.springframework.context.annotation.Import;
 
 import com.farmacia.farmaciaonline.model.CodigoVerificacao;
 import com.farmacia.farmaciaonline.model.IdentidadeSocial;
@@ -23,9 +24,11 @@ import com.farmacia.farmaciaonline.model.enums.Genero;
 import com.farmacia.farmaciaonline.model.enums.Perfil;
 import com.farmacia.farmaciaonline.model.enums.ProvedorSocial;
 import com.farmacia.farmaciaonline.model.enums.StatusUsuario;
+import com.farmacia.farmaciaonline.TestcontainersConfiguration;
 
 @DataJpaTest
 @AutoConfigureTestDatabase(replace = AutoConfigureTestDatabase.Replace.NONE)
+@Import(TestcontainersConfiguration.class)
 class RepositoriesIntegrationTest {
 
     @Autowired

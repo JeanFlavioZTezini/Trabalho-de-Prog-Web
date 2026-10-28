@@ -24,6 +24,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 import lombok.ToString;
+import java.util.Locale;
 
 @Entity
 @Table(name = "usuario")
@@ -122,7 +123,7 @@ public class Usuario {
 
     public void normalizarEmail() {
         if (this.email != null) {
-            this.email = this.email.trim().toLowerCase();
+            this.email = this.email.trim().toLowerCase(Locale.ROOT);
         }
     }
 }

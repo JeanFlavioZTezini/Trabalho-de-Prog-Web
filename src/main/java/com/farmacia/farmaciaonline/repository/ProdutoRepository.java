@@ -1,5 +1,7 @@
 package com.farmacia.farmaciaonline.repository;
 
+import java.util.List;
+
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -12,4 +14,8 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
     /** Produtos ativos (exclusão lógica), paginados. A busca com filtros é da Fase 2 (UC01). */
     Page<Produto> findByAtivoTrue(Pageable pageable);
+
+    List<Produto> findTop8ByAtivoTrueOrderByQtdVendidaDesc();
+
+    List<Produto> findTop8ByAtivoTrueOrderByVisualizacoesDesc();
 }

@@ -26,32 +26,39 @@ Programação Web (ProgWeb 2026/2), usando Spring Boot + Thymeleaf.
 
 1. Clonar o repositório:
    ```bash
-   git clone <url-do-repositorio>
-   cd farmacia-online
+   git clone https://github.com/JeanFlavioZTezini/Trabalho-de-Prog-Web.git
+   cd Trabalho-de-Prog-Web
    ```
 
-2. Subir o banco de dados PostgreSQL via Docker:
+2. Subir o banco de dados PostgreSQL via Docker (com o Docker ligado):
    ```bash
    docker compose up -d
+   docker ps
    ```
-   Isso sobe um Postgres em `localhost:5433` com um volume persistente
-   (os dados não se perdem ao reiniciar o container).
-   Ao abrir esse link no navegador, nenhuma página deve ser carregada: apenas irá aparecer um aviso do próprio navegador de que "localhost não enviou quaisquer dados".
+   O `docker ps` deve mostrar `0.0.0.0:5433->5432/tcp`: é o Postgres em `localhost:5433`, com um volume
+   persistente (os dados não se perdem ao reiniciar o container). Esse endereço não é uma página: o navegador
+   não abre o banco.
 
-3. Rodar a aplicação:
+3. Rodar a aplicação (a primeira vez baixa as dependências e demora alguns minutos):
    ```bash
-   ./mvnw spring-boot:run        # Linux/Mac
-   ./mvnw.cmd spring-boot:run      # Windows
+   ./mvnw spring-boot:run          # Linux/Mac
+   .\mvnw.cmd spring-boot:run      # Windows (PowerShell)
    ```
-   Ou, pela IDE, rodar a classe principal `FarmaciaOnlineApplication`.
+   Ou, pela IDE, rodar a classe principal `FarmaciaOnlineApplication`. Está pronto quando o log mostrar
+   `Started FarmaciaOnlineApplication`.
 
-4. Acessar em [http://localhost:8080](http://localhost:8080).
+4. Acessar [http://localhost:8080](http://localhost:8080). Para entrar como administrador, abra
+   [http://localhost:8080/login](http://localhost:8080/login) e use `admin@farma.com` com a senha `Farma@123`:
+   o login leva ao painel em `/admin`. Para entrar como cliente, use `cliente@farma.com` com a mesma senha.
+   Todos os usuários de teste estão em [Dados de demonstração](#dados-de-demonstração).
 
-5. Para parar o banco:
+5. Para parar a aplicação, `Ctrl+C` (no Windows, responda `S`). Para parar o banco:
    ```bash
    docker compose down
    ```
    (os dados continuam salvos no volume; só sobem de novo com `docker compose up -d`)
+
+Os testes têm passo próprio: ver [Testes e integração contínua](#testes-e-integração-contínua).
 
 ## Dados de demonstração
 
@@ -66,14 +73,8 @@ lojas e usuários de teste). Quem subir o banco do zero recebe os mesmos dados.
 
 Essas contas existem só para desenvolvimento e demonstração.
 
-- A página inicial exibe os oito produtos ativos mais comprados e mais vistos, com preço da
-  apresentação padrão e disponibilidade do banco. O menu superior também é montado com as
-  categorias ativas do seed; os links de produto apontam para `/produtos/{id}` (detalhe da Fase 2).
-- Os preços são formatados para `pt_BR`. O SQL é exibido no log durante a execução local para
-  facilitar a inspeção das consultas da home; apresentações e imagens usam carregamento em lote
-  para evitar uma consulta por produto.
-- **Recomeçar do zero:** `docker compose down -v` apaga o volume do banco; depois `docker compose up -d`
-  e suba a aplicação. Quem aplicou uma versão antiga do `V2` localmente precisa disso.
+- **Recomeçar do zero:** ver [Como zerar o banco para a demonstração](#como-zerar-o-banco-para-a-demonstração).
+  Quem aplicou uma versão antiga do `V2` localmente precisa disso.
 - **Não edite uma migração que já está na `main`:** o Flyway guarda o checksum e a aplicação deixa de
   subir em quem já a aplicou. Para mudar dados, crie uma migração nova (`V3__...sql`).
 - **Textos com várias linhas no seed:** use `E'linha 1\nlinha 2'`. Quebrar a linha dentro das aspas
@@ -82,6 +83,19 @@ Essas contas existem só para desenvolvimento e demonstração.
   com nome descritivo em minúsculas e hífens (ex.: `dipirona-monoidratada-500mg-20-comprimidos.webp`).
   A coluna `imagem_produto.arquivo` guarda o caminho a partir da raiz do site (`/images/produtos/...`).
   Produto sem foto usa `placeholder.svg`. O texto alternativo (`alt`) vem do nome do produto.
+
+## Como zerar o banco para a demonstração
+
+Antes de apresentar, ou sempre que quiser o banco como no seed:
+```bash
+docker compose down -v
+docker compose up -d
+```
+(Se o seu terminal aceitar `&&`, dá para juntar: `docker compose down -v && docker compose up -d`.)
+Depois, suba a aplicação: o Flyway recria as tabelas (`V1`) e os dados de demonstração (`V2`).
+
+O `-v` apaga o volume: cadastros, carrinhos e pedidos feitos nos testes somem. Sem o `-v`, o banco só é desligado
+e os dados continuam lá.
 
 ## Segurança e papéis
 
@@ -123,7 +137,7 @@ Fica para a Fase 2 (UC10): login social, recuperação de senha e o bloqueio aut
 
 ```bash
 ./mvnw verify          # Linux/Mac
-./mvnw.cmd verify      # Windows
+.\mvnw.cmd verify      # Windows (PowerShell)
 ```
 
 **Os testes precisam do Docker ligado** (Docker Desktop aberto no Windows/Mac). Eles usam o
@@ -259,3 +273,57 @@ junto) e página aberta a visitantes precisa estar em `ROTAS_PUBLICAS` do `Secur
 4. Preferir PRs pequenos e focados numa única funcionalidade.
 5. Usar "Squash and merge" pra manter o histórico da `main` limpo.
 6. O CI (GitHub Actions) precisa estar verde para o merge.
+
+O repositório tem um template (`.github/pull_request_template.md`): todo PR novo já abre com as seções
+**O que muda**, **Como testar** e o checklist. Preencha tudo, inclusive o `Closes #<número da issue>`.
+
+### Convenção de branch, commit e PR
+
+- **Branch:** `tipo/f1-NN-descricao-curta`, em minúsculas e com hífens. Tipos: `feat`, `fix`, `docs`, `style`,
+  `test` e `chore`. Ex.: `feat/f1-04-entidades-carrinho-endereco-cartao-loja`.
+- **Commit:** `tipo: verbo no imperativo e o que mudou`, curto, um assunto por commit. Ex.:
+  `feat: adiciona entidades de pedido` e `fix: corrige a ordem dos endereços`.
+- **PR:** o título começa com o código da issue (`F1-05: Entidades e repositories de Pedido...`) e a descrição
+  traz `Closes #<número da issue>`.
+
+### Autoria dos commits
+
+Para os commits aparecerem no seu perfil do GitHub, o nome e o e-mail do Git precisam ser os da sua conta.
+Confira antes do primeiro commit:
+```bash
+git config user.name
+git config user.email
+```
+Para corrigir (vale só neste repositório), use o e-mail cadastrado na sua conta do GitHub ou o endereço
+`noreply` que ela mostra em *Settings > Emails*:
+```bash
+git config user.name "Seu Nome"
+git config user.email "email-da-sua-conta-do-github"
+```
+A revisão é cruzada: quem aprova o PR é de outra trilha.
+
+### Proteção da `main`
+
+A `main` aceita mudanças só por PR: com 1 aprovação e o check `verify` (CI) verde, e com squash and merge.
+Push direto na `main` é recusado. As regras ficam em *Settings > Rules* do repositório e quem as altera é o
+dono do repositório.
+
+## Quem fez o quê
+
+Uma linha por módulo; **atualize esta tabela no seu PR** (o template lembra). Ela é o roteiro do item
+"Divisão da equipe" da apresentação: cada integrante explica as linhas dele.
+
+| Módulo | Issue | Integrante | PR |
+|---|---|---|---|
+| Banco: schema (`V1`), Docker e Flyway | F1-01 | _preencher_ | |
+| Usuários: entidades e repositories | F1-02 (#2) | _preencher_ | |
+| Catálogo: entidades e repositories | F1-03 (#7) | _preencher_ | |
+| Compra: carrinho, endereço, cartão e loja | F1-04 (#13) | Kauê (@KaueAlves09) | |
+| Pedido, pagamento, histórico e auditoria | F1-05 (#16) | Kauê (@KaueAlves09) | |
+| Seed de demonstração (`V2`) | F1-06 (#8) | Kauê (@KaueAlves09) e _preencher_ (autor do `V2` original) | |
+| Layout-base, cabeçalho, rodapé e acessibilidade da interface | F1-07 | Kauê (@KaueAlves09) | |
+| Documento de acessibilidade | F1-08 | _preencher_ | |
+| Login e papéis (Spring Security) | F1-09 | _preencher_ | |
+| Docs e fluxo: template de PR, README e proteção da `main` | F1-10 (#4) | Kauê (@KaueAlves09) | |
+| Testes com Testcontainers e CI | F1-11 (#9) | Kauê (@KaueAlves09) | |
+| Home e menu de categorias pelo banco | F1-12 | _preencher_ | |

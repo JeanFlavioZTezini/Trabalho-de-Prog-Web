@@ -9,16 +9,21 @@ import java.nio.charset.StandardCharsets;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.util.StringUtils;
 
 import com.farmacia.farmaciaonline.config.SecurityConfig;
+import com.farmacia.farmaciaonline.repository.CategoriaRepository;
 
 /** Conteúdo e acessibilidade da página /login (F1-09). Sem banco e sem Docker. */
 @WebMvcTest(LoginController.class)
 @Import(SecurityConfig.class)
 class LoginPageTest {
+
+    @MockBean
+    private CategoriaRepository categoriaRepository;
 
     @Autowired
     private MockMvc mvc;

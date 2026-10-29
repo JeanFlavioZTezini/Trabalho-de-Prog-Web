@@ -22,48 +22,26 @@
     <section class="secao" aria-labelledby="titulo-mais-comprados">
         <h2 id="titulo-mais-comprados">Mais comprados</h2>
         <div class="grade">
-            <!--/* Quando os produtos vierem do banco, trocar por:
-                 <article class="card" th:each="produto : ${produtos}"> ... */-->
-            <article class="card">
-                <div class="imagem">
-                    <img th:src="@{/images/produtos/dipirona-monoidratada-500mg-20-comprimidos.webp}" alt="Dipirona Monoidratada 500mg, caixa com 20 comprimidos">
-                </div>
-                <p class="nome">Dipirona Monoidratada 500mg</p>
-                <p class="qtd">20 comprimidos</p>
-                <div class="card-rodape">
-                    <span class="preco">R$ 12,90</span>
-                    <button class="btn-carrinho" type="button" aria-label="Adicionar Dipirona Monoidratada 500mg ao carrinho">🛒</button>
-                </div>
-            </article>
-
-            <article class="card">
-                <div class="imagem"></div>
-                <p class="nome">Álcool em Gel 70%</p>
-                <p class="qtd">500ml</p>
-                <div class="card-rodape">
-                    <span class="preco">R$ 9,50</span>
-                    <button class="btn-carrinho" type="button" aria-label="Adicionar Álcool em Gel ao carrinho">🛒</button>
-                </div>
-            </article>
-
-            <article class="card">
-                <div class="imagem"></div>
-                <p class="nome">Fralda Infantil P</p>
-                <p class="qtd">30 unidades</p>
-                <div class="card-rodape">
-                    <span class="preco">R$ 34,90</span>
-                    <button class="btn-carrinho" type="button" aria-label="Adicionar Fralda Infantil P ao carrinho">🛒</button>
-                </div>
-            </article>
-
-            <article class="card">
-                <div class="imagem"></div>
-                <p class="nome">Curativo Adesivo</p>
-                <p class="qtd">40 unidades</p>
-                <div class="card-rodape">
-                    <span class="preco">R$ 7,20</span>
-                    <button class="btn-carrinho" type="button" aria-label="Adicionar Curativo Adesivo ao carrinho">🛒</button>
-                </div>
+            <article class="card" th:each="produto : ${maisComprados}">
+                <a class="card-link" th:href="@{/produtos/{id}(id=${produto.id})}">
+                    <div class="imagem">
+                        <img th:src="${produto.imagens[0].arquivo}" th:alt="${produto.nome}">
+                    </div>
+                    <p class="nome" th:text="${produto.nome}">Nome do produto</p>
+                    <th:block th:with="apresentacao=${produto.apresentacaoPadrao}">
+                        <p class="qtd" th:if="${apresentacao != null}"
+                           th:text="${apresentacao.descricao}">Apresentação</p>
+                        <div class="selos">
+                            <span class="selo selo--indisponivel" th:if="${produto.indisponivel}">Indisponível</span>
+                            <span class="selo selo--receita" th:if="${produto.exigeReceita}">Exige receita</span>
+                        </div>
+                        <div class="card-rodape">
+                            <span class="preco" th:if="${apresentacao != null}"
+                                  th:text="${#numbers.formatCurrency(apresentacao.preco)}">R$ 0,00</span>
+                            <span class="preco" th:unless="${apresentacao != null}">Preço indisponível</span>
+                        </div>
+                    </th:block>
+                </a>
             </article>
         </div>
     </section>
@@ -71,44 +49,26 @@
     <section class="secao" aria-labelledby="titulo-mais-vistos">
         <h2 id="titulo-mais-vistos">Mais vistos</h2>
         <div class="grade">
-            <article class="card">
-                <div class="imagem"></div>
-                <p class="nome">Vitamina C 1g</p>
-                <p class="qtd">10 comprimidos efervescentes</p>
-                <div class="card-rodape">
-                    <span class="preco">R$ 24,90</span>
-                    <button class="btn-carrinho" type="button" aria-label="Adicionar Vitamina C ao carrinho">🛒</button>
-                </div>
-            </article>
-
-            <article class="card">
-                <div class="imagem"></div>
-                <p class="nome">Protetor Solar FPS 50</p>
-                <p class="qtd">120ml</p>
-                <div class="card-rodape">
-                    <span class="preco">R$ 49,90</span>
-                    <button class="btn-carrinho" type="button" aria-label="Adicionar Protetor Solar ao carrinho">🛒</button>
-                </div>
-            </article>
-
-            <article class="card">
-                <div class="imagem"></div>
-                <p class="nome">Shampoo Anticaspa</p>
-                <p class="qtd">200ml</p>
-                <div class="card-rodape">
-                    <span class="preco">R$ 27,50</span>
-                    <button class="btn-carrinho" type="button" aria-label="Adicionar Shampoo Anticaspa ao carrinho">🛒</button>
-                </div>
-            </article>
-
-            <article class="card">
-                <div class="imagem"></div>
-                <p class="nome">Termômetro Digital</p>
-                <p class="qtd">1 unidade</p>
-                <div class="card-rodape">
-                    <span class="preco">R$ 32,00</span>
-                    <button class="btn-carrinho" type="button" aria-label="Adicionar Termômetro Digital ao carrinho">🛒</button>
-                </div>
+            <article class="card" th:each="produto : ${maisVistos}">
+                <a class="card-link" th:href="@{/produtos/{id}(id=${produto.id})}">
+                    <div class="imagem">
+                        <img th:src="${produto.imagens[0].arquivo}" th:alt="${produto.nome}">
+                    </div>
+                    <p class="nome" th:text="${produto.nome}">Nome do produto</p>
+                    <th:block th:with="apresentacao=${produto.apresentacaoPadrao}">
+                        <p class="qtd" th:if="${apresentacao != null}"
+                           th:text="${apresentacao.descricao}">Apresentação</p>
+                        <div class="selos">
+                            <span class="selo selo--indisponivel" th:if="${produto.indisponivel}">Indisponível</span>
+                            <span class="selo selo--receita" th:if="${produto.exigeReceita}">Exige receita</span>
+                        </div>
+                        <div class="card-rodape">
+                            <span class="preco" th:if="${apresentacao != null}"
+                                  th:text="${#numbers.formatCurrency(apresentacao.preco)}">R$ 0,00</span>
+                            <span class="preco" th:unless="${apresentacao != null}">Preço indisponível</span>
+                        </div>
+                    </th:block>
+                </a>
             </article>
         </div>
     </section>
@@ -116,29 +76,9 @@
     <section class="secao" aria-labelledby="titulo-categorias">
         <h2 id="titulo-categorias">Outras categorias</h2>
         <ul class="categorias">
-            <li>
-                <a class="categoria" th:href="@{/produtos(categoria='medicamentos')}">
-                    Medicamentos
-                    <span class="imagem"></span>
-                </a>
-            </li>
-            <li>
-                <a class="categoria" th:href="@{/produtos(categoria='higiene')}">
-                    Higiene Pessoal
-                    <span class="imagem"></span>
-                </a>
-            </li>
-            <li>
-                <a class="categoria" th:href="@{/produtos(categoria='cabelos')}">
-                    Cabelos
-                    <span class="imagem"></span>
-                </a>
-            </li>
-            <li>
-                <a class="categoria" th:href="@{/produtos(categoria='vitaminas')}">
-                    Vitaminas e Suplementos
-                    <span class="imagem"></span>
-                </a>
+            <li th:each="item : ${menuCategorias}">
+                <a class="categoria" th:href="@{/produtos(categoria=${item.categoria.id})}"
+                   th:text="${item.categoria.nome}">Categoria</a>
             </li>
         </ul>
     </section>

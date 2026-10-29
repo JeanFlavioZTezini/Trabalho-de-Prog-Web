@@ -14,6 +14,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
@@ -23,6 +24,8 @@ import com.farmacia.farmaciaonline.config.SecurityConfig;
 import com.farmacia.farmaciaonline.model.Usuario;
 import com.farmacia.farmaciaonline.model.enums.Perfil;
 import com.farmacia.farmaciaonline.model.enums.StatusUsuario;
+import com.farmacia.farmaciaonline.repository.CategoriaRepository;
+import com.farmacia.farmaciaonline.repository.ProdutoRepository;
 import com.farmacia.farmaciaonline.security.UsuarioAutenticado;
 
 /**
@@ -33,6 +36,12 @@ import com.farmacia.farmaciaonline.security.UsuarioAutenticado;
 @WebMvcTest({HomeController.class, InstitucionalController.class, LoginController.class})
 @Import(SecurityConfig.class)
 class LayoutTest {
+
+    @MockBean
+    private CategoriaRepository categoriaRepository;
+
+    @MockBean
+    private ProdutoRepository produtoRepository;
 
     @Autowired
     private MockMvc mvc;

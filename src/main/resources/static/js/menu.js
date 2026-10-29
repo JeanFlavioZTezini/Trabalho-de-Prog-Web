@@ -14,12 +14,43 @@
     lista.classList.toggle('is-open', aberto);
   }
 
+  var botoesSubmenu = document.querySelectorAll('.menu-categorias__submenu-toggle');
+
+  function fecharSubmenus() {
+    botoesSubmenu.forEach(function (botaoSubmenu) {
+      botaoSubmenu.setAttribute('aria-expanded', 'false');
+      var submenu = document.getElementById(botaoSubmenu.getAttribute('aria-controls'));
+      if (submenu) submenu.classList.remove('is-open');
+    });
+  }
+
   botao.addEventListener('click', function () {
-    definirAberto(botao.getAttribute('aria-expanded') !== 'true');
+    var aberto = botao.getAttribute('aria-expanded') !== 'true';
+    if (!aberto) fecharSubmenus();
+    definirAberto(aberto);
+  });
+
+  botoesSubmenu.forEach(function (botaoSubmenu) {
+    var submenu = document.getElementById(botaoSubmenu.getAttribute('aria-controls'));
+    if (!submenu) return;
+
+    botaoSubmenu.addEventListener('click', function () {
+      var aberto = botaoSubmenu.getAttribute('aria-expanded') !== 'true';
+      botaoSubmenu.setAttribute('aria-expanded', String(aberto));
+      submenu.classList.toggle('is-open', aberto);
+    });
   });
 
   document.addEventListener('keydown', function (evento) {
-    if (evento.key === 'Escape' && botao.getAttribute('aria-expanded') === 'true') {
+    if (evento.key !== 'Escape') return;
+
+    var submenuAberto = Array.from(botoesSubmenu).find(function (botaoSubmenu) {
+      return botaoSubmenu.getAttribute('aria-expanded') === 'true';
+    });
+    if (submenuAberto) {
+      fecharSubmenus();
+      submenuAberto.focus();
+    } else if (botao.getAttribute('aria-expanded') === 'true') {
       definirAberto(false);
       botao.focus();
     }

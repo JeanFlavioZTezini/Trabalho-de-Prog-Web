@@ -7,6 +7,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Set;
 
+import org.hibernate.annotations.BatchSize;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 
@@ -130,10 +131,12 @@ public class Produto {
             inverseJoinColumns = @JoinColumn(name = "categoria_id"))
     private Set<Categoria> categorias = new HashSet<>();
 
+    @BatchSize(size = 16)
     @OneToMany(mappedBy = "produto")
     @OrderBy("ordem")
     private List<Apresentacao> apresentacoes = new ArrayList<>();
 
+    @BatchSize(size = 16)
     @OneToMany(mappedBy = "produto")
     @OrderBy("ordem")
     private List<ImagemProduto> imagens = new ArrayList<>();

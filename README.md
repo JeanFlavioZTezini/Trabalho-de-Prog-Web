@@ -66,6 +66,12 @@ lojas e usuários de teste). Quem subir o banco do zero recebe os mesmos dados.
 
 Essas contas existem só para desenvolvimento e demonstração.
 
+- A página inicial exibe os oito produtos ativos mais comprados e mais vistos, com preço da
+  apresentação padrão e disponibilidade do banco. O menu superior também é montado com as
+  categorias ativas do seed; os links de produto apontam para `/produtos/{id}` (detalhe da Fase 2).
+- Os preços são formatados para `pt_BR`. O SQL é exibido no log durante a execução local para
+  facilitar a inspeção das consultas da home; apresentações e imagens usam carregamento em lote
+  para evitar uma consulta por produto.
 - **Recomeçar do zero:** `docker compose down -v` apaga o volume do banco; depois `docker compose up -d`
   e suba a aplicação. Quem aplicou uma versão antiga do `V2` localmente precisa disso.
 - **Não edite uma migração que já está na `main`:** o Flyway guarda o checksum e a aplicação deixa de

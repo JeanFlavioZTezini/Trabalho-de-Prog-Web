@@ -64,16 +64,31 @@
         </div>
     </div>
 
-    <!--/* Estático por enquanto; a F1-12 liga as categorias ao banco. */-->
     <nav class="menu-categorias" aria-label="Categorias">
         <div class="container">
             <button type="button" class="menu-categorias__toggle"
                     aria-expanded="false" aria-controls="menu-categorias">Categorias</button>
             <ul id="menu-categorias" class="menu-categorias__lista">
-                <li><a th:href="@{/produtos(categoria='medicamentos')}">Medicamentos</a></li>
-                <li><a th:href="@{/produtos(categoria='higiene')}">Higiene Pessoal</a></li>
-                <li><a th:href="@{/produtos(categoria='cabelos')}">Cabelos</a></li>
-                <li><a th:href="@{/produtos(categoria='vitaminas')}">Vitaminas e Suplementos</a></li>
+                <li class="menu-categorias__item" th:each="item : ${menuCategorias}">
+                    <a th:href="@{/produtos(categoria=${item.categoria.id})}"
+                       th:text="${item.categoria.nome}">Categoria</a>
+                    <button th:if="${!#lists.isEmpty(item.filhas)}"
+                            type="button"
+                            class="menu-categorias__submenu-toggle"
+                            aria-expanded="false"
+                            th:attr="aria-controls=|submenu-${item.categoria.id}|,
+                                     aria-label=|Mostrar subcategorias de ${item.categoria.nome}|">
+                        <span class="visually-hidden">Subcategorias</span>
+                    </button>
+                    <ul th:if="${!#lists.isEmpty(item.filhas)}"
+                        th:id="|submenu-${item.categoria.id}|"
+                        class="menu-categorias__submenu">
+                        <li th:each="filha : ${item.filhas}">
+                            <a th:href="@{/produtos(categoria=${filha.id})}"
+                               th:text="${filha.nome}">Subcategoria</a>
+                        </li>
+                    </ul>
+                </li>
             </ul>
         </div>
     </nav>

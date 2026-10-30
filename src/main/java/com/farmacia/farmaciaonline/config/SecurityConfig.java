@@ -15,7 +15,7 @@ import com.farmacia.farmaciaonline.security.LoginSuccessHandler;
  * Regras de acesso do site.
  *
  * - Públicas: vitrine, carrinho, login, cadastro, páginas institucionais e arquivos estáticos.
- * - /admin/** : só o papel ADMIN (cliente logado recebe 403; visitante é mandado para /login).
+ * - /admin/** e /demo/** : só o papel ADMIN (cliente logado recebe 403; visitante é mandado para /login).
  * - O resto exige login.
  *
  * O CSRF fica LIGADO (padrão do Spring): todo formulário POST precisa do token, e o Thymeleaf
@@ -48,7 +48,7 @@ public class SecurityConfig {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(ROTAS_PUBLICAS).permitAll()
-                .requestMatchers("/admin/**").hasRole("ADMIN")
+                .requestMatchers("/admin/**", "/demo/**").hasRole("ADMIN")
                 .anyRequest().authenticated())
             .formLogin(form -> form
                 .loginPage("/login")

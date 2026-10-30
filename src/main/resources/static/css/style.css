@@ -522,7 +522,7 @@ textarea:focus-visible {
 /* Variação para páginas de formulário curto (login). */
 .pagina-texto--estreita { max-width: 27.5rem; }
 
-.pagina-texto__rodape-form { margin: 1.25rem 0 0; font-size: 0.875rem; }
+.pagina-texto .pagina-texto__rodape-form { margin: 1.25rem 0 0; font-size: 0.875rem; }
 
 /* ---------- Avisos de página (erro de login, "você saiu da conta") ---------- */
 /* Texto sempre em --cor-texto (contraste alto); a cor da borda é só reforço visual,

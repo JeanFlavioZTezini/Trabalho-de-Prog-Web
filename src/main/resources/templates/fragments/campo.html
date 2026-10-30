@@ -9,22 +9,24 @@
         tipo    type do input (text, email, password, ...)
         ajuda   texto de ajuda (ou null)
         erro    mensagem de erro (ou null)
+        autocomplete  valor do atributo autocomplete (ex.: username, current-password, email) ou null
 
     Exemplo:
         <div th:replace="~{fragments/campo :: campo(id='email', nome='email', rotulo='E-mail',
-                 tipo='email', ajuda='Ex.: nome@dominio.com', erro=${erroEmail})}"></div>
+                 tipo='email', ajuda='Ex.: nome@dominio.com', erro=${erroEmail}, autocomplete='email')}"></div>
 
     O que ele faz:
         - ajuda e erro ganham id (id-ajuda e id-erro) e entram no aria-describedby do campo;
         - com erro, o campo recebe aria-invalid="true" e a mensagem tem role="alert",
           então o leitor de tela a anuncia assim que ela aparece;
-        - sem ajuda nem erro, o aria-describedby nem é escrito.
+        - sem ajuda nem erro, o aria-describedby nem é escrito;
+        - o autocomplete ajuda o navegador a preencher dados pessoais (WCAG 1.3.5); com null, nada é escrito.
 -->
-<div class="campo" th:fragment="campo(id, nome, rotulo, tipo, ajuda, erro)"
+<div class="campo" th:fragment="campo(id, nome, rotulo, tipo, ajuda, erro, autocomplete)"
      xmlns:th="http://www.thymeleaf.org">
     <label th:for="${id}" th:text="${rotulo}">Rótulo</label>
     <p class="campo__ajuda" th:if="${ajuda != null}" th:id="${id + '-ajuda'}" th:text="${ajuda}">Texto de ajuda</p>
-    <input th:type="${tipo}" th:id="${id}" th:name="${nome}"
+    <input th:type="${tipo}" th:id="${id}" th:name="${nome}" th:autocomplete="${autocomplete}"
            th:aria-describedby="${(ajuda != null ? id + '-ajuda ' : '') + (erro != null ? id + '-erro' : '')}"
            th:aria-invalid="${erro != null} ? 'true'">
     <p class="campo__erro" role="alert" th:if="${erro != null}" th:id="${id + '-erro'}" th:text="${erro}">Mensagem de erro</p>

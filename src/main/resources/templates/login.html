@@ -20,10 +20,10 @@
     <!--/* th:action coloca o token CSRF no formulário; sem ele o POST /login é recusado (403). */-->
     <form th:action="@{/login}" method="post">
         <div th:replace="~{fragments/campo :: campo(id='identificador', nome='identificador', rotulo='E-mail ou CPF',
-                 tipo='text', ajuda='Se usar o CPF, pode digitar com ou sem pontos e traço.', erro=null)}"></div>
+                 tipo='text', ajuda='Se usar o CPF, pode digitar com ou sem pontos e traço.', erro=null, autocomplete='username')}"></div>
 
         <div th:replace="~{fragments/campo :: campo(id='senha', nome='senha', rotulo='Senha',
-                 tipo='password', ajuda=null, erro=null)}"></div>
+                 tipo='password', ajuda=null, erro=null, autocomplete='current-password')}"></div>
 
         <button type="submit" class="btn-primario btn-primario--bloco">Entrar</button>
     </form>

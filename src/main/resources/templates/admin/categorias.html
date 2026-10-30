@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Categorias | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1>Categorias</h1>
+
+    <p class="alerta alerta--sucesso" role="status" th:if="${sucesso != null}" th:text="${sucesso}"></p>
+    <p class="alerta alerta--erro" role="alert" th:if="${erro != null}" th:text="${erro}"></p>
+
+    <p><a class="btn-primario" th:href="@{/admin/categorias/nova}">Nova categoria</a></p>
+    <p>A hierarquia aceita até 2 níveis (categoria e subcategoria). Categoria inativa some do menu e dos
+        filtros, junto com as suas subcategorias.</p>
+
+    <p th:if="${#lists.isEmpty(linhas)}">Nenhuma categoria cadastrada.</p>
+
+    <table class="tabela-admin" th:unless="${#lists.isEmpty(linhas)}">
+        <thead>
+            <tr>
+                <th scope="col">Nome</th>
+                <th scope="col">Ordem</th>
+                <th scope="col">Status</th>
+                <th scope="col">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="c : ${linhas}">
+                <td th:style="|padding-left: ${c.nivel * 1.5 + 0.5}rem|" th:text="${c.nome}">Nome</td>
+                <td th:text="${c.ordem}">0</td>
+                <td th:text="${c.ativa} ? 'Ativa' : 'Inativa'">Ativa</td>
+                <td>
+                    <a th:href="@{/admin/categorias/{id}/editar(id=${c.id})}">Editar</a>
+                    <a th:href="@{/admin/categorias/{id}/excluir(id=${c.id})}">Excluir</a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+</div>
+</body>
+</html>

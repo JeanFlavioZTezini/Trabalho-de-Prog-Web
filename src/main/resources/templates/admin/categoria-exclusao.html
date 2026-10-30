@@ -1,0 +1,49 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Excluir categoria | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1>Excluir categoria</h1>
+
+    <p class="alerta alerta--erro" role="alert" th:if="${erro != null}" th:text="${erro}"></p>
+
+    <p><strong th:text="${resumo.nome}">Categoria</strong>:
+        <span th:text="|${resumo.subcategorias} subcategoria(s) e ${resumo.produtos} produto(s)|">0 e 0</span>.</p>
+
+    <form th:if="${resumo.subcategorias == 0 and resumo.produtos == 0}"
+          th:action="@{/admin/categorias/{id}/excluir(id=${resumo.id})}" method="post">
+        <p>Sem dependências: a categoria pode ser excluída.</p>
+        <button type="submit" class="btn-primario">Excluir</button>
+    </form>
+
+    <p th:if="${resumo.subcategorias > 0}">
+        A categoria possui subcategorias e não pode ser excluída: exclua as subcategorias antes.
+        Inativar esta categoria também inativa as subcategorias.
+    </p>
+
+    <form th:if="${resumo.produtos > 0 and resumo.subcategorias == 0}"
+          th:action="@{/admin/categorias/{id}/reatribuir(id=${resumo.id})}" method="post">
+        <div class="campo">
+            <label for="destinoId">Reatribuir os produtos para</label>
+            <select id="destinoId" name="destinoId" required>
+                <option value="">Selecione a categoria de destino</option>
+                <option th:each="d : ${resumo.destinos}" th:value="${d.id}"
+                        th:text="${'— '.repeat(d.nivel) + d.nome}">Destino</option>
+            </select>
+        </div>
+        <button type="submit" class="btn-primario">Reatribuir e excluir</button>
+    </form>
+
+    <form th:if="${resumo.ativa}" th:action="@{/admin/categorias/{id}/inativar(id=${resumo.id})}" method="post">
+        <button type="submit">Apenas inativar</button>
+    </form>
+    <p th:unless="${resumo.ativa}">A categoria já está inativa.</p>
+
+    <p><a th:href="@{/admin/categorias}">Voltar</a></p>
+
+</div>
+</body>
+</html>

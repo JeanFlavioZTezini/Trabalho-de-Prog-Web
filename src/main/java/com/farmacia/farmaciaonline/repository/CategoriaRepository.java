@@ -4,6 +4,8 @@ import java.util.Collection;
 import java.util.List;
 
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import com.farmacia.farmaciaonline.model.Categoria;
@@ -20,4 +22,15 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
     /** Subcategorias ativas das categorias raiz, ordenadas por categoria e ordem de exibição. */
     List<Categoria> findByCategoriaPaiIdInAndAtivaTrueOrderByCategoriaPaiIdAscOrdemAsc(
             Collection<Long> categoriaPaiIds);
+
+    List<Categoria> findAllByOrderByOrdemAscNomeAsc();
+
+    List<Categoria> findByCategoriaPaiIsNull();
+
+    List<Categoria> findByCategoriaPaiId(Long categoriaPaiId);
+
+    boolean existsByCategoriaPaiId(Long categoriaPaiId);
+
+    @Query("select count(p) from Produto p join p.categorias c where c.id = :id")
+    long contarProdutos(@Param("id") Long id);
 }

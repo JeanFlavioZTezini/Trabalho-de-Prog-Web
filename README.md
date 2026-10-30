@@ -392,4 +392,4 @@ Uma linha por módulo; **atualize esta tabela no seu PR** (o template lembra). E
 | Login e papéis (Spring Security) | F1-09 | _preencher_ | |
 | Docs e fluxo: template de PR, README e proteção da `main` | F1-10 (#4) | Kauê (@KaueAlves09) | |
 | Testes com Testcontainers e CI | F1-11 (#9) | Kauê (@KaueAlves09) | |
-| Home e menu de categorias pelo banco | F1-12 | _preencher_ | |
+| Home e menu de categorias pelo banco | F1-12 | Fernando (FernandoNakao) | |

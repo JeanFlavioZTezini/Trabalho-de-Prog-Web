@@ -18,4 +18,7 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
     List<Produto> findTop8ByAtivoTrueOrderByQtdVendidaDesc();
 
     List<Produto> findTop8ByAtivoTrueOrderByVisualizacoesDesc();
+
+    /** Produtos vinculados a uma categoria (UC13: reatribuição antes de excluir). */
+    List<Produto> findByCategoriasId(Long categoriaId);
 }

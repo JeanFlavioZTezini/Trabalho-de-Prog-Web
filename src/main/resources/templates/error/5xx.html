@@ -1,0 +1,18 @@
+<!DOCTYPE html>
+<!--
+    Página de erro para qualquer 5xx (erro do servidor). Não mostra detalhes técnicos de propósito.
+-->
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Algo deu errado | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1>Algo deu errado</h1>
+    <p>Não foi possível concluir o que você pediu. Tente de novo em instantes.</p>
+    <p><a th:href="@{/}">Voltar para a página inicial</a></p>
+
+</div>
+</body>
+</html>

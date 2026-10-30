@@ -5,8 +5,8 @@
   --cor-azul-suave: #DBE4EC;  /* fundos leves, badges, hover de linha de tabela */
   --cor-texto: #1F2937;       /* corpo de texto — quase preto, garante contraste alto */
   --cor-texto-hint: #526B7A;  /* placeholder, textos de apoio (5,6:1 sobre branco) */
-  --cor-erro: #DC2626;        /* estoque baixo, mensagens de erro */
-  --cor-sucesso: #16A34A;     /* status "entregue", confirmações */
+  --cor-erro: #B91C1C;        /* texto e borda de erro (6,5:1 sobre branco, 6,0:1 sobre o fundo) */
+  --cor-sucesso: #15803D;     /* texto e borda de sucesso (5,0:1 sobre branco, 4,6:1 sobre o fundo) */
   --cor-fundo: #F5F6F8;       /* fundo cinza claro da página */
   --cor-borda: #E3E6EA;       /* divisórias e bordas decorativas (cards, rodapé) */
   --cor-borda-controle: #7D8E9A; /* borda de campos de formulário (3,4:1 — WCAG 1.4.11) */

@@ -1,7 +1,8 @@
 /*
  * Menu de categorias no mobile (disclosure acessível por teclado).
  * - O botão alterna aria-expanded e a classe is-open da lista.
- * - Esc fecha o menu e devolve o foco ao botão.
+ * - Esc fecha o menu e devolve o foco ao botão; clicar fora fecha o menu e os submenus.
+ * - Abrir um submenu fecha os outros.
  * - Sem JavaScript, o CSS mantém a lista sempre visível (ver .js em style.css).
  */
 (function () {
@@ -36,9 +37,15 @@
 
     botaoSubmenu.addEventListener('click', function () {
       var aberto = botaoSubmenu.getAttribute('aria-expanded') !== 'true';
+      fecharSubmenus();
       botaoSubmenu.setAttribute('aria-expanded', String(aberto));
       submenu.classList.toggle('is-open', aberto);
     });
+  });
+
+  document.addEventListener('click', function (evento) {
+    if (!evento.target.closest('.menu-categorias__item')) fecharSubmenus();
+    if (!evento.target.closest('.menu-categorias')) definirAberto(false);
   });
 
   document.addEventListener('keydown', function (evento) {

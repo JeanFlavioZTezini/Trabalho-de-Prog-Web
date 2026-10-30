@@ -17,6 +17,51 @@ Copie para a descrição do PR e marque o que se aplica:
 - [ ] **Cores:** só `var(--cor-...)` do `tokens.css`; a informação não depende só da cor (ex.: erro tem texto, não só vermelho).
 - [ ] **Testes:** rodei Lighthouse e axe DevTools nas páginas que mudei e anexei os resultados no PR.
 
+## Contraste das cores
+
+Meta (WCAG 2.1 AA): **4,5:1** para texto normal e **3:1** para texto grande (a partir de 24 px, ou 18,66 px em negrito),
+componentes de interface e anel de foco. Razões calculadas com a fórmula de luminância do WCAG a partir dos valores de
+`tokens.css`. Cada linha vale para o uso indicado; combinação que não está na tabela precisa ser medida antes de usar.
+
+| Cor | Sobre | Uso | Razão | Meta | Aprovado |
+|---|---|---|---|---|---|
+| `--cor-texto` (`#1F2937`) | `--cor-branco` (`#FFFFFF`) | Texto do corpo, cards e painéis | 14.68:1 | 4,5:1 | sim |
+| `--cor-texto` (`#1F2937`) | `--cor-fundo` (`#F5F6F8`) | Texto direto sobre o fundo da página | 13.57:1 | 4,5:1 | sim |
+| `--cor-texto` (`#1F2937`) | `--cor-azul-suave` (`#DBE4EC`) | Selo "Indisponível" | 11.41:1 | 4,5:1 | sim |
+| `--cor-branco` (`#FFFFFF`) | `--cor-azul` (`#0F4C81`) | Botão primário, banner, selo "Exige receita", skip-link, caixa do usuário, botão do carrinho | 8.86:1 | 4,5:1 | sim |
+| `--cor-branco` (`#FFFFFF`) | `--cor-azul-hover` (`#0B3961`) | Botão primário em hover | 11.85:1 | 4,5:1 | sim |
+| `--cor-azul` (`#0F4C81`) | `--cor-branco` (`#FFFFFF`) | Logo e links | 8.86:1 | 4,5:1 | sim |
+| `--cor-azul` (`#0F4C81`) | `--cor-fundo` (`#F5F6F8`) | Links e logo sobre o fundo da página | 8.19:1 | 4,5:1 | sim |
+| `--cor-azul` (`#0F4C81`) | `--cor-azul-suave` (`#DBE4EC`) | Faixa de diferenciais da home | 6.88:1 | 4,5:1 | sim |
+| `--cor-azul-hover` (`#0B3961`) | `--cor-branco` (`#FFFFFF`) | Link do rodapé em hover | 11.85:1 | 4,5:1 | sim |
+| `--cor-texto-hint` (`#526B7A`) | `--cor-branco` (`#FFFFFF`) | Placeholder, texto de ajuda e textos de apoio | 5.61:1 | 4,5:1 | sim |
+| `--cor-texto-hint` (`#526B7A`) | `--cor-fundo` (`#F5F6F8`) | Texto de apoio sobre o fundo da página | 5.19:1 | 4,5:1 | sim |
+| `--cor-erro` (`#B91C1C`) | `--cor-branco` (`#FFFFFF`) | Mensagem de erro do campo | 6.47:1 | 4,5:1 | sim |
+| `--cor-erro` (`#B91C1C`) | `--cor-fundo` (`#F5F6F8`) | Mensagem de erro sobre o fundo da página | 5.98:1 | 4,5:1 | sim |
+| `--cor-sucesso` (`#15803D`) | `--cor-branco` (`#FFFFFF`) | Texto de sucesso | 5.02:1 | 4,5:1 | sim |
+| `--cor-sucesso` (`#15803D`) | `--cor-fundo` (`#F5F6F8`) | Texto de sucesso sobre o fundo da página | 4.64:1 | 4,5:1 | sim |
+| `--cor-borda-controle` (`#7D8E9A`) | `--cor-branco` (`#FFFFFF`) | Borda de campo de formulário (componente de interface) | 3.38:1 | 3,0:1 | sim |
+| `--cor-azul` (`#0F4C81`) | `--cor-branco` (`#FFFFFF`) | Anel de foco (contorno de 3 px) sobre branco | 8.86:1 | 3,0:1 | sim |
+| `--cor-azul` (`#0F4C81`) | `--cor-fundo` (`#F5F6F8`) | Anel de foco sobre o fundo da página | 8.19:1 | 3,0:1 | sim |
+| `--cor-branco` (`#FFFFFF`) | `--cor-azul` (`#0F4C81`) | Anel de foco dentro da caixa azul do usuário | 8.86:1 | 3,0:1 | sim |
+| `--cor-erro` (`#B91C1C`) | `--cor-branco` (`#FFFFFF`) | Borda do campo inválido | 6.47:1 | 3,0:1 | sim |
+| `--cor-erro` (`#B91C1C`) | `--cor-fundo` (`#F5F6F8`) | Faixa lateral do aviso de erro | 5.98:1 | 3,0:1 | sim |
+| `--cor-sucesso` (`#15803D`) | `--cor-fundo` (`#F5F6F8`) | Faixa lateral do aviso de sucesso | 4.64:1 | 3,0:1 | sim |
+
+**Tokens corrigidos nesta auditoria** (antes reprovavam em algum fundo):
+
+| Token | Antes | Depois | Sobre branco (antes → depois) | Sobre o fundo da página (antes → depois) |
+|---|---|---|---|---|
+| `--cor-erro` | `#DC2626` | `#B91C1C` | 4.83 → 6.47 | 4.47 → 5.98 |
+| `--cor-sucesso` | `#16A34A` | `#15803D` | 3.30 → 5.02 | 3.05 → 4.64 |
+
+- O `--cor-erro` antigo ficava abaixo de 4,5:1 sobre o fundo da página (`--cor-fundo`), e o `--cor-sucesso` antigo
+  só servia para borda: como texto reprovava.
+- O teste `ContrasteTokensTest` confere os pares acima a cada `./mvnw verify`. Se alguém trocar uma cor do `tokens.css`
+  (por exemplo o azul) e algum par cair abaixo da meta, o teste falha e mostra qual.
+- Informação nunca só por cor: erro tem texto e borda, selos têm texto, e o campo inválido tem mensagem ligada por
+  `aria-describedby`.
+
 ## Padrões do projeto
 
 ### Foco visível
@@ -42,16 +87,16 @@ Use o fragment `templates/fragments/campo.html`. Ele gera o `<label for>`, o tex
 
 ```html
 <div th:replace="~{fragments/campo :: campo(id='email', nome='email', rotulo='E-mail',
-         tipo='email', ajuda='Ex.: nome@dominio.com', erro=${erroEmail})}"></div>
+         tipo='email', ajuda='Ex.: nome@dominio.com', erro=${erroEmail}, autocomplete='email')}"></div>
 ```
 
-Passe todos os parâmetros; use `null` quando não houver ajuda ou erro. Resultado quando há erro:
+Passe todos os parâmetros; use `null` quando não houver ajuda, erro ou autocomplete. Resultado quando há erro:
 
 ```html
 <div class="campo">
     <label for="email">E-mail</label>
     <p class="campo__ajuda" id="email-ajuda">Ex.: nome@dominio.com</p>
-    <input type="email" id="email" name="email" aria-describedby="email-ajuda email-erro" aria-invalid="true">
+    <input type="email" id="email" name="email" autocomplete="email" aria-describedby="email-ajuda email-erro" aria-invalid="true">
     <p class="campo__erro" role="alert" id="email-erro">Informe um e-mail válido.</p>
 </div>
 ```
@@ -59,6 +104,7 @@ Passe todos os parâmetros; use `null` quando não houver ajuda ou erro. Resulta
 - `aria-describedby` faz o leitor de tela ler a ajuda e o erro junto com o campo.
 - `aria-invalid="true"` só aparece quando há erro.
 - `role="alert"` faz o leitor de tela anunciar o erro assim que ele surge.
+- `autocomplete` (`username`, `current-password`, `email`, `tel`...) deixa o navegador e os leitores preencherem dados pessoais (WCAG 1.3.5).
 - As classes (`campo`, `campo__ajuda`, `campo__erro`) estão no `style.css`.
 - Por enquanto o fragment cobre `<input>`. Se precisar de `<select>` ou `<textarea>`, siga o mesmo padrão de ids e atributos.
 
@@ -71,7 +117,7 @@ Teste a página rodando localmente (`./mvnw spring-boot:run` e abrir http://loca
 1. Clique na barra de endereço, depois use **Tab** para andar pela página, **Shift+Tab** para voltar.
 2. O primeiro Tab deve mostrar "Pular para o conteúdo"; Enter nele leva ao conteúdo.
 3. Confira que a ordem do foco segue a ordem visual e que **todo** link, botão e campo mostra o contorno de foco.
-4. **Enter** ativa links e botões; **Espaço** ativa botões; **Esc** fecha o menu de categorias (no mobile).
+4. **Enter** ativa links e botões; **Espaço** ativa botões; **Esc** fecha o submenu de categorias aberto e, em seguida, o menu (no mobile); clicar fora também fecha. No menu de categorias, o link da categoria e o botão da setinha são dois itens do Tab.
 5. Não pode haver "armadilha" de teclado: sempre dá para sair de qualquer elemento só com o teclado.
 
 ### 2. Zoom de 200%

@@ -582,7 +582,9 @@ textarea:focus-visible {
   font-weight: 600;
 }
 
-.campo input {
+.campo input,
+.campo select,
+.campo textarea {
   width: 100%;
   padding: 0.625rem 0.875rem;
   border: 1px solid var(--cor-borda-controle);
@@ -594,6 +596,10 @@ textarea:focus-visible {
 }
 
 .campo input[aria-invalid="true"] { border-color: var(--cor-erro); }
+
+.tabela-admin { width: 100%; border-collapse: collapse; }
+.tabela-admin th, .tabela-admin td { padding: 0.5rem; border-bottom: 1px solid var(--cor-borda-controle); text-align: left; }
+.tabela-admin form { display: inline; }
 
 /* ---------- Rodapé do site ---------- */
 .site-rodape {

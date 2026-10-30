@@ -1,5 +1,6 @@
 package com.farmacia.farmaciaonline.repository;
 
+import java.util.List;
 import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -13,6 +14,8 @@ public interface ApresentacaoRepository extends JpaRepository<Apresentacao, Long
     Optional<Apresentacao> findBySku(String sku);
 
     Optional<Apresentacao> findByEan(String ean);
+
+    List<Apresentacao> findByProdutoId(Long produtoId);
 
     boolean existsBySku(String sku);
 

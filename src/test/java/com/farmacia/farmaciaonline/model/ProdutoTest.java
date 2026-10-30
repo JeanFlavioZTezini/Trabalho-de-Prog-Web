@@ -130,4 +130,50 @@ class ProdutoTest {
             assertThat(produto.isIndisponivel()).isFalse();
         }
     }
+
+    @Nested
+    @DisplayName("getUrlCapa()")
+    class UrlCapa {
+
+        private ImagemProduto imagem(long id, String arquivo, int ordem, Apresentacao apresentacao) {
+            ImagemProduto imagem = new ImagemProduto();
+            imagem.setId(id);
+            imagem.setArquivo(arquivo);
+            imagem.setOrdem(ordem);
+            imagem.setApresentacao(apresentacao);
+            return imagem;
+        }
+
+        @Test
+        @DisplayName("sem imagens, usa o placeholder")
+        void semImagens() {
+            assertThat(new Produto().getUrlCapa()).isEqualTo(Produto.IMAGEM_PADRAO);
+        }
+
+        @Test
+        @DisplayName("foto enviada ganha do placeholder do seed, mesmo com ordem maior")
+        void fotoRealGanhaDoPlaceholder() {
+            Produto produto = new Produto();
+            produto.getImagens().add(imagem(1, Produto.IMAGEM_PADRAO, 0, null));
+            produto.getImagens().add(imagem(2, "/uploads/produtos/a.png", 1, null));
+            assertThat(produto.getUrlCapa()).isEqualTo("/uploads/produtos/a.png");
+        }
+
+        @Test
+        @DisplayName("prefere foto de todas as apresentações à foto de uma apresentação específica")
+        void prefereFotoDeTodasAsApresentacoes() {
+            Produto produto = new Produto();
+            produto.getImagens().add(imagem(1, "/uploads/produtos/especifica.png", 0, apresentacao(9, 0, true, 1)));
+            produto.getImagens().add(imagem(2, "/uploads/produtos/geral.png", 1, null));
+            assertThat(produto.getUrlCapa()).isEqualTo("/uploads/produtos/geral.png");
+        }
+
+        @Test
+        @DisplayName("só com o placeholder, continua no placeholder")
+        void soPlaceholder() {
+            Produto produto = new Produto();
+            produto.getImagens().add(imagem(1, Produto.IMAGEM_PADRAO, 0, null));
+            assertThat(produto.getUrlCapa()).isEqualTo(Produto.IMAGEM_PADRAO);
+        }
+    }
 }

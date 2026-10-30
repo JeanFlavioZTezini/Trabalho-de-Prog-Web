@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Produto | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1 th:text="${produtoId == null} ? 'Novo produto' : 'Editar produto'">Produto</h1>
+
+    <div class="alerta alerta--erro" role="alert" th:if="${erros != null or #fields.hasErrors('${produtoForm.*}')}">
+        <p th:each="e : ${erros}" th:text="${e}"></p>
+        <p th:each="e : ${#fields.errors('${produtoForm.*}')}" th:text="${e}"></p>
+    </div>
+
+    <form th:action="${produtoId == null} ? @{/admin/produtos} : @{/admin/produtos/{id}(id=${produtoId})}"
+          th:object="${produtoForm}" method="post" enctype="multipart/form-data">
+
+        <div class="campo">
+            <label for="nome">Nome</label>
+            <input type="text" id="nome" th:field="*{nome}" maxlength="200" required>
+        </div>
+        <div class="campo">
+            <label for="marca">Marca/fabricante</label>
+            <input type="text" id="marca" th:field="*{marca}" maxlength="100" required>
+        </div>
+        <div class="campo">
+            <label for="principioAtivo">Princípio ativo</label>
+            <input type="text" id="principioAtivo" th:field="*{principioAtivo}" maxlength="150">
+        </div>
+        <div class="campo">
+            <label for="tipo">Tipo</label>
+            <select id="tipo" th:field="*{tipo}">
+                <option value="">(não é medicamento)</option>
+                <option th:each="t : ${tipos}" th:value="${t}" th:text="${t}">GENERICO</option>
+            </select>
+        </div>
+        <div class="campo">
+            <label for="formaFarmaceutica">Forma farmacêutica</label>
+            <input type="text" id="formaFarmaceutica" th:field="*{formaFarmaceutica}" maxlength="30">
+        </div>
+        <div class="campo">
+            <label for="tarja">Tarja</label>
+            <select id="tarja" th:field="*{tarja}">
+                <option th:each="t : ${tarjas}" th:value="${t}" th:text="${t}">SEM_TARJA</option>
+            </select>
+        </div>
+        <div class="campo">
+            <label><input type="checkbox" th:field="*{exigeReceita}"> Exige receita (obrigatório para tarja vermelha/preta)</label>
+        </div>
+        <div class="campo">
+            <label for="registroMs">Registro no Ministério da Saúde</label>
+            <input type="text" id="registroMs" th:field="*{registroMs}" maxlength="30">
+        </div>
+        <div class="campo">
+            <label for="bulaUrl">URL da bula</label>
+            <input type="text" id="bulaUrl" th:field="*{bulaUrl}" maxlength="255">
+        </div>
+        <div class="campo">
+            <label for="indicacao">Indicação</label>
+            <textarea id="indicacao" th:field="*{indicacao}" rows="2"></textarea>
+        </div>
+        <div class="campo">
+            <label for="acao">Ação</label>
+            <textarea id="acao" th:field="*{acao}" rows="2"></textarea>
+        </div>
+        <div class="campo">
+            <label for="viaAdministracao">Via de administração</label>
+            <textarea id="viaAdministracao" th:field="*{viaAdministracao}" rows="2"></textarea>
+        </div>
+        <div class="campo">
+            <label for="publicoAlvo">Público-alvo</label>
+            <textarea id="publicoAlvo" th:field="*{publicoAlvo}" rows="2"></textarea>
+        </div>
+        <div class="campo">
+            <label><input type="checkbox" th:field="*{ativo}"> Ativo</label>
+        </div>
+
+        <fieldset class="campo">
+            <legend>Categorias (ao menos uma ativa)</legend>
+            <label th:each="c : ${categorias}"
+                   th:style="|display:block; padding-left: ${c.nivel * 1.5}rem|">
+                <input type="checkbox" name="categoriaIds" th:value="${c.id}"
+                       th:checked="${#lists.contains(produtoForm.categoriaIds, c.id)}">
+                <span th:text="${c.nome + (c.ativa ? '' : ' (inativa)')}">Categoria</span>
+            </label>
+        </fieldset>
+
+        <h2>Apresentações</h2>
+        <p>Preencha as linhas em branco para adicionar apresentações. Apresentações não são removidas: desmarque "Ativa".</p>
+        <table class="tabela-admin">
+            <thead>
+                <tr>
+                    <th scope="col">Descrição</th>
+                    <th scope="col">SKU</th>
+                    <th scope="col">EAN</th>
+                    <th scope="col">Preço (R$)</th>
+                    <th scope="col">Estoque</th>
+                    <th scope="col">Limite/pedido</th>
+                    <th scope="col">Ativa</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="a, i : *{apresentacoes}">
+                    <td>
+                        <input type="hidden" th:field="*{apresentacoes[__${i.index}__].id}">
+                        <input type="hidden" th:field="*{apresentacoes[__${i.index}__].versao}">
+                        <input type="text" th:field="*{apresentacoes[__${i.index}__].descricao}" maxlength="60"
+                               th:aria-label="|Descrição da apresentação ${i.count}|">
+                    </td>
+                    <td><input type="text" th:field="*{apresentacoes[__${i.index}__].sku}" maxlength="40"
+                               th:aria-label="|SKU da apresentação ${i.count}|"></td>
+                    <td><input type="text" th:field="*{apresentacoes[__${i.index}__].ean}" maxlength="14"
+                               th:aria-label="|EAN da apresentação ${i.count}|"></td>
+                    <td><input type="number" step="0.01" min="0.01" th:field="*{apresentacoes[__${i.index}__].preco}"
+                               th:aria-label="|Preço da apresentação ${i.count}|"></td>
+                    <td><input type="number" min="0" th:field="*{apresentacoes[__${i.index}__].estoque}"
+                               th:aria-label="|Estoque da apresentação ${i.count}|"></td>
+                    <td><input type="number" min="1" th:field="*{apresentacoes[__${i.index}__].limitePorPedido}"
+                               th:aria-label="|Limite por pedido da apresentação ${i.count}|"></td>
+                    <td><input type="checkbox" th:field="*{apresentacoes[__${i.index}__].ativa}"
+                               th:aria-label="|Apresentação ${i.count} ativa|"></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <fieldset class="campo">
+            <legend>Imagens</legend>
+            <p th:if="${#lists.isEmpty(imagens)}">Sem fotos: o site usa a imagem padrão.</p>
+            <label th:each="img : ${imagens}">
+                <img th:src="@{${img.arquivo}}" alt="" width="60" height="60">
+                <input type="checkbox" name="removerImagemIds" th:value="${img.id}"> Remover
+                <span th:text="${img.apresentacao == null} ? '(todas as apresentações)' : ${img.apresentacao.descricao}">vale para</span>
+            </label>
+            <label for="novasImagens">Adicionar fotos (JPG, PNG ou WebP, até 2 MB cada)</label>
+            <input type="file" id="novasImagens" name="novasImagens" multiple accept=".jpg,.jpeg,.png,.webp">
+            <p id="aviso-imagem" role="alert"></p>
+            <label for="imagemApresentacaoId">As novas fotos valem para</label>
+            <select id="imagemApresentacaoId" th:field="*{imagemApresentacaoId}">
+                <option value="">Todas as apresentações</option>
+                <th:block th:each="a : *{apresentacoes}">
+                    <option th:if="${a.id != null}" th:value="${a.id}" th:text="${a.descricao}">20 comprimidos</option>
+                </th:block>
+            </select>
+            <p th:if="${produtoId == null}">Para vincular fotos a uma apresentação específica, salve o produto e depois edite-o.</p>
+        </fieldset>
+
+        <button type="submit" class="btn-primario">Salvar</button>
+        <a th:href="@{/admin/produtos}">Cancelar</a>
+    </form>
+
+    <script th:src="@{/js/produto-form.js}" defer></script>
+</div>
+</body>
+</html>

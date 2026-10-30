@@ -152,6 +152,22 @@ public class Produto {
                 .orElse(null);
     }
 
+    /** Foto usada quando o produto não tem nenhuma foto de verdade. */
+    public static final String IMAGEM_PADRAO = "/images/produtos/placeholder.svg";
+
+    /**
+     * Foto de capa (home e listagens): a primeira foto de verdade, preferindo as que valem para todas
+     * as apresentações. O placeholder do seed só é usado se não houver outra foto.
+     */
+    public String getUrlCapa() {
+        return imagens.stream()
+                .filter(i -> !IMAGEM_PADRAO.equals(i.getArquivo()))
+                .min(Comparator.comparing((ImagemProduto i) -> i.getApresentacao() != null)
+                        .thenComparingInt(ImagemProduto::getOrdem))
+                .map(ImagemProduto::getArquivo)
+                .orElse(IMAGEM_PADRAO);
+    }
+
     /**
      * Produto indisponível: nenhuma de suas apresentações está disponível
      * (ver {@link Apresentacao#isDisponivel()}). Sem apresentações, também é indisponível.

@@ -38,3 +38,4 @@ Thumbs.db
 
 ### Variáveis de ambiente (se usarem depois) ###
 .env
+uploads/

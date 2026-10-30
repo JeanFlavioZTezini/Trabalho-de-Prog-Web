@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Produtos | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1>Produtos</h1>
+
+    <p class="alerta alerta--sucesso" role="status" th:if="${sucesso != null}" th:text="${sucesso}"></p>
+
+    <p class="alerta alerta--erro" role="alert" th:if="${erro != null}" th:text="${erro}"></p>
+
+    <p><a class="btn-primario" th:href="@{/admin/produtos/novo}">Novo produto</a></p>
+
+    <form th:action="@{/admin/produtos}" method="get">
+        <div class="campo">
+            <label for="q">Buscar por nome, marca, princípio ativo, SKU ou EAN</label>
+            <input type="search" id="q" name="q" th:value="${q}">
+        </div>
+        <div class="campo">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="">Todos</option>
+                <option value="ativos" th:selected="${status == 'ativos'}">Ativos</option>
+                <option value="inativos" th:selected="${status == 'inativos'}">Inativos</option>
+            </select>
+        </div>
+        <button type="submit" class="btn-primario">Filtrar</button>
+    </form>
+
+    <p th:if="${pagina.empty}">Nenhum produto encontrado.</p>
+
+    <table class="tabela-admin" th:unless="${pagina.empty}">
+        <thead>
+            <tr>
+                <th scope="col">Nome</th>
+                <th scope="col">Marca</th>
+                <th scope="col">Tarja</th>
+                <th scope="col">Apresentações</th>
+                <th scope="col">Status</th>
+                <th scope="col">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="p : ${pagina.content}">
+                <td th:text="${p.nome}">Nome</td>
+                <td th:text="${p.marca}">Marca</td>
+                <td th:text="${p.tarja}">SEM_TARJA</td>
+                <td th:text="${#lists.size(p.apresentacoes)}">0</td>
+                <td th:text="${p.ativo} ? 'Ativo' : 'Inativo'">Ativo</td>
+                <td>
+                    <a th:href="@{/admin/produtos/{id}/editar(id=${p.id})}">Editar</a>
+                    <form th:action="@{/admin/produtos/{id}/excluir(id=${p.id})}" method="post" style="display:inline"
+                          onsubmit="return confirm('Excluir este produto? Se houver pedidos, ele será apenas inativado.')">
+                        <button type="submit">Excluir</button>
+                    </form>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+
+    <p th:if="${pagina.totalPages > 1}">
+        <a th:if="${pagina.hasPrevious()}"
+           th:href="@{/admin/produtos(q=${q}, status=${status}, pagina=${pagina.number - 1})}">Anterior</a>
+        <span th:text="|Página ${pagina.number + 1} de ${pagina.totalPages}|">Página 1 de 1</span>
+        <a th:if="${pagina.hasNext()}"
+           th:href="@{/admin/produtos(q=${q}, status=${status}, pagina=${pagina.number + 1})}">Próxima</a>
+    </p>
+
+</div>
+</body>
+</html>

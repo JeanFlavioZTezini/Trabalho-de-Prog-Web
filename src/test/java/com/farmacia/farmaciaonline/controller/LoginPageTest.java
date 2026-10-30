@@ -48,6 +48,14 @@ class LoginPageTest {
     }
 
     @Test
+    void camposTemAutocompleteParaOPreenchimentoAutomatico() throws Exception {
+        String html = pagina("/login");
+
+        assertThat(html).contains("autocomplete=\"username\"");
+        assertThat(html).contains("autocomplete=\"current-password\"");
+    }
+
+    @Test
     void formularioPostaParaLogin() throws Exception {
         String html = pagina("/login");
 

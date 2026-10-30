@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<!--
+    Página de erro 404. O Spring Boot usa este arquivo sozinho para o status 404: link de uma página
+    que ainda não existe (ex.: /produtos/1, /cadastro) ou endereço digitado errado.
+-->
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Página não encontrada | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1>Página não encontrada</h1>
+    <p>Não encontramos o que você procurava. O endereço pode estar errado ou esta área ainda não foi criada.</p>
+    <p><a th:href="@{/}">Voltar para a página inicial</a></p>
+
+</div>
+</body>
+</html>

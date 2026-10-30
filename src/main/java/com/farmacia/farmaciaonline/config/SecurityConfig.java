@@ -38,6 +38,7 @@ public class SecurityConfig {
             "/institucional/**", // páginas do rodapé (já existem desde a F1-07)
             "/css/**",
             "/images/**",
+            "/uploads/**", // fotos enviadas pelo admin (UC12)
             "/js/**",
             "/error" // o Spring Boot mostra aqui as páginas de erro, incluindo templates/error/403.html
     };

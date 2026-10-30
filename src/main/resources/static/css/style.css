@@ -285,6 +285,26 @@ textarea:focus-visible {
 .js .menu-categorias__submenu-toggle { display: inline-flex; align-items: center; justify-content: center; }
 .js .menu-categorias__submenu:not(.is-open) { display: none; }
 
+/* Desktop: o submenu flutua sobre a página em vez de empurrar o conteúdo. */
+@media (min-width: 768px) {
+  .menu-categorias__submenu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    z-index: 20;
+    min-width: 14rem;
+    border: 1px solid var(--cor-borda);
+    border-radius: var(--raio);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+  }
+
+  /* O último item fica no canto direito: abrir para a esquerda evita rolagem horizontal. */
+  .menu-categorias__item:last-child .menu-categorias__submenu {
+    right: 0;
+    left: auto;
+  }
+}
+
 /* O botão só existe visualmente no mobile (e só com JS ligado). */
 .menu-categorias__toggle {
   display: none;
@@ -617,14 +637,21 @@ textarea:focus-visible {
    desktop: acima de 1023px · tablet: 768–1023px · mobile: até 767px
    ========================================================= */
 
+@media (min-width: 768px) {
+  .categorias { grid-template-columns: repeat(auto-fit, minmax(8rem, 1fr)); }
+}
+
+@media (min-width: 1024px) {
+  .grade { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+}
+
 @media (max-width: 1023px) {
   .topo__linha { gap: 1rem; }
   .banner { padding: 2.5rem 1.5rem; }
   .banner h1 { font-size: 1.75rem; }
 
-  /* 4 itens cabem em 4 colunas no tablet (evita 3 + 1 sobrando na linha de baixo) */
-  .grade,
-  .categorias { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  /* A home mostra 8 produtos por seção: 4 colunas evitam item sozinho na última linha */
+  .grade { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .beneficios { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .site-rodape__colunas { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -654,8 +681,23 @@ textarea:focus-visible {
 
   /* Menu de categorias vira um botão que abre/fecha (só com JS; sem JS a lista fica visível). */
   .js .menu-categorias__toggle { display: flex; }
-  .js .menu-categorias__lista { display: none; flex-direction: column; padding-bottom: 0.5rem; }
-  .js .menu-categorias__lista.is-open { display: flex; }
+  .js .menu-categorias { position: relative; }
+  .js .menu-categorias__lista { display: none; flex-direction: column; padding: 0.5rem 1rem; }
+
+  /* O painel sobrepõe a página (como o submenu no desktop) e rola por dentro se for alto. */
+  .js .menu-categorias__lista.is-open {
+    display: flex;
+    position: absolute;
+    top: 100%;
+    right: 0;
+    left: 0;
+    z-index: 30;
+    max-height: 70vh;
+    overflow-y: auto;
+    background-color: var(--cor-branco);
+    border-bottom: 1px solid var(--cor-borda);
+    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+  }
   .menu-categorias__item { flex-wrap: wrap; }
   .menu-categorias__submenu { flex-basis: 100%; padding-left: 1rem; }
   .menu-categorias__submenu a { white-space: normal; }

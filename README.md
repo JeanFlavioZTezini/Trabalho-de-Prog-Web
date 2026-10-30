@@ -118,6 +118,12 @@ usar `th:action`** (nunca `action="..."` escrito à mão). Formulário sem token
 mesmo motivo (o botão **Sair** do cabeçalho já é um formulário). Quem fizer `fetch`/AJAX com `POST` precisa enviar
 o token no cabeçalho `X-CSRF-TOKEN`.
 
+**Formulário para visitante (sem sessão):** o token CSRF cria a sessão na hora em que o formulário é montado. Se o
+Thymeleaf já tiver enviado parte da página ao navegador, a sessão não pode mais ser criada e o `/login` quebra para
+quem abre numa aba anônima (`Cannot create a session after the response has been committed`). Por isso o
+`application.properties` tem `spring.thymeleaf.servlet.produce-partial-output-while-processing=false`: a página só é
+enviada depois de pronta. Não remova essa linha. O `LoginAnonimoTest` abre o `/login` num servidor de verdade, sem sessão.
+
 **Rota nova pública?** Qualquer URL que não esteja na tabela acima exige login. Se a sua página for aberta a
 visitantes (ex.: uma nova página institucional), acrescente o caminho em `ROTAS_PUBLICAS` no `SecurityConfig`.
 Rota de administração: coloque sob `/admin/**`.
@@ -218,20 +224,24 @@ src/main/resources
 │   │                   campo.html: campo de formulário acessível com rótulo, ajuda e erro)
 │   ├── institucional  (páginas de texto, ex.: boas-praticas.html)
 │   ├── admin          (painel do administrador, provisório)
-│   ├── error          (403.html: o Spring Boot usa sozinho para o status 403)
+│   ├── error          (403.html, 404.html e 5xx.html: o Spring Boot usa sozinho conforme o status)
 │   ├── login.html
 │   └── index.html
 └── application.properties
 
 docs
-└── acessibilidade.md  (checklist de acessibilidade para PRs e como testar)
+└── acessibilidade.md  (tabela de contraste, checklist de acessibilidade para PRs e como testar)
 
 src/test/java/com/farmacia/farmaciaonline
 ├── controller/                            (LayoutTest, SegurancaTest, LoginPageTest: camada web, sem Docker)
 ├── security/                              (testes de login: service, handlers e integração com o seed)
 ├── TestcontainersConfiguration.java       (PostgreSQL 16 descartável via Docker, para testes com banco)
 ├── FarmaciaOnlineApplicationTests.java    (contextLoads: Flyway + validate do Hibernate num Postgres real)
-└── SeedDemonstracaoTest.java              (confere o V2: usuários, catálogo, EAN-13, sequences)
+├── SeedDemonstracaoTest.java              (confere o V2: usuários, catálogo, EAN-13, sequences)
+├── MapeamentoDasTabelasTest.java          (toda tabela da V1 tem uma entidade JPA: pega entidade que sumiu)
+├── model/                                 (testes unitários puros, sem Spring nem banco)
+└── repository/                            (testes de integração com @DataJpaTest contra o Postgres real:
+                                            use CatalogoRepositoryTest e CompraRepositoryTest como modelo)
 
 .github/workflows
 └── ci.yml             (CI: ./mvnw -B verify em PR e push na main)
@@ -252,6 +262,44 @@ Entidades em `model` (`Categoria`, `Produto`, `Apresentacao`, `ImagemProduto`); 
 - As coleções de `Produto` (`categorias`, `apresentacoes`, `imagens`) são LAZY. Acesse dentro de transação ou
   com `JOIN FETCH`, senão dá `LazyInitializationException` ou consulta N+1. Não há cascade: grave cada
   `Apresentacao` e `ImagemProduto` pelo próprio repository.
+
+## Modelo de compra
+
+Entidades em `model` (`Carrinho`, `ItemCarrinho`, `Endereco`, `CartaoSalvo`, `Loja`); o schema vem da `V1__init.sql`.
+
+- **O carrinho tem um dono só:** um `Usuario` (logado) **ou** um `token` UUID guardado em cookie (visitante).
+  O banco recusa carrinho sem dono ou com os dois; `Carrinho#isDeVisitante()` diz qual é. Cada usuário tem no
+  máximo um carrinho, e cada apresentação aparece uma vez por carrinho (adicionar de novo soma a quantidade).
+  No login, o carrinho do token é mesclado ao do usuário (I12).
+- **Itens:** `Carrinho.itens` tem `cascade = ALL` e `orphanRemoval = true`. Para adicionar, coloque o item na lista
+  (com `item.setCarrinho(carrinho)`); para remover, tire da lista. Os itens vêm ordenados por `id`.
+- **`ItemCarrinho.precoVisto`** é o preço no momento em que o item entrou no carrinho. `getSubtotal()` usa
+  esse preço; comparar com `Apresentacao.preco` detecta que o preço mudou (UC05-E3).
+- **`CartaoSalvo` guarda só o token do gateway e dados mascarados.** Nunca grave número completo nem CVV (LGPD e PCI DSS).
+- `Endereco` salvo não é o endereço do pedido: o pedido guarda uma cópia, então editar ou excluir um endereço não
+  altera pedidos antigos.
+- `Loja` é o ponto de retirada. Produto que exige receita só pode ser retirado em loja (I3).
+
+## Modelo de pedido
+
+Entidades em `model` (`Pedido`, `ItemPedido`, `Pagamento`, `HistoricoStatusPedido`, `LogAuditoria`); o schema vem da `V1__init.sql`.
+
+- **O pedido guarda cópias (snapshots).** O endereço de entrega vai no `@Embeddable EnderecoEntrega`, que o `Pedido`
+  mapeia para as colunas `entrega_*`, e o `ItemPedido` guarda nome, descrição, SKU, preço e `exigeReceita` do momento
+  da compra. Mudar um `Endereco` salvo ou o catálogo não altera pedidos antigos.
+- **Entrega x retirada:** entrega tem `enderecoEntrega` e não tem `lojaRetirada`; retirada tem `lojaRetirada`, frete zero
+  e `enderecoEntrega` nulo. O banco recusa as outras combinações.
+- **Chame `Pedido#recalcularTotais()` antes de gravar.** O banco exige `total = subtotal + frete`. O método arredonda
+  cada item e o frete para 2 casas (HALF_UP) e depois soma, e trata frete nulo como zero.
+- **Regra que o banco não garante:** pedido com item que exige receita só pode ser RETIRADA. `Pedido#temItemQueExigeReceita()`
+  só consulta; quem valida é o service do checkout (Fase 2), com teste próprio.
+- `Pedido.itens` tem `cascade = ALL`: grave o pedido e os itens vão juntos. Pagamentos e histórico são gravados pelos
+  próprios repositories.
+- Um pedido tem várias tentativas de `Pagamento` (UC08-E2). Do cartão só ficam dados mascarados, e parcelas acima de 1
+  só no crédito.
+- `HistoricoStatusPedido.alteradoPor` nulo significa que a mudança foi do sistema.
+- `PedidoRepository#findByIdAndUsuarioId` é o jeito de buscar um pedido para o cliente: de outro usuário, volta vazio (UC06).
+- `PRONTO_PARA_RETIRADA` é o status do pedido de retirada em loja. Quem decide as transições entre status é o service (Fase 2).
 
 ## Como criar uma página nova
 

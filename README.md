@@ -133,6 +133,24 @@ sistema é uma loja virtual: o papel `CLIENTE` também mexe no **próprio** carr
 Fica para a Fase 2 (UC10): login social, recuperação de senha e o bloqueio automático após várias senhas erradas
 (hoje o sistema só **respeita** o `bloqueado_ate` que já estiver preenchido).
 
+## Home e menu de categorias
+
+Tudo vem do banco; nada é fixo na tela.
+
+- **Menu:** `NavegacaoAdvice` coloca `menuCategorias` (categorias raiz ativas e suas filhas, por `ordem`) no modelo de
+  toda página renderizada por controller, e o `fragments/layout.html` monta o `<nav>`. Categoria nova ou inativada
+  muda o menu no próximo carregamento. Quem tem subcategorias ganha um botão (`aria-expanded`) que abre com
+  Enter ou clique e fecha com Esc ou clicando fora (`static/js/menu.js`).
+- **Home:** `HomeController` envia `maisComprados` (por `qtdVendida`) e `maisVistos` (por `visualizacoes`), só com
+  `ativo = true` e no máximo 8. O card mostra a primeira imagem (ou o `placeholder.svg`, se o produto não tiver
+  nenhuma), o nome, a apresentação padrão com o preço em reais (`spring.web.locale=pt_BR` e
+  `#numbers.formatCurrency`) e os selos "Indisponível" e "Exige receita".
+- **Consultas:** `Produto.apresentacoes` e `Produto.imagens` usam `@BatchSize`, então a home não faz uma consulta por
+  produto. O log do SQL vem desligado; para conferir, ligue-o só nesta execução (PowerShell):
+  `$env:SPRING_JPA_SHOW_SQL="true"; .\mvnw.cmd spring-boot:run`, abra a home e conte as consultas.
+- **Testes:** `FarmaciaOnlineApplicationTests` confere a home com o seed (Novalgina, preço, selos, menu) e
+  `HomeIntegracaoTest` cobre produto sem imagem e categoria inativa.
+
 ## Testes e integração contínua
 
 ```bash

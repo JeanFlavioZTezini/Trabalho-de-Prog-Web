@@ -328,6 +328,7 @@ Telas em `/enderecos` (lista, `novo`, `{id}/editar`, `{id}/excluir`); exigem log
   redirecionamento. Salvar ou "Usar este endereço" volta para `/checkout?enderecoId=<id>`; cancelar volta para `/checkout`.
   **Quem fizer o checkout deve ler `enderecoId` e buscar o endereço por `EnderecoService`** (nunca por
   `EnderecoRepository#findById`), para manter a regra de 404 para endereço alheio.
+- **Máscara do CEP:** `static/js/cep.js` coloca o hífen enquanto a pessoa digita e formata o CEP salvo ao editar. É só conforto: sem JavaScript o campo aceita com ou sem hífen.
 - **Tela pequena:** a tabela da lista rola dentro da própria caixa (`.tabela-rolavel`), sem fazer a página rolar para o lado.
 - **Testes:** `EnderecoFormTest` e `DemoCepAdapterTest` (sem Spring), `EnderecoControllerTest` (camada web, sem Docker)
   e `EnderecoServiceIntegracaoTest` (Docker ligado: isolamento entre clientes e pedido antigo intacto).

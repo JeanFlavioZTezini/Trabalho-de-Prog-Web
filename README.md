@@ -213,6 +213,7 @@ com.farmacia.farmaciaonline
 ├── security         (UsuarioDetailsService, UsuarioAutenticado, handlers de login)
 ├── service          (Regras de negócio)
 ├── validacao        (CpfValido: validação do CPF pelos dígitos verificadores)
+├── mensagem         (EnvioDeMensagem: envio de e-mail e SMS; demo/DemoEnvioAdapter guarda na memória)
 └── FarmaciaOnlineApplication.java
 
 src/main/resources
@@ -357,6 +358,41 @@ Telas em `/enderecos` (lista, `novo`, `{id}/editar`, `{id}/excluir`); exigem log
   `retornoCadastro`.
 - **Testes:** `CpfValidatorTest`, `CadastroFormTest`, `CadastroControllerTest` (sem banco), `CadastroServiceIntegracaoTest`
   e `CadastroIntegracaoTest` (PostgreSQL real; este último inclui a tentativa de elevar o perfil e o login da conta pendente).
+
+## Confirmação da conta e códigos de verificação (F-05 / UC04)
+
+- **Fluxo:** depois do cadastro, `/confirmar-conta` mostra o e-mail e o celular mascarados (`m***@dominio.com`,
+  `(67) 9****-8888`). A pessoa escolhe o canal, recebe um código de 6 números e o digita. Com o código certo, aquele
+  contato fica confirmado (`usuario.email_confirmado_em` ou `celular_confirmado_em`, migration `V3`), a conta vira `ATIVA`
+  e a pessoa volta ao login com o aviso "Conta confirmada". Confirmar o e-mail não confirma o celular, e vice-versa.
+- **Retomada:** o login de conta pendente mostra o link "Confirmar minha conta" (`/confirmar-conta/retomar`). Para
+  retomar, a pessoa informa e-mail ou CPF **e a senha**; quem sabe só o e-mail de alguém não abre nada. A conta em
+  confirmação fica sempre na sessão (`contaEmConfirmacao`), nunca na URL.
+- **Códigos (`CodigoVerificacaoService`):** gerados com `SecureRandom`, guardados só como hash BCrypt, de uso único e
+  separados por finalidade (`CADASTRO`, `ALTERAR_EMAIL`, `ALTERAR_CELULAR`, `RECUPERAR_SENHA`): código de uma finalidade
+  não vale para outra. A F-06 (recuperação) e a F-21 (troca de contato) usam o mesmo serviço. Recusas voltam como
+  resultado, sem exceção, para a tentativa errada ficar gravada.
+- **Limites** (em `app.codigos.*` no `application.properties`):
+
+  | Configuração | Valor | O que faz |
+  |---|---|---|
+  | `app.codigos.validade` | `10m` | tempo de vida do código |
+  | `app.codigos.tentativas-maximas` | `5` | erros até o código ser bloqueado |
+  | `app.codigos.intervalo-reenvio` | `60s` | espera mínima para pedir outro código (o novo invalida o anterior) |
+  | `app.codigos.envios-por-hora` | `5` | envios na última hora antes de começar o bloqueio |
+  | `app.codigos.bloqueio-envio` | `15m` | depois do limite, cada novo envio só sai esse tempo depois do anterior |
+
+- **Envio de demonstração e perfil demo:** não há serviço real de e-mail ou SMS. O `DemoEnvioAdapter` guarda as
+  mensagens na memória (as últimas 50, somem ao reiniciar) e a página `/caixa-demo` as mostra. Essa página só existe com
+  o perfil `demo`, que vem ligado no `application.properties` (`spring.profiles.active=demo`). Para desligar, apague a
+  linha ou suba com outro perfil (`$env:SPRING_PROFILES_ACTIVE="producao"`): aí `/caixa-demo` dá 404. O código nunca vai
+  para log nem para resposta fora dessa página.
+- **Contrato de envio para outras issues:** `mensagem/EnvioDeMensagem.enviar(canal, destino, assunto, texto)`. O resumo
+  do pedido (F-14) usa a mesma interface com o canal `EMAIL`.
+- **Testes:** `ContatoMascaradoTest` e `DemoEnvioAdapterTest` (unitários), `CaixaDemoControllerTest` e
+  `CaixaDemoSemPerfilTest` (camada web, com e sem o perfil demo), `CodigoVerificacaoServiceIntegracaoTest` (expirado,
+  incorreto, uso repetido, finalidade errada, bloqueio por tentativas, reenvio, limite por hora, código fora do log e
+  tentativa gravada mesmo com a recusa) e `ConfirmacaoContaIntegracaoTest` (fluxo completo, SMS, retomada e caixa demo).
 
 ## Como criar uma página nova
 

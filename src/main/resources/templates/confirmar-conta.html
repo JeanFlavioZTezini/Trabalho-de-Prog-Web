@@ -1,0 +1,21 @@
+<!DOCTYPE html>
+<!--
+    Página provisória: a F-05 troca por a tela do código de confirmação. A conta recém-criada está na sessão
+    (CadastroController.SESSAO_CONTA).
+-->
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Confirmar conta | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1>Cadastro recebido</h1>
+
+    <p>Sua conta foi criada e está <strong>pendente</strong>: ela só poderá entrar depois de confirmar o e-mail ou o
+        celular. A confirmação por código ainda será liberada.</p>
+    <p><a th:href="@{/}">Voltar para a página inicial</a></p>
+
+</div>
+</body>
+</html>

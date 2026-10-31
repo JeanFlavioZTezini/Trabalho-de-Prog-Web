@@ -379,6 +379,8 @@ dono do repositório.
 Uma linha por módulo; **atualize esta tabela no seu PR** (o template lembra). Ela é o roteiro do item
 "Divisão da equipe" da apresentação: cada integrante explica as linhas dele.
 
+### Fase 1: fundação
+
 | Módulo | Issue | Integrante | PR |
 |---|---|---|---|
 | Banco: schema (`V1`), Docker e Flyway | F1-01 | _preencher_ | |
@@ -392,4 +394,31 @@ Uma linha por módulo; **atualize esta tabela no seu PR** (o template lembra). E
 | Login e papéis (Spring Security) | F1-09 | _preencher_ | |
 | Docs e fluxo: template de PR, README e proteção da `main` | F1-10 (#4) | Kauê (@KaueAlves09) | |
 | Testes com Testcontainers e CI | F1-11 (#9) | Kauê (@KaueAlves09) | |
-| Home e menu de categorias pelo banco | F1-12 | Fernando (FernandoNakao) | |
+| Home e menu de categorias pelo banco | F1-12 | _preencher_ | |
+
+### Onda final: entrega e estabilização
+
+Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: ao criar a issue, anote o número ao lado
+(por exemplo `F-04 (#52)`). As letras A a F são as pessoas do plano; troque cada uma pelo nome e pelo usuário do GitHub.
+
+| Módulo | Issue | Integrante | PR |
+|---|---|---|---|
+| Catálogo público: busca, categoria, filtros e paginação (UC01) | F-01 | Pessoa A: _preencher_ | |
+| Detalhes do produto e apresentação comprável (UC02) | F-02 | Pessoa A: _preencher_ | |
+| Navegação integrada, páginas de termos e revisão de interface (UC03/UC15) | F-03 | Pessoa A: _preencher_ | |
+| Cadastro com validação e conta pendente (UC03) | F-04 | Kauê (@KaueAlves09), pessoa B | |
+| Serviço de códigos e confirmação de conta com envio simulado (UC04) | F-05 | Kauê (@KaueAlves09), pessoa B | |
+| Recuperação de senha sem login e revogação de sessões (UC14, UC10-A4) | F-06 | Kauê (@KaueAlves09), pessoa B | |
+| CRUD de categorias hierárquicas (UC13) | F-07 | Pessoa C: _preencher_ | |
+| CRUD de produtos, apresentações, estoque e imagens (UC12) | F-08 | Pessoa C: _preencher_ | |
+| Consulta administrativa de clientes com auditoria (UC11) | F-09 | Pessoa C: _preencher_ | |
+| Carrinho de visitante e cliente, com mesclagem no login (UC05) | F-10 | Pessoa D: _preencher_ | |
+| CRUD de endereços e seleção no checkout (UC16) | F-11 | Pessoa D: _preencher_ | |
+| Edição de dados pessoais e senha autenticada (UC07) | F-12 | Pessoa D: _preencher_ | |
+| Gateway de pagamento simulado e retorno idempotente (UC08/UC09) | F-13 | Pessoa E: _preencher_ | |
+| Checkout transacional, entrega ou retirada, estoque e expiração (UC08/UC09) | F-14 | Pessoa E: _preencher_ | |
+| Contratos e modelos de pedidos e migrations de compatibilidade (UC06/UC08/UC14/UC17) | F-15 | Pessoa F: _preencher_, com Kauê (contatos confirmados) e a pessoa E | |
+| Histórico e detalhe de pedidos do cliente (UC06) | F-16 | Pessoa F: _preencher_ | |
+| Administração de pedidos: transições, receita e histórico (UC17) | F-17 | Pessoa F: _preencher_ | |
+| Proteção do login e logout validado nos novos fluxos (UC10/UC15) | F-18 | Pessoa F: _preencher_ | |
+| Integração, teste do percurso completo e entrega reproduzível | F-19 | Todos | |

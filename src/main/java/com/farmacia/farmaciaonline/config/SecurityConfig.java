@@ -35,6 +35,7 @@ public class SecurityConfig {
             "/login",
             "/cadastro/**",
             "/confirmar-conta/**",
+            "/recuperar-senha/**",
             "/institucional/**", // páginas do rodapé (já existem desde a F1-07)
             "/css/**",
             "/images/**",

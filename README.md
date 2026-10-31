@@ -212,6 +212,7 @@ com.farmacia.farmaciaonline
 ├── repository       (Interfaces Spring Data JPA)
 ├── security         (UsuarioDetailsService, UsuarioAutenticado, handlers de login)
 ├── service          (Regras de negócio)
+├── validacao        (CpfValido: validação do CPF pelos dígitos verificadores)
 └── FarmaciaOnlineApplication.java
 
 src/main/resources
@@ -332,6 +333,30 @@ Telas em `/enderecos` (lista, `novo`, `{id}/editar`, `{id}/excluir`); exigem log
 - **Tela pequena:** a tabela da lista rola dentro da própria caixa (`.tabela-rolavel`), sem fazer a página rolar para o lado.
 - **Testes:** `EnderecoFormTest` e `DemoCepAdapterTest` (sem Spring), `EnderecoControllerTest` (camada web, sem Docker)
   e `EnderecoServiceIntegracaoTest` (Docker ligado: isolamento entre clientes e pedido antigo intacto).
+
+## Cadastro de clientes (F-04 / UC03)
+
+- **Telas:** `/cadastro` (formulário e POST) e `/confirmar-conta` (página provisória até a F-05). Quem já está logado é
+  mandado para a home.
+- **Regras** (`CadastroForm` e `CadastroService`): CPF pelos dígitos verificadores (`@CpfValido`), 18 anos ou mais,
+  celular com DDD e 9 dígitos, e-mail válido, senha de 8 caracteres ou mais com letra e número (até 72 bytes, o limite do
+  BCrypt) e CPF e e-mail ainda sem conta, sem diferenciar maiúsculas. Se dois cadastros iguais chegarem ao mesmo tempo,
+  o índice único do banco recusa o segundo e a tela mostra o mesmo aviso de duplicidade.
+- **A conta nasce PENDENTE e CLIENTE**, com senha em BCrypt e a versão dos termos (`app.termos.versao`, hoje `1.0`) e a
+  data do aceite. O navegador não manda nada disso: o `CadastroForm` não tem esses campos, então `perfil=ADMIN` ou
+  `status=ATIVA` na requisição são ignorados (há teste).
+- **Duplicidade:** a tela avisa que já existe conta e oferece entrar (`/login`) ou recuperar a senha (`/recuperar-senha`,
+  da F-06).
+- **Máscaras:** o CPF e o celular ganham pontuação enquanto a pessoa digita (`static/js/mascaras.js`, pelo atributo
+  `data-mascara="cpf"` ou `"celular"`). Sem JavaScript o formulário continua funcionando: o servidor grava só os dígitos.
+- **Retorno ao carrinho:** `/cadastro?retorno=carrinho` ou `?retorno=checkout` (só essas duas palavras; qualquer outra coisa é
+  ignorada). O valor fica na sessão (`retornoCadastro`); `CadastroController.destinoDoRetorno` converte para `/carrinho`
+  ou `/checkout`. Quem montar o botão "Criar conta" do carrinho (F-10) usa esse parâmetro.
+- **Contrato com a confirmação (F-05):** depois de gravar, o cadastro guarda na **sessão** o id da conta
+  (`contaEmConfirmacao`) e redireciona para `/confirmar-conta`. A F-05 lê o id daí (nunca da URL) e, ao final, usa o
+  `retornoCadastro`.
+- **Testes:** `CpfValidatorTest`, `CadastroFormTest`, `CadastroControllerTest` (sem banco), `CadastroServiceIntegracaoTest`
+  e `CadastroIntegracaoTest` (PostgreSQL real; este último inclui a tentativa de elevar o perfil e o login da conta pendente).
 
 ## Como criar uma página nova
 

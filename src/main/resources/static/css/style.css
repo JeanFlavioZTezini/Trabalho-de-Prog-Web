@@ -744,3 +744,11 @@ textarea:focus-visible {
    dentro da caixa os textos escondidos (.visually-hidden), que são absolutos e senão escapam do corte. */
 .tabela-rolavel { position: relative; overflow-x: auto; }
 .tabela-rolavel:focus-visible { outline: 3px solid var(--cor-azul); outline-offset: 2px; }
+
+/* ---------- F-04: cadastro ---------- */
+/* Chrome não aplica :focus-visible quando o foco está no botão do calendário do campo de data: sem esta regra o
+   contorno some nessa parada do Tab. */
+input[type="date"]:focus-within {
+  outline: 3px solid var(--cor-azul);
+  outline-offset: 2px;
+}

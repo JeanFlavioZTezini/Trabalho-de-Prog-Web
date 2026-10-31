@@ -183,6 +183,7 @@ class EnderecoControllerTest {
             assertThat(html).contains("for=\"" + campo + "\"").contains("id=\"" + campo + "\"");
         }
         assertThat(html).contains("action=\"/enderecos\"").contains("name=\"_csrf\"");
+        assertThat(html).contains("src=\"/js/cep.js\"");
     }
 
     @Test

@@ -28,7 +28,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
@@ -47,9 +46,10 @@ import com.farmacia.farmaciaonline.service.CadastroService;
 
 /**
  * Camada web do cadastro, com o serviço simulado: sem banco e sem Docker. As regras do serviço têm teste próprio
- * (CadastroServiceIntegracaoTest) e o fluxo completo está no CadastroIntegracaoTest.
+ * (CadastroServiceIntegracaoTest), o fluxo completo está no CadastroIntegracaoTest e a confirmação no
+ * ConfirmacaoContaIntegracaoTest.
  */
-@WebMvcTest({CadastroController.class, ConfirmacaoContaController.class})
+@WebMvcTest(CadastroController.class)
 @Import(SecurityConfig.class)
 class CadastroControllerTest {
 
@@ -252,17 +252,5 @@ class CadastroControllerTest {
         assertThat(CadastroController.destinoDoRetorno("checkout")).isEqualTo("/checkout");
         assertThat(CadastroController.destinoDoRetorno("https://x.com")).isNull();
         assertThat(CadastroController.destinoDoRetorno(null)).isNull();
-    }
-
-    @Test
-    @DisplayName("a página provisória de confirmação só abre para quem acabou de se cadastrar")
-    void confirmacaoExigeContaNaSessao() throws Exception {
-        mvc.perform(get("/confirmar-conta")).andExpect(redirectedUrl("/cadastro"));
-
-        MockHttpSession sessao = new MockHttpSession();
-        sessao.setAttribute(CadastroController.SESSAO_CONTA, 7L);
-        String html = html(get("/confirmar-conta").session(sessao));
-
-        assertThat(html).contains("<h1>Cadastro recebido</h1>").contains("pendente");
     }
 }

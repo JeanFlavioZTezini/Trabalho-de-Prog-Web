@@ -20,9 +20,12 @@ public class LoginController {
     public String login(
             @RequestParam(name = "erro", required = false) String erro,
             @RequestParam(name = "logout", required = false) String logout,
+            @RequestParam(name = "confirmada", required = false) String confirmada,
             Model model) {
         model.addAttribute("erroLogin", mensagemDeErro(erro));
+        model.addAttribute("contaPendente", LoginFailureHandler.MOTIVO_PENDENTE.equals(erro));
         model.addAttribute("saiu", logout != null);
+        model.addAttribute("contaConfirmada", confirmada != null);
         return "login";
     }
 
@@ -32,7 +35,7 @@ public class LoginController {
         }
         return switch (erro) {
             case LoginFailureHandler.MOTIVO_PENDENTE ->
-                    "Sua conta ainda não foi confirmada. Confirme seu e-mail para poder entrar.";
+                    "Sua conta ainda não foi confirmada. Confirme seu e-mail ou celular para poder entrar.";
             case LoginFailureHandler.MOTIVO_BLOQUEADA ->
                     "Sua conta está temporariamente bloqueada. Tente novamente mais tarde.";
             case LoginFailureHandler.MOTIVO_INDISPONIVEL ->

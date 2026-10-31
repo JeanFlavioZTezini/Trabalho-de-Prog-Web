@@ -13,9 +13,12 @@
     <p class="alerta alerta--erro" role="alert" th:if="${erroLogin != null}" th:text="${erroLogin}">
         Mensagem de erro
     </p>
+    <p th:if="${contaPendente}"><a th:href="@{/confirmar-conta/retomar}">Confirmar minha conta</a></p>
 
-    <!--/* Aviso de logout: não é erro, então role="status" (anunciado sem interromper). */-->
+    <!--/* Avisos de logout e de conta confirmada: não são erro, então role="status" (anunciado sem interromper). */-->
     <p class="alerta alerta--sucesso" role="status" th:if="${saiu}">Você saiu da sua conta.</p>
+    <p class="alerta alerta--sucesso" role="status" th:if="${contaConfirmada}">Conta confirmada. Agora é só entrar com
+        seu e-mail ou CPF e a senha.</p>
 
     <!--/* th:action coloca o token CSRF no formulário; sem ele o POST /login é recusado (403). */-->
     <form th:action="@{/login}" method="post">

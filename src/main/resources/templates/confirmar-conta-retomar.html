@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Confirmar minha conta | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1>Confirmar minha conta</h1>
+
+    <p>Informe o e-mail ou CPF e a senha do cadastro. Se a conta ainda estiver pendente, você pede um código para
+        confirmá-la.</p>
+
+    <p class="alerta alerta--erro" role="alert" th:if="${erro}" th:text="${erro}">Erro.</p>
+
+    <form th:action="@{/confirmar-conta/retomar}" method="post">
+        <div th:replace="~{fragments/campo :: campo(id='identificador', nome='identificador', rotulo='E-mail ou CPF',
+                 tipo='text', ajuda=null, erro=null, autocomplete='username')}"></div>
+        <div th:replace="~{fragments/campo :: campo(id='senha', nome='senha', rotulo='Senha',
+                 tipo='password', ajuda=null, erro=null, autocomplete='current-password')}"></div>
+        <button type="submit" class="btn-primario btn-primario--bloco">Continuar</button>
+    </form>
+
+    <p class="pagina-texto__rodape-form">Ainda não tem conta? <a th:href="@{/cadastro}">Cadastre-se</a></p>
+
+</div>
+</body>
+</html>

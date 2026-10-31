@@ -86,6 +86,14 @@ public class Usuario {
     @Column(name = "bloqueado_ate")
     private Instant bloqueadoAte;
 
+    /** Quando o e-mail foi confirmado por código (F-05). Nulo = ainda não confirmado. */
+    @Column(name = "email_confirmado_em")
+    private Instant emailConfirmadoEm;
+
+    /** Quando o celular foi confirmado por código (F-05). Confirmar o e-mail não preenche este campo. */
+    @Column(name = "celular_confirmado_em")
+    private Instant celularConfirmadoEm;
+
     @Column(name = "criado_em", nullable = false, updatable = false)
     private Instant criadoEm;
 

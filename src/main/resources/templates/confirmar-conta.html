@@ -1,8 +1,4 @@
 <!DOCTYPE html>
-<!--
-    Página provisória: a F-05 troca por a tela do código de confirmação. A conta recém-criada está na sessão
-    (CadastroController.SESSAO_CONTA).
--->
 <html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
 <head>
     <title>Confirmar conta | Farma++</title>
@@ -10,11 +6,48 @@
 <body>
 <div id="pagina" class="pagina-texto pagina-texto--estreita">
 
-    <h1>Cadastro recebido</h1>
+    <h1>Confirme sua conta</h1>
 
-    <p>Sua conta foi criada e está <strong>pendente</strong>: ela só poderá entrar depois de confirmar o e-mail ou o
-        celular. A confirmação por código ainda será liberada.</p>
-    <p><a th:href="@{/}">Voltar para a página inicial</a></p>
+    <p>Sua conta foi criada e está pendente. Peça um código, digite-o abaixo e a conta fica ativa.</p>
+
+    <p class="alerta alerta--sucesso" role="status" th:if="${sucesso}" th:text="${sucesso}">Código enviado.</p>
+    <p class="alerta alerta--erro" role="alert" th:if="${erro}" th:text="${erro}">Erro.</p>
+
+    <h2>1. Receber o código</h2>
+    <form th:action="@{/confirmar-conta/enviar}" method="post">
+        <fieldset class="campo campo--opcoes">
+            <legend>Enviar o código por</legend>
+            <label for="canal-email">
+                <input type="radio" id="canal-email" name="canal" value="EMAIL" checked>
+                E-mail <span th:text="${emailMascarado}">m***@exemplo.com</span>
+            </label>
+            <label for="canal-sms" th:if="${celularMascarado != ''}">
+                <input type="radio" id="canal-sms" name="canal" value="SMS">
+                SMS <span th:text="${celularMascarado}">(67) 9****-8888</span>
+            </label>
+        </fieldset>
+        <button type="submit" class="btn-primario">Enviar código</button>
+    </form>
+
+    <h2>2. Digitar o código</h2>
+    <form th:action="@{/confirmar-conta}" method="post">
+        <div class="campo">
+            <label for="codigo">Código de 6 números</label>
+            <p class="campo__ajuda" id="codigo-ajuda"
+               th:text="|Vale por ${validadeMinutos} minutos e aceita ${tentativasMaximas} tentativas. Pedir outro código invalida o anterior.|">
+                Vale por 10 minutos.</p>
+            <input type="text" id="codigo" name="codigo" inputmode="numeric" autocomplete="one-time-code"
+                   maxlength="6" pattern="[0-9]{6}" required aria-describedby="codigo-ajuda">
+        </div>
+        <button type="submit" class="btn-primario">Confirmar conta</button>
+    </form>
+
+    <p class="pagina-texto__rodape-form" th:if="${demo}">
+        Demonstração: nenhum e-mail ou SMS sai de verdade. Veja o código na
+        <a th:href="@{/caixa-demo}" target="_blank" rel="noopener">caixa de mensagens de teste<span
+                class="visually-hidden"> (abre em nova aba)</span></a>.
+    </p>
+    <p class="pagina-texto__rodape-form"><a th:href="@{/login}">Voltar ao login</a></p>
 
 </div>
 </body>

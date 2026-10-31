@@ -36,6 +36,7 @@ public class SecurityConfig {
             "/cadastro/**",
             "/confirmar-conta/**",
             "/recuperar-senha/**",
+            "/caixa-demo/**", // caixa de mensagens de teste: a rota só existe no perfil demo
             "/institucional/**", // páginas do rodapé (já existem desde a F1-07)
             "/css/**",
             "/images/**",

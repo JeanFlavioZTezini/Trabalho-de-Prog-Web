@@ -765,3 +765,25 @@ input[type="date"]:focus-within {
 .caixa-demo li { margin-bottom: 1.5rem; }
 .caixa-demo h2 { margin: 0 0 0.25rem; font-size: 1.125rem; }
 .caixa-demo__dados { color: var(--cor-texto-hint); }
+
+/* ---------- F-14: checkout ---------- */
+.alerta > :last-child { margin-bottom: 0; }
+
+.checkout-totais {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  gap: 0.25rem 1rem;
+  max-width: 20rem;
+  margin: 1rem 0 1.5rem auto;
+}
+.checkout-totais dt, .checkout-totais dd { margin: 0; }
+.checkout-totais dd { text-align: right; }
+.checkout-totais__total { font-size: 1.125rem; font-weight: 700; }
+
+/* O código do Pix/boleto é uma linha longa e sem espaços: quebra para não fazer a página rolar para o lado. */
+.checkout-codigo { overflow-wrap: anywhere; font-family: monospace; }
+
+.checkout-demo { margin: 1rem 0; }
+.checkout-demo form { display: inline-block; margin-right: 0.5rem; }
+
+.selo-receita { display: block; font-size: 0.75rem; font-weight: 700; }

@@ -62,8 +62,8 @@ Os testes têm passo próprio: ver [Testes e integração contínua](#testes-e-i
 
 ## Dados de demonstração
 
-Num banco novo, o Flyway aplica `V1__init.sql` (tabelas) e `V2__seed.sql` (categorias, produtos,
-lojas e usuários de teste). Quem subir o banco do zero recebe os mesmos dados.
+Num banco novo, o Flyway aplica `V1__init.sql` (tabelas), `V2__seed.sql` (categorias, produtos,
+lojas e usuários de teste) e as migrações seguintes. Quem subir o banco do zero recebe os mesmos dados.
 
 | E-mail | Perfil | Status | Senha |
 |---|---|---|---|
@@ -228,6 +228,7 @@ src/main/resources
 │   ├── institucional  (páginas de texto, ex.: boas-praticas.html)
 │   ├── admin          (painel do administrador, provisório)
 │   ├── enderecos      (lista, formulário e exclusão dos endereços do cliente)
+│   ├── checkout       (escolha, resumo e tela do pedido)
 │   ├── error          (403.html, 404.html e 5xx.html: o Spring Boot usa sozinho conforme o status)
 │   ├── login.html
 │   └── index.html
@@ -261,8 +262,9 @@ Entidades em `model` (`Categoria`, `Produto`, `Apresentacao`, `ImagemProduto`); 
   `null` se o produto não tem apresentações). `Apresentacao#isDisponivel()` é "ativa e estoque > 0".
   `Produto#isIndisponivel()` é "nenhuma apresentação disponível" (sem apresentações também é indisponível).
 - `ImagemProduto.apresentacao` nula significa que a imagem vale para todas as apresentações do produto.
-- `Apresentacao.versao` (`@Version`) é o lock otimista do estoque. No checkout, duas compras simultâneas da
-  mesma apresentação fazem a segunda falhar com `ObjectOptimisticLockingFailureException`: trate esse erro.
+- `Apresentacao.versao` (`@Version`) protege a edição do produto no admin: quem abriu a tela antes de uma compra não
+  sobrescreve o estoque. O checkout não depende dela para disputar estoque: usa atualização condicional
+  (`ApresentacaoRepository#reservarEstoque`), que também sobe a versão.
 - As coleções de `Produto` (`categorias`, `apresentacoes`, `imagens`) são LAZY. Acesse dentro de transação ou
   com `JOIN FETCH`, senão dá `LazyInitializationException` ou consulta N+1. Não há cascade: grave cada
   `Apresentacao` e `ImagemProduto` pelo próprio repository.
@@ -296,7 +298,7 @@ Entidades em `model` (`Pedido`, `ItemPedido`, `Pagamento`, `HistoricoStatusPedid
 - **Chame `Pedido#recalcularTotais()` antes de gravar.** O banco exige `total = subtotal + frete`. O método arredonda
   cada item e o frete para 2 casas (HALF_UP) e depois soma, e trata frete nulo como zero.
 - **Regra que o banco não garante:** pedido com item que exige receita só pode ser RETIRADA. `Pedido#temItemQueExigeReceita()`
-  só consulta; quem valida é o service do checkout (Fase 2), com teste próprio.
+  só consulta; quem valida é o `CheckoutService`, com teste próprio.
 - `Pedido.itens` tem `cascade = ALL`: grave o pedido e os itens vão juntos. Pagamentos e histórico são gravados pelos
   próprios repositories.
 - Um pedido tem várias tentativas de `Pagamento` (UC08-E2). Do cartão só ficam dados mascarados, e parcelas acima de 1
@@ -334,6 +336,89 @@ Telas em `/enderecos` (lista, `novo`, `{id}/editar`, `{id}/excluir`); exigem log
 - **Tela pequena:** a tabela da lista rola dentro da própria caixa (`.tabela-rolavel`), sem fazer a página rolar para o lado.
 - **Testes:** `EnderecoFormTest` e `DemoCepAdapterTest` (sem Spring), `EnderecoControllerTest` (camada web, sem Docker)
   e `EnderecoServiceIntegracaoTest` (Docker ligado: isolamento entre clientes e pedido antigo intacto).
+
+## Checkout (F-14 / UC08 e UC09)
+
+Telas em `/checkout`; exigem login e conta `CLIENTE` `ATIVA` (administrador e conta pendente recebem 403). O carrinho de
+quem está logado é a origem dos itens. A F-10 só precisa levar a pessoa para `/checkout` e manter `ItemCarrinho.precoVisto`.
+
+| Rota | O que faz |
+|---|---|
+| `GET /checkout` | Escolha de entrega ou retirada, endereço, loja, pagamento e parcelas. Aceita `?enderecoId=` na volta de `/enderecos` |
+| `GET /checkout/resumo` | Resumo calculado no servidor, antes de confirmar |
+| `POST /checkout/precos` | Aceita os preços novos dos itens |
+| `POST /checkout/confirmar` | Registra o pedido e faz a primeira cobrança |
+| `GET /checkout/pedidos/{id}` | Confirmação e situação do pedido (pedido alheio responde 404) |
+| `POST /checkout/pedidos/{id}/pagamento` | Nova tentativa no mesmo pedido |
+| `POST /checkout/pedidos/{id}/atualizar` | "Já paguei": consulta o gateway |
+| `POST /checkout/pedidos/{id}/resumo` | Reenvia o resumo que não foi enviado |
+| `POST /checkout/pedidos/{id}/demo/{aprovar,expirar}` | Simula o evento de Pix/boleto. Só no perfil `demo` e só para o dono do pedido |
+
+**Frete de demonstração** (`service/FreteDemo`). O CEP e a UF precisam combinar; o que não está na tabela não é atendido e
+bloqueia a entrega. Retirada tem frete zero.
+
+| UF | Faixa de CEP | Frete | Prazo |
+|---|---|---|---|
+| SP | 01000-000 a 09999-999 | R$ 9,90 | 2 dias |
+| SP | 11000-000 a 19999-999 | R$ 14,90 | 3 dias |
+| RJ | 20000-000 a 28999-999 | R$ 19,90 | 4 dias |
+| MG | 30000-000 a 39999-999 | R$ 19,90 | 4 dias |
+
+**Receita:** qualquer item que exige receita obriga a retirada em loja, inclusive em `POST` direto. A tela avisa que a
+receita é apresentada na loja. Não há envio nem análise de receita pelo site (decisão do grupo).
+
+**O servidor recalcula tudo.** Do navegador só vêm as escolhas. Não existe campo de total: um `total=` na requisição é
+ignorado. O formulário leva uma `conferencia` (impressão digital do resumo mostrado): se o recalculado for diferente, a
+pessoa volta ao resumo. Se `ItemCarrinho.precoVisto` difere do preço atual, a tela mostra o aviso e só deixa confirmar
+depois de aceitar o preço novo.
+
+**Política de pagamento e estoque** (uma só, em `EstadoPedidoService`; todo evento trava a linha do pedido antes de agir):
+
+| Situação | Pedido | Estoque |
+|---|---|---|
+| Pedido registrado, ou Pix/boleto pendente | `AGUARDANDO_PAGAMENTO` | Reservado (já saiu de `estoque`) |
+| Aprovação | `PAGAMENTO_APROVADO` | A reserva é consumida; soma em `qtd_vendida` |
+| Recusa | Continua `AGUARDANDO_PAGAMENTO` | Continua reservado; nova tentativa no mesmo pedido, até `expira_em` |
+| Expiração ou cancelamento | `CANCELADO` | Devolvido uma vez |
+
+- **Validade da reserva:** Pix 30 minutos e boleto 3 dias (do gateway); nos demais casos (cartão recusado, resposta
+  perdida), `app.checkout.validade-reserva` (30 minutos). O `ExpiracaoPedidosJob` roda a cada minuto
+  (`app.checkout.expiracao.cron`) e, antes de expirar, consulta o gateway: Pix pago no último minuto vira aprovação.
+- **Última unidade:** `ApresentacaoRepository#reservarEstoque` é um `UPDATE` condicional (`estoque >= quantidade` e preço
+  igual ao confirmado). O banco trava a linha, então só uma das compras passa; a outra volta ao resumo sem pedido.
+- **Envio repetido:** o resumo gera uma `chave` por exibição. O mesmo envio (duplo clique, voltar e reenviar) devolve o
+  mesmo pedido, sem nova reserva nem cobrança: a linha do carrinho põe os envios em fila e `ux_pedido_chave` é a garantia final.
+- **Dupla aprovação:** o índice `ux_pagamento_ativo` só permite uma tentativa pendente ou aprovada por pedido. Só tentativa
+  pendente muda de estado, então evento repetido ou atrasado não faz nada.
+- **Gateway fora da transação** (`PagamentoPedidoService`, sem `@Transactional`): grava a tentativa pendente (commit), chama
+  o gateway, grava o retorno (outro commit). Se a resposta se perder, a tentativa fica pendente e a tela oferece repetir com
+  a mesma chave, que o gateway reconhece e não cobra de novo. Pagamento de pedido cancelado que chegue depois é ignorado.
+- **Resumo por e-mail** (`ResumoPedidoService`): sai pelo `EnvioDeMensagem` depois do commit, quando o pedido é aceito
+  (aprovado, ou Pix/boleto gerado). Se falhar, o pedido continua valendo e a tela oferece **Reenviar resumo**. No perfil demo,
+  a mensagem aparece em `/caixa-demo`.
+
+**Para testar na demonstração:** os cartões fictícios `4111 1111 1111 1111` (aprova) e `4111 1111 1111 1210` (recusa), com
+validade futura. Pix e boleto mostram os botões **Simular pagamento aprovado** e **Simular expiração**. Como o gateway demo
+guarda as transações na memória, reiniciar a aplicação faz o Pix pendente responder como recusado (a pessoa tenta de novo).
+Esses botões e o `POST /demo/pagamento/forcar-status` (só `ADMIN`) existem apenas no perfil `demo`; fora dele, respondem 404.
+
+**Contratos para outras issues:**
+
+- **F-16 (pedidos do cliente):** o pedido tem as cópias em `enderecoEntrega` ou `localRetirada`, e `MetodoPagamento` e
+  `StatusPedido` têm `getRotulo()`. Dá para trocar o redirecionamento final para a nova tela quando ela existir.
+- **F-17 (administração):** cancelar é `EstadoPedidoService#cancelar(pedidoId, autor, observacao)`, que devolve o estoque uma
+  vez e funciona até `EM_SEPARACAO`; registrar a necessidade de estorno fica com a F-17. `Pedido.versao` (`@Version`) já existe
+  para a atualização concorrente. Pagamento aprovado só vem de `PagamentoPedidoService#processarEvento`.
+- **F-15:** a `V4` já criou o que o checkout precisa (`pedido.versao` e as colunas `retirada_*`); falta só o `status_anterior`
+  do histórico. `PRONTO_PARA_RETIRADA` já está nas constraints desde a `V1`.
+
+**Testes:** `FreteDemoTest` e `CartaoFormTest` (sem banco); `CheckoutServiceIntegracaoTest` (acesso, total, frete, receita, preço
+alterado, última unidade e envio repetido, com threads de verdade); `PagamentoPedidoIntegracaoTest` (recusa, evento repetido,
+expiração, cancelamento, gateway fora do ar e falha no envio); `CheckoutFluxoWebIntegracaoTest` (o percurso pelas telas);
+`CheckoutDemoSemPerfilTest` (sem o perfil demo, os botões não existem). A base `CheckoutTesteBase` não usa `@Transactional` de
+propósito: um rollback no fim do teste esconderia os commits e as travas, que são o assunto.
+
+**Fora do escopo:** escolher um cartão salvo no pagamento (opcional, F-25).
 
 ## Cadastro de clientes (F-04 / UC03)
 
@@ -509,7 +594,7 @@ Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: a
 | CRUD de endereços e seleção no checkout (UC16) | F-11 | Pessoa D: _preencher_ | |
 | Edição de dados pessoais e senha autenticada (UC07) | F-12 | Pessoa D: _preencher_ | |
 | Gateway de pagamento simulado e retorno idempotente (UC08/UC09) | F-13 | Pessoa E: _preencher_ | |
-| Checkout transacional, entrega ou retirada, estoque e expiração (UC08/UC09) | F-14 | Pessoa E: _preencher_ | |
+| Checkout transacional, entrega ou retirada, estoque e expiração (UC08/UC09) | F-14 (#37) | @Joaomarceloap | |
 | Contratos e modelos de pedidos e migrations de compatibilidade (UC06/UC08/UC14/UC17) | F-15 | Pessoa F: _preencher_, com Kauê (contatos confirmados) e a pessoa E | |
 | Histórico e detalhe de pedidos do cliente (UC06) | F-16 | Pessoa F: _preencher_ | |
 | Administração de pedidos: transições, receita e histórico (UC17) | F-17 | Pessoa F: _preencher_ | |

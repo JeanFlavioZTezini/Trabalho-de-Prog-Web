@@ -2,6 +2,7 @@ package com.farmacia.farmaciaonline.model;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -80,6 +81,13 @@ public class Pagamento {
     private String codigoPagamento;
 
     private Instant expiraEm;
+
+    /** Identifica a tentativa: reenviada, não cobra de novo. O gateway recebe a mesma chave. */
+    private UUID chaveIdempotencia;
+
+    /** Último retorno do gateway, para orientar a pessoa (ex.: motivo da recusa). */
+    @Column(length = 255)
+    private String mensagem;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

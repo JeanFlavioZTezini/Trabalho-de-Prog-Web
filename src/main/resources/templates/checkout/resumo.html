@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Resumo do pedido | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1>Resumo do pedido</h1>
+
+    <div class="alerta alerta--erro" role="alert" th:if="${erros != null}">
+        <ul><li th:each="e : ${erros}" th:text="${e}">Erro</li></ul>
+    </div>
+
+    <div class="alerta alerta--erro" role="alert" th:unless="${#lists.isEmpty(resumo.problemas)}">
+        <p>Antes de confirmar, resolva:</p>
+        <ul><li th:each="p : ${resumo.problemas}" th:text="${p}">Problema</li></ul>
+        <p><a th:href="@{/checkout}">Voltar às escolhas</a> ou <a th:href="@{/carrinho}">ir ao carrinho</a></p>
+    </div>
+
+    <div class="alerta alerta--erro" role="alert" th:if="${resumo.precoAlterado}">
+        <p><strong>O preço de um item mudou</strong> desde que você o adicionou. O total abaixo já usa o preço novo.
+           Confira e aceite para continuar.</p>
+        <form th:action="@{/checkout/precos}" method="post">
+            <th:block th:replace="~{checkout/fragmentos :: escolhaOculta(form=${checkoutForm})}"></th:block>
+            <button type="submit" class="btn-primario">Aceitar os novos preços</button>
+        </form>
+    </div>
+
+    <div class="tabela-rolavel" role="region" aria-label="Itens do pedido" tabindex="0">
+        <table class="tabela-admin">
+            <caption class="visually-hidden">Itens do pedido</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Produto</th>
+                    <th scope="col">Qtd.</th>
+                    <th scope="col">Preço</th>
+                    <th scope="col">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="i : ${resumo.itens}">
+                    <td>
+                        <span th:text="|${i.nomeProduto} ${i.descricao}|">Produto</span>
+                        <span class="selo-receita" th:if="${i.exigeReceita}">Exige receita</span>
+                    </td>
+                    <td th:text="${i.quantidade}">1</td>
+                    <td>
+                        <span th:text="${#numbers.formatCurrency(i.preco)}">R$ 10,00</span>
+                        <span th:if="${i.precoAlterado}"><br>antes: <span th:text="${#numbers.formatCurrency(i.precoVisto)}">R$ 9,00</span></span>
+                    </td>
+                    <td th:text="${#numbers.formatCurrency(i.subtotal)}">R$ 10,00</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <dl class="checkout-totais">
+        <dt>Subtotal</dt><dd th:text="${#numbers.formatCurrency(resumo.subtotal)}">R$ 10,00</dd>
+        <dt>Frete</dt><dd th:text="${#numbers.formatCurrency(resumo.frete)}">R$ 0,00</dd>
+        <dt>Total</dt><dd class="checkout-totais__total" th:text="${#numbers.formatCurrency(resumo.total)}">R$ 10,00</dd>
+    </dl>
+
+    <section th:if="${resumo.endereco != null}">
+        <h2>Entrega</h2>
+        <p>
+            <span th:text="${resumo.endereco.destinatario}">Destinatário</span><br>
+            <span th:text="|${resumo.endereco.logradouro}, ${resumo.endereco.numero}${resumo.endereco.complemento != null ? ' - ' + resumo.endereco.complemento : ''}|">Rua, 1</span><br>
+            <span th:text="|${resumo.endereco.bairro} - ${resumo.endereco.cidade}/${resumo.endereco.uf}|">Bairro</span>
+        </p>
+        <p th:if="${resumo.prazoEntregaDias != null}">Prazo: até <span th:text="${resumo.prazoEntregaDias}">2</span> dias úteis.</p>
+    </section>
+
+    <section th:if="${resumo.loja != null}">
+        <h2>Retirada em loja</h2>
+        <p>
+            <span th:text="${resumo.loja.nome}">Loja</span><br>
+            <span th:text="|${resumo.loja.logradouro}, ${resumo.loja.numero} - ${resumo.loja.bairro}, ${resumo.loja.cidade}/${resumo.loja.uf}|">Rua</span><br>
+            <span th:text="${resumo.loja.horarioFuncionamento}">Horário</span>
+        </p>
+    </section>
+
+    <p class="alerta" th:if="${resumo.exigeReceita}">
+        Este pedido tem medicamento que exige receita: <strong>apresente a receita na loja</strong> para retirá-lo.
+    </p>
+
+    <section th:if="${resumo.metodo != null}">
+        <h2>Pagamento</h2>
+        <p>
+            <span th:text="${resumo.metodo.rotulo}">Pix</span>
+            <span th:if="${checkoutForm.parcelasEfetivas() > 1}" th:text="|em ${checkoutForm.parcelasEfetivas()}x|">em 2x</span>
+        </p>
+    </section>
+
+    <form th:if="${resumo.confirmavel}" th:action="@{/checkout/confirmar}" method="post" autocomplete="off">
+        <th:block th:replace="~{checkout/fragmentos :: escolhaOculta(form=${checkoutForm})}"></th:block>
+        <input type="hidden" name="conferencia" th:value="${resumo.conferencia}">
+        <input type="hidden" name="chave" th:value="${chave}">
+        <th:block th:if="${checkoutForm.pagoComCartao}">
+            <th:block th:replace="~{checkout/fragmentos :: cartao(demo=${demo})}"></th:block>
+        </th:block>
+        <button type="submit" class="btn-primario">Confirmar pedido</button>
+    </form>
+
+    <p class="pagina-texto__rodape-form"><a th:href="@{/checkout}">Alterar as escolhas</a></p>
+
+</div>
+</body>
+</html>

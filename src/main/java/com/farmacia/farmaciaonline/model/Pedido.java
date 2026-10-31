@@ -5,6 +5,7 @@ import java.math.RoundingMode;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.UUID;
 
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
@@ -29,6 +30,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -89,6 +91,20 @@ public class Pedido {
     })
     private EnderecoEntrega enderecoEntrega;
 
+    /** Cópia da loja no momento da compra. Nula em pedido de entrega. */
+    @Embedded
+    @AttributeOverrides({
+            @AttributeOverride(name = "nome", column = @Column(name = "retirada_nome", length = 100)),
+            @AttributeOverride(name = "cep", column = @Column(name = "retirada_cep", length = 8)),
+            @AttributeOverride(name = "logradouro", column = @Column(name = "retirada_logradouro", length = 200)),
+            @AttributeOverride(name = "numero", column = @Column(name = "retirada_numero", length = 20)),
+            @AttributeOverride(name = "bairro", column = @Column(name = "retirada_bairro", length = 100)),
+            @AttributeOverride(name = "cidade", column = @Column(name = "retirada_cidade", length = 100)),
+            @AttributeOverride(name = "uf", column = @Column(name = "retirada_uf", length = 2)),
+            @AttributeOverride(name = "horarioFuncionamento", column = @Column(name = "retirada_horario", length = 200))
+    })
+    private LocalRetirada localRetirada;
+
     private Integer prazoEntregaDias;
 
     @Column(nullable = false, precision = 10, scale = 2)
@@ -100,8 +116,18 @@ public class Pedido {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal total;
 
-    /** Limite para pagar Pix ou boleto (UC08-A2). */
+    /** Até quando o estoque fica reservado sem pagamento (ver "Checkout" no README). Nulo depois de pago ou cancelado. */
     private Instant expiraEm;
+
+    /** Identifica o envio do formulário: o mesmo envio repetido devolve este pedido em vez de criar outro. */
+    private UUID chaveIdempotencia;
+
+    /** Quando o resumo foi enviado. Nulo: ainda não foi, e a tela oferece reenviar. */
+    private Instant resumoEnviadoEm;
+
+    /** Lock otimista: duas alterações de status simultâneas não se sobrescrevem. */
+    @Version
+    private Long versao;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

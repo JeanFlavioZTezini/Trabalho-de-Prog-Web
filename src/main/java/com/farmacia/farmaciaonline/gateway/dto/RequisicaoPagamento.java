@@ -13,7 +13,8 @@ public record RequisicaoPagamento(
         String validadeCartao,
         String nomeImpressoCartao,
         Integer parcelas,
-        Long cartaoSalvoId
+        Long cartaoSalvoId,
+        String chaveIdempotencia
 ) {
     public RequisicaoPagamento {
         if (parcelas == null || parcelas < 1) {
@@ -22,5 +23,16 @@ public record RequisicaoPagamento(
         if (numeroCartao != null) {
             numeroCartao = numeroCartao.replaceAll("[\\s-]", "");
         }
+    }
+
+    public RequisicaoPagamento(Long pedidoId, BigDecimal valor, MetodoPagamento metodo, String numeroCartao, String cvv,
+            String validadeCartao, String nomeImpressoCartao, Integer parcelas, Long cartaoSalvoId) {
+        this(pedidoId, valor, metodo, numeroCartao, cvv, validadeCartao, nomeImpressoCartao, parcelas, cartaoSalvoId,
+                null);
+    }
+
+    @Override
+    public String toString() {
+        return "RequisicaoPagamento[pedidoId=" + pedidoId + ", metodo=" + metodo + ", parcelas=" + parcelas + "]";
     }
 }

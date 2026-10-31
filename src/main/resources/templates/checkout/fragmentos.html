@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<body>
+
+<!--/* Escolhas da tela anterior, para reenviar nos formulários do resumo. */-->
+<th:block th:fragment="escolhaOculta(form)">
+    <input type="hidden" name="tipoEntrega" th:if="${form.tipoEntrega != null}" th:value="${form.tipoEntrega}">
+    <input type="hidden" name="enderecoId" th:if="${form.enderecoId != null}" th:value="${form.enderecoId}">
+    <input type="hidden" name="lojaId" th:if="${form.lojaId != null}" th:value="${form.lojaId}">
+    <input type="hidden" name="metodo" th:if="${form.metodo != null}" th:value="${form.metodo}">
+    <input type="hidden" name="parcelas" th:if="${form.parcelas != null}" th:value="${form.parcelas}">
+</th:block>
+
+<!--/* Dados do cartão: nunca vêm preenchidos, o servidor não os guarda. */-->
+<th:block th:fragment="cartao(demo)">
+    <p class="alerta" th:if="${demo}">
+        Pagamento de demonstração: nenhum valor é cobrado. Use um número fictício:
+        <strong>4111 1111 1111 1111</strong> aprova e <strong>4111 1111 1111 1210</strong> é recusado
+        (validade futura e qualquer código de segurança).
+    </p>
+    <div th:replace="~{fragments/campo :: campo(id='numeroCartao', nome='numeroCartao', rotulo='Número do cartão', tipo='text', ajuda=null, erro=null, autocomplete='cc-number')}"></div>
+    <div th:replace="~{fragments/campo :: campo(id='validadeCartao', nome='validadeCartao', rotulo='Validade', tipo='text', ajuda='Mês e ano, ex.: 12/30', erro=null, autocomplete='cc-exp')}"></div>
+    <div th:replace="~{fragments/campo :: campo(id='cvv', nome='cvv', rotulo='Código de segurança', tipo='text', ajuda=null, erro=null, autocomplete='cc-csc')}"></div>
+    <div th:replace="~{fragments/campo :: campo(id='nomeImpresso', nome='nomeImpresso', rotulo='Nome impresso no cartão', tipo='text', ajuda=null, erro=null, autocomplete='cc-name')}"></div>
+</th:block>
+
+<th:block th:fragment="parcelas(selecionada)">
+    <div class="campo">
+        <label for="parcelas">Parcelas (só no cartão de crédito)</label>
+        <select id="parcelas" name="parcelas">
+            <option th:each="n : ${#numbers.sequence(1, 12)}" th:value="${n}" th:text="|${n}x|"
+                    th:selected="${selecionada == n}">1x</option>
+        </select>
+    </div>
+</th:block>
+
+</body>
+</html>

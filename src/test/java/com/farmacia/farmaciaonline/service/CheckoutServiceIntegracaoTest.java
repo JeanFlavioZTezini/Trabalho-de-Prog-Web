@@ -87,7 +87,7 @@ class CheckoutServiceIntegracaoTest extends CheckoutTesteBase {
         Usuario dono = novoCliente();
         Usuario outro = novoCliente();
         noCarrinho(outro, novaApresentacao("10.00", 5), 1);
-        Long enderecoDoDono = novoEndereco(dono, "01310-100", "SP");
+        Long enderecoDoDono = novoEndereco(dono, "79002-000", "MS");
         CheckoutForm form = entrega(enderecoDoDono, MetodoPagamento.PIX);
 
         assertThatThrownBy(() -> checkout.montarResumo(outro.getId(), form))
@@ -133,16 +133,16 @@ class CheckoutServiceIntegracaoTest extends CheckoutTesteBase {
         Apresentacao b = novaApresentacao("3.33", 10);
         noCarrinho(cliente, a, 2);
         noCarrinho(cliente, b, 3);
-        Long enderecoId = novoEndereco(cliente, "20040-020", "RJ");
+        Long enderecoId = novoEndereco(cliente, "79800-001", "MS");
 
         Long id = comprar(cliente, entrega(enderecoId, MetodoPagamento.CARTAO_DEBITO), cartao(CARTAO_APROVADO));
 
         Pedido pedido = pedidoCompleto(id);
         assertThat(pedido.getSubtotal()).isEqualByComparingTo("30.99");
-        assertThat(pedido.getFrete()).isEqualByComparingTo("19.90");
-        assertThat(pedido.getTotal()).isEqualByComparingTo("50.89");
-        assertThat(pedido.getPrazoEntregaDias()).isEqualTo(4);
-        assertThat(pedido.getEnderecoEntrega().getCep()).isEqualTo("20040020");
+        assertThat(pedido.getFrete()).isEqualByComparingTo("14.90");
+        assertThat(pedido.getTotal()).isEqualByComparingTo("45.89");
+        assertThat(pedido.getPrazoEntregaDias()).isEqualTo(3);
+        assertThat(pedido.getEnderecoEntrega().getCep()).isEqualTo("79800001");
         assertThat(pedido.getItens()).hasSize(2);
         ItemPedido item = pedido.getItens().get(0);
         assertThat(item.getNomeProduto()).isEqualTo(a.getProduto().getNome());
@@ -188,7 +188,7 @@ class CheckoutServiceIntegracaoTest extends CheckoutTesteBase {
         CheckoutForm form = entrega(acre, MetodoPagamento.PIX);
 
         ResumoCheckout resumo = checkout.montarResumo(cliente.getId(), form).orElseThrow();
-        assertThat(resumo.problemas()).anyMatch(p -> p.contains("não entregamos"));
+        assertThat(resumo.problemas()).anyMatch(p -> p.contains("Mato Grosso do Sul"));
         assertThatThrownBy(() -> checkout.registrar(cliente.getId(), form, resumo.conferencia(), UUID.randomUUID()))
                 .isInstanceOf(CheckoutException.class);
         assertThat(estoqueDe(a)).isEqualTo(5);
@@ -205,7 +205,7 @@ class CheckoutServiceIntegracaoTest extends CheckoutTesteBase {
         Apresentacao controlado = novaApresentacao("18.50", 5, true);
         noCarrinho(cliente, novaApresentacao("10.00", 5), 1);
         noCarrinho(cliente, controlado, 1);
-        CheckoutForm entrega = entrega(novoEndereco(cliente, "01310-100", "SP"), MetodoPagamento.PIX);
+        CheckoutForm entrega = entrega(novoEndereco(cliente, "79002-000", "MS"), MetodoPagamento.PIX);
 
         ResumoCheckout resumo = checkout.montarResumo(cliente.getId(), entrega).orElseThrow();
         assertThat(resumo.exigeReceita()).isTrue();

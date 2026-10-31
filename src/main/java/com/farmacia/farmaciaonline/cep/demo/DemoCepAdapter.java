@@ -19,7 +19,9 @@ public class DemoCepAdapter implements ConsultaCep {
             "04094050", new EnderecoCep("04094050", "Avenida Ibirapuera", "Moema", "São Paulo", "SP"),
             "01001000", new EnderecoCep("01001000", "Praça da Sé", "Sé", "São Paulo", "SP"),
             "20040020", new EnderecoCep("20040020", "Rua da Assembleia", "Centro", "Rio de Janeiro", "RJ"),
-            "30130010", new EnderecoCep("30130010", "Avenida Afonso Pena", "Centro", "Belo Horizonte", "MG"));
+            "30130010", new EnderecoCep("30130010", "Avenida Afonso Pena", "Centro", "Belo Horizonte", "MG"),
+            "79002000", new EnderecoCep("79002000", "Rua 14 de Julho", "Centro", "Campo Grande", "MS"),
+            "79800001", new EnderecoCep("79800001", "Avenida Marcelino Pires", "Centro", "Dourados", "MS"));
 
     @Override
     public Optional<EnderecoCep> consultar(String cep) {

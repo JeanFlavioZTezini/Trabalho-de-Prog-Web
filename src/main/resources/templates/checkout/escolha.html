@@ -32,6 +32,7 @@
 
         <section th:unless="${tela.exigeReceita}">
             <h2>Endereço de entrega</h2>
+            <p>Entregamos somente em Mato Grosso do Sul (MS).</p>
             <fieldset class="campo--opcoes" th:unless="${#lists.isEmpty(tela.enderecos)}">
                 <legend class="visually-hidden">Endereço de entrega</legend>
                 <label th:each="e, estado : ${tela.enderecos}">

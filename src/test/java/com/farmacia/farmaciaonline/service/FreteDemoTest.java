@@ -13,11 +13,10 @@ class FreteDemoTest {
 
     @ParameterizedTest
     @CsvSource({
-            "SP, 01310100, 9.90, 2",
-            "SP, 09999999, 9.90, 2",
-            "SP, 13000000, 14.90, 3",
-            "RJ, 20040020, 19.90, 4",
-            "MG, 30130010, 19.90, 4"
+            "MS, 79000000, 9.90, 2",
+            "MS, 79129999, 9.90, 2",
+            "MS, 79130000, 14.90, 3",
+            "MS, 79999999, 14.90, 3"
     })
     @DisplayName("a tabela demo devolve o frete e o prazo da faixa de CEP")
     void regioesAtendidas(String uf, String cep, String valor, int prazo) {
@@ -30,10 +29,14 @@ class FreteDemoTest {
     @ParameterizedTest
     @CsvSource({
             "AC, 69900000",
-            "BA, 40000000",
-            "SP, 10000000"
+            "SP, 01310100",
+            "RJ, 20040020",
+            "MG, 30130010",
+            "MT, 78000000",
+            "MS, 78999999",
+            "MS, 80000000"
     })
-    @DisplayName("região fora da tabela não é atendida")
+    @DisplayName("fora de Mato Grosso do Sul não é atendido")
     void regioesNaoAtendidas(String uf, String cep) {
         assertThat(frete.cotar(uf, cep)).isEmpty();
     }
@@ -41,14 +44,14 @@ class FreteDemoTest {
     @Test
     @DisplayName("CEP de uma UF com a sigla de outra não é atendido")
     void cepEUfPrecisamCombinar() {
-        assertThat(frete.cotar("RJ", "01310100")).isEmpty();
+        assertThat(frete.cotar("SP", "79002000")).isEmpty();
     }
 
     @Test
     @DisplayName("dados incompletos não são atendidos, sem erro")
     void dadosInvalidos() {
-        assertThat(frete.cotar(null, "01310100")).isEmpty();
-        assertThat(frete.cotar("SP", null)).isEmpty();
-        assertThat(frete.cotar("SP", "0131")).isEmpty();
+        assertThat(frete.cotar(null, "79002000")).isEmpty();
+        assertThat(frete.cotar("MS", null)).isEmpty();
+        assertThat(frete.cotar("MS", "7900")).isEmpty();
     }
 }

@@ -319,7 +319,7 @@ Telas em `/enderecos` (lista, `novo`, `{id}/editar`, `{id}/excluir`); exigem log
 - **Validação** (`EnderecoForm`): destinatário, CEP, logradouro, número, bairro, cidade e UF obrigatórios; CEP com 8
   dígitos (com ou sem traço, gravado só com dígitos); UF é uma das 27 siglas; complemento e referência opcionais.
 - **Consulta de CEP** por adaptador: a tela depende da interface `cep/ConsultaCep`, e hoje só existe o
-  `cep/demo/DemoCepAdapter`, com 5 CEPs fictícios (`01310-100`, `04094-050`, `01001-000`, `20040-020`, `30130-010`).
+  `cep/demo/DemoCepAdapter`, com 7 CEPs fictícios (`01310-100`, `04094-050`, `01001-000`, `20040-020`, `30130-010`, `79002-000`, `79800-001`).
   CEP fora da lista = "não localizado"; `99999-999` simula o serviço fora do ar. Nos dois casos o formulário
   continua com o que já foi digitado e a pessoa preenche à mão. O botão "Buscar CEP" é um `POST` (funciona sem JavaScript). O Enter dentro do
   formulário **salva** (há um botão de envio escondido antes dele, porque o Enter aciona o primeiro botão do formulário).
@@ -354,15 +354,13 @@ quem está logado é a origem dos itens. A F-10 só precisa levar a pessoa para 
 | `POST /checkout/pedidos/{id}/resumo` | Reenvia o resumo que não foi enviado |
 | `POST /checkout/pedidos/{id}/demo/{aprovar,expirar}` | Simula o evento de Pix/boleto. Só no perfil `demo` e só para o dono do pedido |
 
-**Frete de demonstração** (`service/FreteDemo`). O CEP e a UF precisam combinar; o que não está na tabela não é atendido e
+**Frete de demonstração** (`service/FreteDemo`). Só Mato Grosso do Sul é atendido. O CEP e a UF precisam combinar; o que não está na tabela não é atendido e
 bloqueia a entrega. Retirada tem frete zero.
 
 | UF | Faixa de CEP | Frete | Prazo |
 |---|---|---|---|
-| SP | 01000-000 a 09999-999 | R$ 9,90 | 2 dias |
-| SP | 11000-000 a 19999-999 | R$ 14,90 | 3 dias |
-| RJ | 20000-000 a 28999-999 | R$ 19,90 | 4 dias |
-| MG | 30000-000 a 39999-999 | R$ 19,90 | 4 dias |
+| MS | 79000-000 a 79129-999 (Campo Grande) | R$ 9,90 | 2 dias |
+| MS | 79130-000 a 79999-999 (demais cidades) | R$ 14,90 | 3 dias |
 
 **Receita:** qualquer item que exige receita obriga a retirada em loja, inclusive em `POST` direto. A tela avisa que a
 receita é apresentada na loja. Não há envio nem análise de receita pelo site (decisão do grupo).

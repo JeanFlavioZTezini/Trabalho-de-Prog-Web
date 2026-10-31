@@ -174,7 +174,7 @@ public class CheckoutService {
                 endereco = enderecoService.copiaParaEntrega(usuarioId, form.getEnderecoId());
                 Optional<FreteDemo.Cotacao> cotacao = freteDemo.cotar(endereco.getUf(), endereco.getCep());
                 if (cotacao.isEmpty()) {
-                    problemas.add("Ainda não entregamos neste endereço. Escolha outro ou retire em uma loja.");
+                    problemas.add("Entregamos somente em Mato Grosso do Sul (MS). Escolha outro endereço ou retire em uma loja.");
                 } else {
                     frete = cotacao.get().valor();
                     prazo = cotacao.get().prazoDias();

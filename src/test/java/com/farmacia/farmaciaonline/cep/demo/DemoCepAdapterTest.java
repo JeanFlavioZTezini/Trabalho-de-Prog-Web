@@ -23,6 +23,12 @@ class DemoCepAdapterTest {
     }
 
     @Test
+    void cepDeMatoGrossoDoSulVoltaComOEndereco() {
+        assertThat(adapter.consultar("79002-000").orElseThrow().uf()).isEqualTo("MS");
+        assertThat(adapter.consultar("79800-001").orElseThrow().cidade()).isEqualTo("Dourados");
+    }
+
+    @Test
     void aceitaCepComTracoEComEspacos() {
         assertThat(adapter.consultar(" 01310-100 ")).isPresent();
     }

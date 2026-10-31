@@ -112,8 +112,8 @@ class CheckoutFluxoWebIntegracaoTest extends CheckoutTesteBase {
         Usuario cliente = novoCliente();
         Usuario outro = novoCliente();
         noCarrinho(cliente, novaApresentacao("10.00", 5), 1);
-        Long meu = novoEndereco(cliente, "01310-100", "SP");
-        Long alheio = novoEndereco(outro, "01310-100", "SP");
+        Long meu = novoEndereco(cliente, "79002-000", "MS");
+        Long alheio = novoEndereco(outro, "79002-000", "MS");
 
         String html = pagina(cliente, "/checkout?enderecoId=" + meu);
         assertThat(html).contains("Avenida Teste").contains("/enderecos?retorno=checkout");
@@ -129,7 +129,7 @@ class CheckoutFluxoWebIntegracaoTest extends CheckoutTesteBase {
         Usuario cliente = novoCliente();
         Apresentacao a = novaApresentacao("10.50", 5);
         noCarrinho(cliente, a, 2);
-        Long enderecoId = novoEndereco(cliente, "01310-100", "SP");
+        Long enderecoId = novoEndereco(cliente, "79002-000", "MS");
         String query = "tipoEntrega=ENTREGA&metodo=PIX&enderecoId=" + enderecoId;
 
         assertThat(pagina(cliente, "/checkout/resumo?" + query))
@@ -241,7 +241,7 @@ class CheckoutFluxoWebIntegracaoTest extends CheckoutTesteBase {
         Usuario cliente = novoCliente();
         Apresentacao controlado = novaApresentacao("18.50", 5, true);
         noCarrinho(cliente, controlado, 1);
-        Long enderecoId = novoEndereco(cliente, "01310-100", "SP");
+        Long enderecoId = novoEndereco(cliente, "79002-000", "MS");
 
         assertThat(pagina(cliente, "/checkout")).contains("retirado em loja").doesNotContain("value=\"ENTREGA\"");
         String query = "tipoEntrega=ENTREGA&metodo=PIX&enderecoId=" + enderecoId;

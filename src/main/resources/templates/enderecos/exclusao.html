@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Excluir endereço | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1>Excluir endereço</h1>
+
+    <p>Tem certeza de que quer excluir este endereço?</p>
+    <p>
+        <strong th:text="${endereco.destinatario}">Destinatário</strong><br>
+        <span th:text="|${endereco.logradouro}, ${endereco.numero}${endereco.complemento != null ? ' - ' + endereco.complemento : ''}|">Rua, 1</span><br>
+        <span th:text="|${endereco.bairro} - ${endereco.cidade}/${endereco.uf}|">Bairro - Cidade/UF</span><br>
+        <span th:text="|CEP ${#strings.substring(endereco.cep, 0, 5)}-${#strings.substring(endereco.cep, 5, 8)}|">CEP 00000-000</span>
+    </p>
+    <p>Pedidos já feitos com este endereço não são alterados.</p>
+
+    <form th:action="@{/enderecos/{id}/excluir(id=${endereco.id})}" method="post">
+        <input type="hidden" name="retorno" value="checkout" th:if="${checkout}">
+        <button type="submit" class="btn-primario">Excluir endereço</button>
+        <a th:href="${checkout} ? @{/enderecos(retorno='checkout')} : @{/enderecos}">Cancelar</a>
+    </form>
+
+</div>
+</body>
+</html>

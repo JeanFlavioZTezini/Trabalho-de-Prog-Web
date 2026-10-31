@@ -205,7 +205,8 @@ disponíveis como artefato da execução.
 
 ```
 com.farmacia.farmaciaonline
-├── config          (SecurityConfig, WebConfig, etc.)
+├── cep              (ConsultaCep: porta de consulta de CEP; demo/DemoCepAdapter)
+├── config           (SecurityConfig, WebConfig, etc.)
 ├── controller       (Controllers Thymeleaf; UsuarioLogadoAdvice entrega o primeiro nome ao cabeçalho)
 ├── model            (Entidades JPA)
 ├── repository       (Interfaces Spring Data JPA)
@@ -224,6 +225,7 @@ src/main/resources
 │   │                   campo.html: campo de formulário acessível com rótulo, ajuda e erro)
 │   ├── institucional  (páginas de texto, ex.: boas-praticas.html)
 │   ├── admin          (painel do administrador, provisório)
+│   ├── enderecos      (lista, formulário e exclusão dos endereços do cliente)
 │   ├── error          (403.html, 404.html e 5xx.html: o Spring Boot usa sozinho conforme o status)
 │   ├── login.html
 │   └── index.html
@@ -300,6 +302,36 @@ Entidades em `model` (`Pedido`, `ItemPedido`, `Pagamento`, `HistoricoStatusPedid
 - `HistoricoStatusPedido.alteradoPor` nulo significa que a mudança foi do sistema.
 - `PedidoRepository#findByIdAndUsuarioId` é o jeito de buscar um pedido para o cliente: de outro usuário, volta vazio (UC06).
 - `PRONTO_PARA_RETIRADA` é o status do pedido de retirada em loja. Quem decide as transições entre status é o service (Fase 2).
+
+## Endereços do cliente (F-11 / UC16)
+
+Telas em `/enderecos` (lista, `novo`, `{id}/editar`, `{id}/excluir`); exigem login (regra "todo o resto" do
+`SecurityConfig`). Código: `EnderecoController`, `EnderecoService`, `EnderecoForm`, `EnderecoRepository`.
+
+- **Dono é sempre o usuário da sessão.** Nenhum método lê id de usuário da requisição, e o formulário não tem
+  `id` nem usuário. `EnderecoRepository#findByIdAndUsuarioId` é o único jeito de buscar para o cliente: endereço
+  de outra pessoa responde **404** (ler, editar, excluir, selecionar, buscar CEP e POST direto). Conta que não está
+  `ATIVA` recebe 403.
+- **Validação** (`EnderecoForm`): destinatário, CEP, logradouro, número, bairro, cidade e UF obrigatórios; CEP com 8
+  dígitos (com ou sem traço, gravado só com dígitos); UF é uma das 27 siglas; complemento e referência opcionais.
+- **Consulta de CEP** por adaptador: a tela depende da interface `cep/ConsultaCep`, e hoje só existe o
+  `cep/demo/DemoCepAdapter`, com 5 CEPs fictícios (`01310-100`, `04094-050`, `01001-000`, `20040-020`, `30130-010`).
+  CEP fora da lista = "não localizado"; `99999-999` simula o serviço fora do ar. Nos dois casos o formulário
+  continua com o que já foi digitado e a pessoa preenche à mão. O botão "Buscar CEP" é um `POST` (funciona sem JavaScript). O Enter dentro do
+  formulário **salva** (há um botão de envio escondido antes dele, porque o Enter aciona o primeiro botão do formulário).
+- **Área atendida:** o endereço fora dela **pode ser salvo**; quem bloqueia a compra é o checkout.
+- **Exclusão** pede confirmação (`/{id}/excluir`). Editar ou excluir **não altera pedidos antigos**: o pedido guarda a
+  cópia `EnderecoEntrega`. `EnderecoService#copiaParaEntrega(usuarioId, enderecoId)` entrega essa cópia (só de
+  endereço do próprio usuário) para o checkout/F-14 gravar no pedido.
+- **Integração com o checkout:** o checkout abre `/enderecos?retorno=checkout` (ou `/enderecos/novo?retorno=checkout`).
+  Só o valor exato `checkout` é aceito e o destino é fixo (`/checkout`), então nada que vem da URL vira
+  redirecionamento. Salvar ou "Usar este endereço" volta para `/checkout?enderecoId=<id>`; cancelar volta para `/checkout`.
+  **Quem fizer o checkout deve ler `enderecoId` e buscar o endereço por `EnderecoService`** (nunca por
+  `EnderecoRepository#findById`), para manter a regra de 404 para endereço alheio.
+- **Máscara do CEP:** `static/js/cep.js` coloca o hífen enquanto a pessoa digita e formata o CEP salvo ao editar. É só conforto: sem JavaScript o campo aceita com ou sem hífen.
+- **Tela pequena:** a tabela da lista rola dentro da própria caixa (`.tabela-rolavel`), sem fazer a página rolar para o lado.
+- **Testes:** `EnderecoFormTest` e `DemoCepAdapterTest` (sem Spring), `EnderecoControllerTest` (camada web, sem Docker)
+  e `EnderecoServiceIntegracaoTest` (Docker ligado: isolamento entre clientes e pedido antigo intacto).
 
 ## Como criar uma página nova
 

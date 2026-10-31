@@ -729,3 +729,18 @@ textarea:focus-visible {
     scroll-behavior: auto !important;
   }
 }
+
+/* ---------- F-11: endereços ---------- */
+.usuario--logado { max-width: 24rem; }
+.usuario--logado a { white-space: nowrap; }
+
+.campo select[aria-invalid="true"],
+.campo textarea[aria-invalid="true"] { border-color: var(--cor-erro); }
+
+/* Link com cara de botão: sem esta regra, ".pagina-texto a" deixa o texto azul sobre o fundo azul. */
+.pagina-texto a.btn-primario { color: var(--cor-branco); text-decoration: none; }
+
+/* Tabela larga: rola dentro da própria caixa, a página não rola para o lado. O "position: relative" mantém
+   dentro da caixa os textos escondidos (.visually-hidden), que são absolutos e senão escapam do corte. */
+.tabela-rolavel { position: relative; overflow-x: auto; }
+.tabela-rolavel:focus-visible { outline: 3px solid var(--cor-azul); outline-offset: 2px; }

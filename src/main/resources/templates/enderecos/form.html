@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Endereço | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1 th:text="${enderecoId == null} ? 'Novo endereço' : 'Editar endereço'">Endereço</h1>
+
+    <p class="alerta" th:if="${avisoCep != null}" th:classappend="${avisoCepErro} ? 'alerta--erro' : 'alerta--sucesso'"
+       th:attr="role=${avisoCepErro} ? 'alert' : 'status'" th:text="${avisoCep}"></p>
+
+    <form th:action="${enderecoId == null} ? @{/enderecos} : @{/enderecos/{id}(id=${enderecoId})}"
+          th:object="${enderecoForm}" method="post">
+        <!--/* O Enter num campo aciona o PRIMEIRO botão de envio do formulário. Este botão (fora do Tab e
+               escondido) garante que o Enter salve em vez de acionar "Buscar CEP". */-->
+        <button type="submit" class="visually-hidden" tabindex="-1" aria-hidden="true">Salvar endereço</button>
+        <input type="hidden" name="retorno" value="checkout" th:if="${checkout}">
+
+        <div class="campo">
+            <label for="destinatario">Destinatário</label>
+            <input type="text" id="destinatario" th:field="*{destinatario}" maxlength="150" required
+                   autocomplete="name" th:aria-invalid="${#fields.hasErrors('destinatario')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('destinatario')} ? 'destinatario-erro'">
+            <p class="campo__erro" role="alert" id="destinatario-erro" th:if="${#fields.hasErrors('destinatario')}"
+               th:errors="*{destinatario}"></p>
+        </div>
+
+        <div class="campo">
+            <label for="cep">CEP</label>
+            <p class="campo__ajuda" id="cep-ajuda">Ex.: 01310-100. Use “Buscar CEP” para preencher o endereço ou digite à mão.</p>
+            <input type="text" id="cep" th:field="*{cep}" maxlength="9" inputmode="numeric" required
+                   autocomplete="postal-code" th:aria-invalid="${#fields.hasErrors('cep')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('cep')} ? 'cep-ajuda cep-erro' : 'cep-ajuda'">
+            <p class="campo__erro" role="alert" id="cep-erro" th:if="${#fields.hasErrors('cep')}" th:errors="*{cep}"></p>
+            <button type="submit" formnovalidate
+                    th:formaction="${enderecoId == null} ? @{/enderecos/cep} : @{/enderecos/{id}/cep(id=${enderecoId})}">Buscar CEP</button>
+        </div>
+
+        <div class="campo">
+            <label for="logradouro">Logradouro</label>
+            <input type="text" id="logradouro" th:field="*{logradouro}" maxlength="200" required
+                   autocomplete="address-line1" th:aria-invalid="${#fields.hasErrors('logradouro')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('logradouro')} ? 'logradouro-erro'">
+            <p class="campo__erro" role="alert" id="logradouro-erro" th:if="${#fields.hasErrors('logradouro')}"
+               th:errors="*{logradouro}"></p>
+        </div>
+
+        <div class="campo">
+            <label for="numero">Número</label>
+            <p class="campo__ajuda" id="numero-ajuda">Sem número? Escreva S/N.</p>
+            <input type="text" id="numero" th:field="*{numero}" maxlength="20" required
+                   th:aria-invalid="${#fields.hasErrors('numero')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('numero')} ? 'numero-ajuda numero-erro' : 'numero-ajuda'">
+            <p class="campo__erro" role="alert" id="numero-erro" th:if="${#fields.hasErrors('numero')}" th:errors="*{numero}"></p>
+        </div>
+
+        <div class="campo">
+            <label for="complemento">Complemento (opcional)</label>
+            <input type="text" id="complemento" th:field="*{complemento}" maxlength="100"
+                   autocomplete="address-line2" th:aria-invalid="${#fields.hasErrors('complemento')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('complemento')} ? 'complemento-erro'">
+            <p class="campo__erro" role="alert" id="complemento-erro" th:if="${#fields.hasErrors('complemento')}"
+               th:errors="*{complemento}"></p>
+        </div>
+
+        <div class="campo">
+            <label for="bairro">Bairro</label>
+            <input type="text" id="bairro" th:field="*{bairro}" maxlength="100" required
+                   th:aria-invalid="${#fields.hasErrors('bairro')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('bairro')} ? 'bairro-erro'">
+            <p class="campo__erro" role="alert" id="bairro-erro" th:if="${#fields.hasErrors('bairro')}" th:errors="*{bairro}"></p>
+        </div>
+
+        <div class="campo">
+            <label for="cidade">Cidade</label>
+            <input type="text" id="cidade" th:field="*{cidade}" maxlength="100" required
+                   autocomplete="address-level2" th:aria-invalid="${#fields.hasErrors('cidade')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('cidade')} ? 'cidade-erro'">
+            <p class="campo__erro" role="alert" id="cidade-erro" th:if="${#fields.hasErrors('cidade')}" th:errors="*{cidade}"></p>
+        </div>
+
+        <div class="campo">
+            <label for="uf">UF</label>
+            <select id="uf" th:field="*{uf}" required autocomplete="address-level1"
+                    th:aria-invalid="${#fields.hasErrors('uf')} ? 'true'"
+                    th:aria-describedby="${#fields.hasErrors('uf')} ? 'uf-erro'">
+                <option value="">Selecione</option>
+                <option th:each="sigla : ${ufs}" th:value="${sigla}" th:text="${sigla}">SP</option>
+            </select>
+            <p class="campo__erro" role="alert" id="uf-erro" th:if="${#fields.hasErrors('uf')}" th:errors="*{uf}"></p>
+        </div>
+
+        <div class="campo">
+            <label for="referencia">Ponto de referência (opcional)</label>
+            <input type="text" id="referencia" th:field="*{referencia}" maxlength="200"
+                   th:aria-invalid="${#fields.hasErrors('referencia')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('referencia')} ? 'referencia-erro'">
+            <p class="campo__erro" role="alert" id="referencia-erro" th:if="${#fields.hasErrors('referencia')}"
+               th:errors="*{referencia}"></p>
+        </div>
+
+        <button type="submit" class="btn-primario">Salvar endereço</button>
+        <a th:href="${checkout} ? @{/checkout} : @{/enderecos}">Cancelar</a>
+    </form>
+
+    <script th:src="@{/js/cep.js}" defer></script>
+
+</div>
+</body>
+</html>

@@ -59,6 +59,7 @@
              O logout é POST, então o formulário precisa de th:action (ele injeta o token CSRF). */-->
         <div class="usuario usuario--logado" sec:authorize="isAuthenticated()">
             <span class="usuario__nome">Olá, <strong th:text="${primeiroNomeUsuario} ?: ${#authentication.name}">usuário</strong></span>
+            <a th:href="@{/enderecos}">Meus endereços</a>
             <form class="usuario__sair" th:action="@{/logout}" method="post">
                 <button type="submit" class="usuario__sair-botao">Sair</button>
             </form>

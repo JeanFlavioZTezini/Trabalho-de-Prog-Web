@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Meus endereços | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1>Meus endereços</h1>
+
+    <p class="alerta alerta--sucesso" role="status" th:if="${sucesso != null}" th:text="${sucesso}"></p>
+    <p class="alerta alerta--erro" role="alert" th:if="${erro != null}" th:text="${erro}"></p>
+
+    <p th:if="${checkout}">Escolha o endereço de entrega do pedido ou cadastre um novo.</p>
+
+    <p>
+        <a class="btn-primario"
+           th:href="${checkout} ? @{/enderecos/novo(retorno='checkout')} : @{/enderecos/novo}">Novo endereço</a>
+        <a th:if="${checkout}" th:href="@{/checkout}">Voltar ao checkout</a>
+    </p>
+
+    <p th:if="${#lists.isEmpty(enderecos)}">Você ainda não cadastrou nenhum endereço.</p>
+
+    <div class="tabela-rolavel" role="region" aria-label="Endereços cadastrados" tabindex="0"
+         th:unless="${#lists.isEmpty(enderecos)}">
+    <table class="tabela-admin">
+        <caption class="visually-hidden">Endereços cadastrados</caption>
+        <thead>
+            <tr>
+                <th scope="col">Destinatário</th>
+                <th scope="col">Endereço</th>
+                <th scope="col">CEP</th>
+                <th scope="col">Ações</th>
+            </tr>
+        </thead>
+        <tbody>
+            <tr th:each="e : ${enderecos}">
+                <td th:text="${e.destinatario}">Destinatário</td>
+                <td>
+                    <span th:text="|${e.logradouro}, ${e.numero}${e.complemento != null ? ' - ' + e.complemento : ''}|">Rua, 1</span><br>
+                    <span th:text="|${e.bairro} - ${e.cidade}/${e.uf}|">Bairro - Cidade/UF</span>
+                    <span th:if="${e.referencia != null}"><br>Referência: <span th:text="${e.referencia}">ponto de referência</span></span>
+                </td>
+                <td th:text="|${#strings.substring(e.cep, 0, 5)}-${#strings.substring(e.cep, 5, 8)}|">00000-000</td>
+                <td>
+                    <form th:if="${checkout}" th:action="@{/enderecos/{id}/selecionar(id=${e.id},retorno='checkout')}"
+                          method="post">
+                        <button type="submit" class="btn-primario">
+                            Usar este endereço<span class="visually-hidden" th:text="| (${e.destinatario}, ${e.logradouro})|"></span>
+                        </button>
+                    </form>
+                    <a th:href="${checkout} ? @{/enderecos/{id}/editar(id=${e.id},retorno='checkout')} : @{/enderecos/{id}/editar(id=${e.id})}">
+                        Editar<span class="visually-hidden" th:text="| ${e.destinatario}|"></span></a>
+                    <a th:href="${checkout} ? @{/enderecos/{id}/excluir(id=${e.id},retorno='checkout')} : @{/enderecos/{id}/excluir(id=${e.id})}">
+                        Excluir<span class="visually-hidden" th:text="| ${e.destinatario}|"></span></a>
+                </td>
+            </tr>
+        </tbody>
+    </table>
+    </div>
+
+</div>
+</body>
+</html>

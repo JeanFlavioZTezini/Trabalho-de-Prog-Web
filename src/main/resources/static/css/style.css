@@ -752,3 +752,16 @@ input[type="date"]:focus-within {
   outline: 3px solid var(--cor-azul);
   outline-offset: 2px;
 }
+
+/* ---------- F-05: confirmação da conta e caixa de mensagens de teste ---------- */
+/* Grupo de opções (rádio): sem a moldura padrão do fieldset e com o rádio ao lado do texto. */
+.campo--opcoes { border: 0; margin: 0 0 1rem; padding: 0; }
+.campo--opcoes legend { margin-bottom: 0.5rem; padding: 0; font-weight: 700; }
+.campo--opcoes label { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 400; }
+.campo--opcoes input { width: auto; margin: 0; }
+.pagina-texto form + h2 { margin-top: 2rem; }
+
+.caixa-demo { padding-left: 1.25rem; }
+.caixa-demo li { margin-bottom: 1.5rem; }
+.caixa-demo h2 { margin: 0 0 0.25rem; font-size: 1.125rem; }
+.caixa-demo__dados { color: var(--cor-texto-hint); }

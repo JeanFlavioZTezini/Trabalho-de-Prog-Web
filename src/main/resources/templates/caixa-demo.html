@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<!--
+    Caixa de mensagens de teste (perfil demo): os e-mails e SMS que o envio simulado guardou na memória.
+-->
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Caixa de mensagens de teste | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1>Caixa de mensagens de teste</h1>
+
+    <p class="alerta">Página de demonstração: nenhum e-mail ou SMS sai de verdade. As mensagens ficam só na memória
+        (as últimas 50) e somem quando a aplicação reinicia.</p>
+
+    <p th:if="${#lists.isEmpty(mensagens)}">Nenhuma mensagem ainda.</p>
+
+    <ol class="caixa-demo" th:unless="${#lists.isEmpty(mensagens)}">
+        <li th:each="m : ${mensagens}">
+            <h2 th:text="${m.assunto()}">Assunto</h2>
+            <p class="caixa-demo__dados"
+               th:text="|${m.canal().name() == 'EMAIL' ? 'E-mail' : 'SMS'} para ${m.destino()}, ${#temporals.format(m.enviadaEm(), 'dd/MM/yyyy HH:mm:ss')}|">
+                E-mail para fulano@exemplo.com</p>
+            <p th:text="${m.texto()}">Texto da mensagem</p>
+        </li>
+    </ol>
+
+    <p><a th:href="@{/confirmar-conta}">Voltar para a confirmação da conta</a></p>
+
+</div>
+</body>
+</html>

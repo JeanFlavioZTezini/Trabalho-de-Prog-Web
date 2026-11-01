@@ -39,6 +39,21 @@ class RevogacaoDeSessoesTest {
     }
 
     @Test
+    void encerrarOutrasPoupaSoASessaoAtual() {
+        SessionRegistryImpl registro = new SessionRegistryImpl();
+        registro.registerNewSession("atual", principal(2));
+        registro.registerNewSession("outro-navegador", principal(2));
+        registro.registerNewSession("outra-pessoa", principal(3));
+
+        int encerradas = new RevogacaoDeSessoes(registro).encerrarOutrasSessoesDe(2L, "atual");
+
+        assertThat(encerradas).isEqualTo(1);
+        assertThat(registro.getSessionInformation("atual").isExpired()).isFalse();
+        assertThat(registro.getSessionInformation("outro-navegador").isExpired()).isTrue();
+        assertThat(registro.getSessionInformation("outra-pessoa").isExpired()).isFalse();
+    }
+
+    @Test
     void usuarioSemSessaoNaoEncerraNada() {
         SessionRegistryImpl registro = new SessionRegistryImpl();
         registro.registerNewSession("outra-pessoa", principal(3));

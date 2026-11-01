@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title th:text="${produto.nome + ' | Farma++'}">Produto | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="produto-detalhe">
+    <p><a th:href="@{/}">Voltar à página inicial</a></p>
+
+    <h1 th:text="${produto.nome}">Nome do produto</h1>
+    <p class="produto-detalhe__marca">
+        <span th:text="${produto.marca}">Marca</span>
+        <span th:if="${produto.principioAtivo != null}" th:text="| · ${produto.principioAtivo}|"></span>
+    </p>
+
+    <div class="produto-detalhe__grade">
+        <section class="produto-detalhe__galeria" aria-label="Imagens do produto">
+            <img th:each="imagem : ${produto.imagens}"
+                 th:src="@{${imagem.arquivo}}" th:alt="${imagem.alt}">
+        </section>
+
+        <div class="produto-detalhe__compra">
+            <form class="produto-detalhe__selecao" method="get"
+                  th:action="@{/produtos/{id}(id=${produto.id})}">
+                <div class="campo">
+                    <label for="apresentacaoId">Apresentação</label>
+                    <select id="apresentacaoId" name="apresentacaoId" data-atualizar-apresentacao
+                            th:disabled="${#lists.isEmpty(produto.apresentacoes)}">
+                        <option th:each="opcao : ${produto.apresentacoes}"
+                                th:value="${opcao.id}"
+                                th:selected="${produto.apresentacaoSelecionada != null and opcao.id == produto.apresentacaoSelecionada.id}"
+                                th:text="|${opcao.descricao}${opcao.disponivel ? '' : ' — Sem estoque'}|">
+                            20 comprimidos
+                        </option>
+                    </select>
+                </div>
+                <noscript>
+                    <button class="btn-secundario" type="submit"
+                            th:disabled="${#lists.isEmpty(produto.apresentacoes)}">Atualizar apresentação</button>
+                </noscript>
+            </form>
+
+            <p class="produto-detalhe__preco" th:if="${produto.apresentacaoSelecionada != null}"
+               th:text="${#numbers.formatCurrency(produto.apresentacaoSelecionada.preco)}">R$ 30,99</p>
+            <p class="produto-detalhe__preco" th:unless="${produto.apresentacaoSelecionada != null}">
+                Preço indisponível
+            </p>
+            <p class="produto-detalhe__ean" th:if="${produto.apresentacaoSelecionada != null}">
+                EAN: <span th:text="${produto.apresentacaoSelecionada.ean}">7891000000021</span>
+            </p>
+
+            <p class="selo selo--indisponivel" role="status" th:if="${!produto.disponivel}">
+                Indisponível para compra nesta apresentação.
+            </p>
+            <p class="selo selo--receita" role="status" th:if="${produto.exigeReceita}">
+                Exige receita
+            </p>
+
+            <form class="produto-detalhe__adicionar" th:action="@{/carrinho/itens}" method="post">
+                <input th:if="${produto.apresentacaoSelecionada != null}" type="hidden" name="apresentacaoId"
+                       th:value="${produto.apresentacaoSelecionada.id}">
+                <div class="campo">
+                    <label for="quantidade">Quantidade</label>
+                    <input type="number" id="quantidade" name="quantidade" value="1" min="1"
+                           th:attr="max=${produto.quantidadeMaxima}"
+                           th:disabled="${!produto.disponivel}"
+                           th:aria-describedby="${!produto.disponivel ? 'aviso-estoque' : 'limite-quantidade'}">
+                    <p id="limite-quantidade" class="campo__ajuda" th:if="${produto.disponivel}"
+                       th:text="|Máximo de ${produto.quantidadeMaxima} unidade(s) nesta compra.|">
+                        Máximo de 10 unidades nesta compra.
+                    </p>
+                    <p id="aviso-estoque" class="campo__ajuda" th:if="${!produto.disponivel}">
+                        Escolha uma apresentação disponível para comprar.
+                    </p>
+                </div>
+                <button class="btn-primario" type="submit"
+                        th:disabled="${!produto.disponivel or produto.apresentacaoSelecionada == null}">
+                    Adicionar ao carrinho
+                </button>
+            </form>
+
+            <aside class="produto-detalhe__aviso" aria-label="Avisos do produto">
+                <p th:if="${produto.exigeReceita}">
+                    Este produto exige receita. Consulte as condições de venda antes de comprar.
+                </p>
+                <p th:if="${produto.bulaUrl != null}">
+                    <a th:href="${produto.bulaUrl}" target="_blank" rel="noopener noreferrer">
+                        Consultar bula (abre em nova aba)
+                    </a>
+                </p>
+                <p th:if="${produto.bulaUrlInvalida}">
+                    O link da bula cadastrado não é válido e não pode ser aberto. Consulte a farmácia.
+                </p>
+                <p th:if="${produto.bulaUrl == null and !produto.bulaUrlInvalida}">
+                    Bula não disponível para este produto.
+                </p>
+                <p>As informações são descritivas e não substituem a orientação de um profissional de saúde.</p>
+            </aside>
+        </div>
+    </div>
+
+    <section class="produto-detalhe__secao" aria-labelledby="titulo-descricao">
+        <h2 id="titulo-descricao">Descrição e informações</h2>
+        <dl class="produto-detalhe__dados">
+            <div th:if="${produto.formaFarmaceutica != null}">
+                <dt>Forma</dt><dd th:text="${produto.formaFarmaceutica}">comprimido</dd>
+            </div>
+            <div th:if="${produto.acao != null}">
+                <dt>Ação</dt><dd th:text="${produto.acao}">Analgésico</dd>
+            </div>
+            <div th:if="${produto.viaAdministracao != null}">
+                <dt>Via de administração</dt><dd th:text="${produto.viaAdministracao}">Via oral</dd>
+            </div>
+            <div th:if="${produto.publicoAlvo != null}">
+                <dt>Público-alvo informado</dt><dd th:text="${produto.publicoAlvo}">Adultos</dd>
+            </div>
+            <div>
+                <dt>Classificação</dt><dd th:text="${produto.tarja}">Sem tarja</dd>
+            </div>
+            <div th:if="${produto.registroMs != null}">
+                <dt>Registro MS</dt><dd th:text="${produto.registroMs}">Registro</dd>
+            </div>
+        </dl>
+        <h3>Indicações informadas</h3>
+        <ul th:if="${!#lists.isEmpty(produto.indicacoes)}">
+            <li th:each="indicacao : ${produto.indicacoes}" th:text="${indicacao}">Indicação</li>
+        </ul>
+        <p th:if="${#lists.isEmpty(produto.indicacoes)}">Não há indicações cadastradas para este produto.</p>
+    </section>
+
+    <section class="produto-detalhe__secao" aria-labelledby="titulo-pagamento">
+        <h2 id="titulo-pagamento">Formas de pagamento</h2>
+        <p>As opções disponíveis para este pedido serão confirmadas no checkout.</p>
+        <ul>
+            <li th:each="metodo : ${metodosPagamento}" th:text="${metodo.rotulo}">Pix</li>
+        </ul>
+    </section>
+
+    <script th:src="@{/js/detalhe-produto.js}" defer></script>
+</div>
+</body>
+</html>

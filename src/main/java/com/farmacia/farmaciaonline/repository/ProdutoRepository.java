@@ -30,6 +30,11 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long>, Produto
     @Query("update Produto p set p.qtdVendida = p.qtdVendida + :quantidade where p.id = :id")
     int somarVendidos(@Param("id") Long id, @Param("quantidade") long quantidade);
 
+    /** Incrementa visualizações sem perder atualizações simultâneas de outras visitas. */
+    @Modifying
+    @Query("update Produto p set p.visualizacoes = p.visualizacoes + 1 where p.id = :id and p.ativo = true")
+    int incrementarVisualizacoes(@Param("id") Long id);
+
     /** Lista administrativa (UC12): nome, marca, princípio ativo, SKU ou EAN; {@code termo} já vem com %...%. */
     @Query("""
             select p from Produto p

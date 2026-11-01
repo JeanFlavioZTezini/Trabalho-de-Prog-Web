@@ -1,0 +1,180 @@
+package com.farmacia.farmaciaonline.controller;
+
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+
+import java.nio.charset.StandardCharsets;
+
+import jakarta.persistence.EntityManager;
+
+import org.junit.jupiter.api.DisplayName;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.context.annotation.Import;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
+import org.springframework.transaction.annotation.Transactional;
+
+import com.farmacia.farmaciaonline.TestcontainersConfiguration;
+import com.farmacia.farmaciaonline.model.Apresentacao;
+import com.farmacia.farmaciaonline.model.ImagemProduto;
+import com.farmacia.farmaciaonline.model.Produto;
+import com.farmacia.farmaciaonline.repository.ApresentacaoRepository;
+import com.farmacia.farmaciaonline.repository.CarrinhoRepository;
+import com.farmacia.farmaciaonline.repository.ImagemProdutoRepository;
+import com.farmacia.farmaciaonline.repository.ProdutoRepository;
+import com.farmacia.farmaciaonline.security.CarrinhoCookie;
+
+@SpringBootTest
+@AutoConfigureMockMvc
+@Import(TestcontainersConfiguration.class)
+@Transactional
+class DetalheProdutoIntegracaoTest {
+
+    @Autowired
+    private MockMvc mvc;
+
+    @Autowired
+    private ProdutoRepository produtoRepository;
+
+    @Autowired
+    private ApresentacaoRepository apresentacaoRepository;
+
+    @Autowired
+    private ImagemProdutoRepository imagemProdutoRepository;
+
+    @Autowired
+    private CarrinhoRepository carrinhoRepository;
+
+    @Autowired
+    private EntityManager entityManager;
+
+    @Test
+    @DisplayName("detalhe público exibe descrição, preço, avisos e compra da apresentação ativa")
+    void detalheExibeDadosEIncrementaVisualizacoes() throws Exception {
+        long visualizacoesAntes = produtoRepository.findById(1L).orElseThrow().getVisualizacoes();
+
+        String html = pagina("/produtos/1");
+
+        assertThat(html).contains("Novalgina Dipirona 1g");
+        assertThat(html).contains("href=\"/\">Voltar à página inicial</a>");
+        assertThat(html).contains("Alívio da dor");
+        assertThat(html).contains("Redução da febre");
+        assertThat(html).contains("R$ 30,99");
+        assertThat(html).contains("20 comprimidos");
+        assertThat(html).contains("7891000000021");
+        assertThat(html).contains("Formas de pagamento");
+        assertThat(html).contains("Cartão de crédito", "Cartão de débito", "Pix", "Boleto");
+        assertThat(html).containsPattern("(?s)<input type=\"hidden\" name=\"apresentacaoId\"\\s+value=\"2\">");
+        assertThat(html).contains("name=\"quantidade\"", "max=\"10\"", "name=\"_csrf\"");
+        assertThat(html).contains("alt=\"Novalgina Dipirona 1g\"");
+
+        entityManager.flush();
+        entityManager.clear();
+        assertThat(produtoRepository.findById(1L).orElseThrow().getVisualizacoes())
+                .isEqualTo(visualizacoesAntes + 1);
+    }
+
+    @Test
+    @DisplayName("trocar para apresentação sem estoque atualiza preço e desativa a compra")
+    void apresentaEstadoSemEstoque() throws Exception {
+        String html = pagina("/produtos/1?apresentacaoId=1");
+
+        assertThat(html).contains("10 comprimidos");
+        assertThat(html).contains("R$ 20,99");
+        assertThat(html).contains("Indisponível para compra nesta apresentação.");
+        assertThat(html).contains("name=\"quantidade\"");
+        assertThat(html).contains("disabled");
+        assertThat(html).contains("alt=\"Novalgina Dipirona 1g\"");
+    }
+
+    @Test
+    @DisplayName("imagem específica e descrição mudam com a apresentação selecionada")
+    void imagemEspecificaPertenceASelecaoAtual() throws Exception {
+        Produto produto = produtoRepository.findById(1L).orElseThrow();
+        Apresentacao apresentacao = apresentacaoRepository.findById(3L).orElseThrow();
+        ImagemProduto imagem = new ImagemProduto();
+        imagem.setProduto(produto);
+        imagem.setApresentacao(apresentacao);
+        imagem.setArquivo("/images/produtos/dipirona-monoidratada-500mg-20-comprimidos.webp");
+        imagem.setOrdem(0);
+        imagemProdutoRepository.saveAndFlush(imagem);
+
+        String html = pagina("/produtos/1?apresentacaoId=3");
+
+        assertThat(html).contains("30 comprimidos");
+        assertThat(html).contains("src=\"/images/produtos/dipirona-monoidratada-500mg-20-comprimidos.webp\"");
+        assertThat(html).contains("alt=\"Novalgina Dipirona 1g — 30 comprimidos\"");
+    }
+
+    @Test
+    @DisplayName("não aceita apresentação de outro produto nem apresentação inativa")
+    void recusaApresentacoesQueNaoPertencemAoProdutoOuEstaoInativas() throws Exception {
+        mvc.perform(get("/produtos/1").param("apresentacaoId", "4"))
+                .andExpect(status().isNotFound());
+
+        Apresentacao apresentacao = apresentacaoRepository.findById(2L).orElseThrow();
+        apresentacao.setAtiva(false);
+        apresentacaoRepository.saveAndFlush(apresentacao);
+
+        mvc.perform(get("/produtos/1").param("apresentacaoId", "2"))
+                .andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("produto inexistente ou inativo responde 404 sem exibir detalhes")
+    void produtoInexistenteOuInativoResponde404() throws Exception {
+        mvc.perform(get("/produtos/9999")).andExpect(status().isNotFound());
+        mvc.perform(get("/produtos/19")).andExpect(status().isNotFound());
+    }
+
+    @Test
+    @DisplayName("link de bula com esquema inseguro não é aberto e recebe orientação")
+    void naoAbreLinkDeBulaInseguro() throws Exception {
+        Produto produto = produtoRepository.findById(1L).orElseThrow();
+        produto.setBulaUrl("javascript:alert(1)");
+        produtoRepository.saveAndFlush(produto);
+
+        String html = pagina("/produtos/1");
+
+        assertThat(html).contains("O link da bula cadastrado não é válido e não pode ser aberto.");
+        assertThat(html).doesNotContain("href=\"javascript:alert(1)\"");
+    }
+
+    @Test
+    @DisplayName("comprar envia apresentação correta e o servidor limita a quantidade no carrinho")
+    void comprarAdicionaApresentacaoERevalidaQuantidade() throws Exception {
+        MvcResult resultado = mvc.perform(post("/carrinho/itens")
+                        .with(csrf())
+                        .param("apresentacaoId", "2")
+                        .param("quantidade", "12"))
+                .andExpect(status().is3xxRedirection())
+                .andExpect(redirectedUrl("/carrinho"))
+                .andReturn();
+
+        String token = resultado.getResponse().getCookie(CarrinhoCookie.NOME).getValue();
+        assertThat(token).isNotBlank();
+        assertThat(carrinhoRepository.findByToken(java.util.UUID.fromString(token)))
+                .isPresent()
+                .get()
+                .extracting(carrinho -> carrinho.getItens().get(0).getApresentacao().getId())
+                .isEqualTo(2L);
+        assertThat(carrinhoRepository.findByToken(java.util.UUID.fromString(token)).orElseThrow()
+                .getItens().get(0).getQuantidade()).isEqualTo(10);
+    }
+
+    private String pagina(String url) throws Exception {
+        return mvc.perform(get(url))
+                .andExpect(status().isOk())
+                .andReturn()
+                .getResponse()
+                .getContentAsString(StandardCharsets.UTF_8)
+                .replace('\u00a0', ' ');
+    }
+}

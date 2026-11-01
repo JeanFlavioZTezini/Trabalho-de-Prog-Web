@@ -2,6 +2,8 @@ package com.farmacia.farmaciaonline.service;
 
 import java.io.IOException;
 import java.math.BigDecimal;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -124,6 +126,9 @@ public class ProdutoService {
             erros.add("Selecione a tarja.");
         } else if (form.getTarja() != Tarja.SEM_TARJA && !form.isExigeReceita()) {
             erros.add("Produtos com tarja vermelha ou preta devem exigir receita.");
+        }
+        if (!bulaValida(texto(form.getBulaUrl()))) {
+            erros.add("A URL da bula deve ser um endereço http:// ou https:// válido.");
         }
         List<ApresentacaoForm> linhas = form.getApresentacoes().stream().filter(l -> !l.isVazia()).toList();
         List<Apresentacao> destinos = validarApresentacoes(produto, linhas, erros);
@@ -354,6 +359,20 @@ public class ProdutoService {
 
     private Produto buscarProduto(Long id) {
         return produtoRepository.findById(id).orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+    }
+
+    /** Mesma regra da página do produto (F-02): só http/https absoluto abre; vazio é permitido. */
+    private static boolean bulaValida(String url) {
+        if (url == null) {
+            return true;
+        }
+        try {
+            URI uri = new URI(url);
+            return uri.isAbsolute() && ("http".equalsIgnoreCase(uri.getScheme())
+                    || "https".equalsIgnoreCase(uri.getScheme())) && uri.getHost() != null;
+        } catch (URISyntaxException e) {
+            return false;
+        }
     }
 
     private static boolean vazio(String s) {

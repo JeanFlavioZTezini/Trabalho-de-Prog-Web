@@ -677,6 +677,46 @@ tem `GET`, e não existe edição administrativa de conta.
   `ClienteAdminServiceIntegracaoTest` (PostgreSQL real: busca por nome, e-mail e CPF, status, só cliente, paginação,
   curingas como texto, auditoria sem o termo buscado, 404 sem log, pedidos recentes, log que falha derruba a consulta).
 
+## Produtos, apresentações, estoque e imagens (F-08 / UC12)
+
+Cadastro administrativo de produtos. Regras em `service/ProdutoService`, telas em `AdminProdutoController` +
+`templates/admin/produtos.html` e `produto-form.html`; fotos em `service/ArmazenamentoImagem` e `config/UploadsConfig`.
+Fica sob `/admin/**` (só `ADMIN`: visitante vai para `/login`, cliente logado recebe 403, inclusive em POST direto).
+
+| Rota | O que faz |
+|---|---|
+| `GET /admin/produtos` | lista paginada (20 por página, por nome) com busca `q` (nome, marca, princípio ativo, SKU ou EAN) e filtro `status` (ativos, inativos) |
+| `GET /admin/produtos/novo`, `POST /admin/produtos` | formulário e cadastro |
+| `GET /admin/produtos/{id}/editar`, `POST /admin/produtos/{id}` | edição |
+| `POST /admin/produtos/{id}/excluir` | exclusão (ver abaixo) |
+
+- **Regras do formulário:** nome e marca obrigatórios; ao menos uma categoria **ativa**; tarja vermelha ou preta exige
+  receita; ao menos uma apresentação, cada uma com descrição (até 60), SKU (até 40) e EAN (8 a 14 dígitos) **únicos**, preço
+  maior que zero, estoque não negativo e limite por pedido maior que zero. Toda violação volta ao formulário com a mensagem
+  no alerta de erro (regras de negócio) ou junto ao campo, com `aria-invalid` (validação do formulário), sem gravar nada.
+- **Preço e estoque ficam em `Apresentacao`.** Apresentação não é removida: desmarca-se "Ativa". Linhas em branco no fim
+  do formulário cadastram novas apresentações.
+- **Estoque e compra concorrente:** cada linha carrega a `versao` lida ao abrir o formulário. Se uma compra (ou
+  cancelamento) mexeu no estoque depois, o salvamento é recusado com "foi alterada por outra operação"; o estoque da compra
+  não é sobrescrito. A conferência final vale também contra a corrida entre validar e gravar (lock otimista).
+- **Quem e quando:** `atualizado_por` (o administrador da sessão, nunca um campo do formulário) e `atualizado_em`.
+- **Exclusão:** produto com pedido (`item_pedido`) só é **inativado**, e o histórico fica intacto; sem pedido, é apagado de
+  vez (imagens e apresentações primeiro, porque o mapeamento não tem cascade). Se surgir um vínculo no meio do caminho, a
+  tela pede para inativar. Produto inativado sai do catálogo (F-01/F-02).
+- **Fotos:** JPG, PNG ou WebP de até 2 MB, conferidas pela extensão, pelo tipo enviado **e** pelo conteúdo do arquivo. O nome
+  gravado é um UUID (o nome enviado nunca vira caminho). Ficam em `app.uploads.dir` (padrão `uploads/`, fora do JAR) e são
+  servidas em `/uploads/produtos/**` (rota pública, só leitura). A foto nova vale para todas as apresentações ou para uma
+  delas, e a apresentação escolhida precisa ser do mesmo produto. Sem foto, o site usa a imagem padrão. Se a gravação
+  falha, os arquivos já escritos são apagados; arquivos de fotos removidas são apagados só depois do commit.
+- **Limites de envio:** `spring.servlet.multipart.max-file-size=10MB` e `max-request-size=30MB` (o limite de 2 MB por
+  foto é do serviço); passar do limite do servidor mostra a mensagem de `UploadExcedidoAdvice`.
+- **Bula:** a URL é opcional, mas, se informada, precisa ser um endereço `http://` ou `https://` válido (mesma regra da página do produto, F-02, que continua tratando URL inválida já gravada).
+- **Testes:** `ProdutoServiceIntegracaoTest` (PostgreSQL real: cadastro aparece no catálogo e grava o administrador,
+  violações com mensagem, estoque alterado por compra não é sobrescrito, foto vinculada à apresentação certa, exclusão
+  definitiva e só inativação com pedido), `ArmazenamentoImagemTest`, `UploadExcedidoAdviceTest`,
+  `AdminProdutoSegurancaTest` (visitante, cliente, administrador da sessão gravado, CSRF) e `AdminProdutoTelaTest` (HTML:
+  um único h1, rótulos, erro ligado ao campo por `aria-describedby`, tabela em região rolável).
+
 ## Como criar uma página nova
 
 Toda página usa o layout `templates/fragments/layout.html` (cabeçalho com busca, menu de
@@ -782,11 +822,11 @@ Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: a
 | Catálogo público: busca, categoria, filtros e paginação (UC01) | F-01 | Cássio (@cassioqm) | |
 | Detalhes do produto e apresentação comprável (UC02) | F-02 | Cássio (@cassioqm) | |
 | Navegação integrada, páginas de termos e revisão de interface (UC03/UC15) | F-03 | Pessoa A: _preencher_ | |
-| Cadastro com validação e conta pendente (UC03) | F-04 | Kauê (@KaueAlves09), pessoa B | |
-| Serviço de códigos e confirmação de conta com envio simulado (UC04) | F-05 | Kauê (@KaueAlves09), pessoa B | |
-| Recuperação de senha sem login e revogação de sessões (UC14, UC10-A4) | F-06 | Kauê (@KaueAlves09), pessoa B | |
+| Cadastro com validação e conta pendente (UC03) | F-04 | Kauê (@KaueAlves09) | |
+| Serviço de códigos e confirmação de conta com envio simulado (UC04) | F-05 | Kauê (@KaueAlves09) | |
+| Recuperação de senha sem login e revogação de sessões (UC14, UC10-A4) | F-06 | Kauê (@KaueAlves09) | |
 | CRUD de categorias hierárquicas (UC13) | F-07 | Pessoa C: _preencher_ | |
-| CRUD de produtos, apresentações, estoque e imagens (UC12) | F-08 | Pessoa C: _preencher_ | |
+| CRUD de produtos, apresentações, estoque e imagens (UC12) | F-08 (#31) | Nakao (@FernandoNakao) | |
 | Consulta administrativa de clientes com auditoria (UC11) | F-09 (#32) | Kauê (@KaueAlves09), repassada da trilha C | |
 | Carrinho de visitante e cliente, com mesclagem no login (UC05) | F-10 | Pessoa D: _preencher_ | |
 | CRUD de endereços e seleção no checkout (UC16) | F-11 | Pessoa D: _preencher_ | |

@@ -373,6 +373,45 @@ textarea:focus-visible {
   gap: 1rem;
 }
 
+.filtros-catalogo {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+  align-items: end;
+  gap: 1rem;
+  margin: 1.5rem 0 2rem;
+  padding: 1rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background-color: var(--cor-branco);
+}
+
+.filtros-catalogo .campo { margin: 0; }
+.filtros-catalogo input:not([type="checkbox"]),
+.filtros-catalogo select { width: 100%; }
+.filtros-catalogo .campo input[type="checkbox"] {
+  width: auto;
+  min-width: 1rem;
+  min-height: 1rem;
+  margin: 0;
+  padding: 0;
+  accent-color: var(--cor-azul);
+}
+.filtros-catalogo__termo { grid-column: 1 / -1; }
+.filtros-catalogo__disponibilidade { display: flex; align-items: center; gap: 0.5rem; }
+.filtros-catalogo__disponibilidade label { margin: 0; }
+.filtros-catalogo__acoes { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.filtros-catalogo__acoes a,
+.paginacao a { color: var(--cor-azul); font-weight: 600; }
+
+.paginacao {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin: 1.5rem 0;
+}
+
 .card {
   background-color: var(--cor-branco);
   border: 1px solid var(--cor-borda);

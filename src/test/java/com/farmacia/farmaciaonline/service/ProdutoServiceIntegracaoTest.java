@@ -153,4 +153,21 @@ class ProdutoServiceIntegracaoTest {
         assertThat(jdbc.queryForObject("SELECT count(*) FROM item_pedido WHERE pedido_id = 900000", Integer.class))
                 .isEqualTo(1);
     }
+
+    @Test
+    void urlDeBulaSoAceitaHttpOuHttps() {
+        for (String ruim : new String[] { "javascript:alert(1)", "texto solto", "ftp://x.com/bula.pdf", "https://" }) {
+            ProdutoForm f = form("Bula Ruim", "UC12-D", "7890000000042");
+            f.setBulaUrl(ruim);
+            assertThatThrownBy(() -> service.salvar(null, f, ADMIN)).isInstanceOfSatisfying(ProdutoException.class,
+                    e -> assertThat(e.getErros()).containsExactly(
+                            "A URL da bula deve ser um endereço http:// ou https:// válido."));
+        }
+        String[] boas = { "https://www.gov.br/anvisa/bula.pdf", "http://exemplo.com/b", "  ", null };
+        for (int i = 0; i < boas.length; i++) {
+            ProdutoForm f = form("Bula Boa " + i, "UC12-E" + i, "789000000006" + i);
+            f.setBulaUrl(boas[i]);
+            service.salvar(null, f, ADMIN);
+        }
+    }
 }

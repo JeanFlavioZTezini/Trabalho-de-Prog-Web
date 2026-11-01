@@ -8,9 +8,8 @@
 
     <h1 th:text="${produtoId == null} ? 'Novo produto' : 'Editar produto'">Produto</h1>
 
-    <div class="alerta alerta--erro" role="alert" th:if="${erros != null or #fields.hasErrors('${produtoForm.*}')}">
+    <div class="alerta alerta--erro" role="alert" th:if="${erros != null}">
         <p th:each="e : ${erros}" th:text="${e}"></p>
-        <p th:each="e : ${#fields.errors('${produtoForm.*}')}" th:text="${e}"></p>
     </div>
 
     <form th:action="${produtoId == null} ? @{/admin/produtos} : @{/admin/produtos/{id}(id=${produtoId})}"
@@ -18,15 +17,24 @@
 
         <div class="campo">
             <label for="nome">Nome</label>
-            <input type="text" id="nome" th:field="*{nome}" maxlength="200" required>
+            <input type="text" id="nome" th:field="*{nome}" maxlength="200" required
+                   th:aria-invalid="${#fields.hasErrors('nome')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('nome')} ? 'nome-erro'">
+            <p class="campo__erro" role="alert" id="nome-erro" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></p>
         </div>
         <div class="campo">
             <label for="marca">Marca/fabricante</label>
-            <input type="text" id="marca" th:field="*{marca}" maxlength="100" required>
+            <input type="text" id="marca" th:field="*{marca}" maxlength="100" required
+                   th:aria-invalid="${#fields.hasErrors('marca')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('marca')} ? 'marca-erro'">
+            <p class="campo__erro" role="alert" id="marca-erro" th:if="${#fields.hasErrors('marca')}" th:errors="*{marca}"></p>
         </div>
         <div class="campo">
             <label for="principioAtivo">Princípio ativo</label>
-            <input type="text" id="principioAtivo" th:field="*{principioAtivo}" maxlength="150">
+            <input type="text" id="principioAtivo" th:field="*{principioAtivo}" maxlength="150"
+                   th:aria-invalid="${#fields.hasErrors('principioAtivo')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('principioAtivo')} ? 'principioAtivo-erro'">
+            <p class="campo__erro" role="alert" id="principioAtivo-erro" th:if="${#fields.hasErrors('principioAtivo')}" th:errors="*{principioAtivo}"></p>
         </div>
         <div class="campo">
             <label for="tipo">Tipo</label>
@@ -37,7 +45,10 @@
         </div>
         <div class="campo">
             <label for="formaFarmaceutica">Forma farmacêutica</label>
-            <input type="text" id="formaFarmaceutica" th:field="*{formaFarmaceutica}" maxlength="30">
+            <input type="text" id="formaFarmaceutica" th:field="*{formaFarmaceutica}" maxlength="30"
+                   th:aria-invalid="${#fields.hasErrors('formaFarmaceutica')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('formaFarmaceutica')} ? 'formaFarmaceutica-erro'">
+            <p class="campo__erro" role="alert" id="formaFarmaceutica-erro" th:if="${#fields.hasErrors('formaFarmaceutica')}" th:errors="*{formaFarmaceutica}"></p>
         </div>
         <div class="campo">
             <label for="tarja">Tarja</label>
@@ -50,11 +61,17 @@
         </div>
         <div class="campo">
             <label for="registroMs">Registro no Ministério da Saúde</label>
-            <input type="text" id="registroMs" th:field="*{registroMs}" maxlength="30">
+            <input type="text" id="registroMs" th:field="*{registroMs}" maxlength="30"
+                   th:aria-invalid="${#fields.hasErrors('registroMs')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('registroMs')} ? 'registroMs-erro'">
+            <p class="campo__erro" role="alert" id="registroMs-erro" th:if="${#fields.hasErrors('registroMs')}" th:errors="*{registroMs}"></p>
         </div>
         <div class="campo">
             <label for="bulaUrl">URL da bula</label>
-            <input type="text" id="bulaUrl" th:field="*{bulaUrl}" maxlength="255">
+            <input type="text" id="bulaUrl" th:field="*{bulaUrl}" maxlength="255"
+                   th:aria-invalid="${#fields.hasErrors('bulaUrl')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('bulaUrl')} ? 'bulaUrl-erro'">
+            <p class="campo__erro" role="alert" id="bulaUrl-erro" th:if="${#fields.hasErrors('bulaUrl')}" th:errors="*{bulaUrl}"></p>
         </div>
         <div class="campo">
             <label for="indicacao">Indicação</label>

@@ -32,34 +32,36 @@
 
     <p th:if="${pagina.empty}">Nenhum produto encontrado.</p>
 
-    <table class="tabela-admin" th:unless="${pagina.empty}">
-        <thead>
-            <tr>
-                <th scope="col">Nome</th>
-                <th scope="col">Marca</th>
-                <th scope="col">Tarja</th>
-                <th scope="col">Apresentações</th>
-                <th scope="col">Status</th>
-                <th scope="col">Ações</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr th:each="p : ${pagina.content}">
-                <td th:text="${p.nome}">Nome</td>
-                <td th:text="${p.marca}">Marca</td>
-                <td th:text="${p.tarja}">SEM_TARJA</td>
-                <td th:text="${#lists.size(p.apresentacoes)}">0</td>
-                <td th:text="${p.ativo} ? 'Ativo' : 'Inativo'">Ativo</td>
-                <td>
-                    <a th:href="@{/admin/produtos/{id}/editar(id=${p.id})}">Editar</a>
-                    <form th:action="@{/admin/produtos/{id}/excluir(id=${p.id})}" method="post" style="display:inline"
-                          onsubmit="return confirm('Excluir este produto? Se houver pedidos, ele será apenas inativado.')">
-                        <button type="submit">Excluir</button>
-                    </form>
-                </td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="tabela-rolavel" role="region" aria-label="Lista de produtos" tabindex="0" th:unless="${pagina.empty}">
+        <table class="tabela-admin">
+            <thead>
+                <tr>
+                    <th scope="col">Nome</th>
+                    <th scope="col">Marca</th>
+                    <th scope="col">Tarja</th>
+                    <th scope="col">Apresentações</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Ações</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="p : ${pagina.content}">
+                    <td th:text="${p.nome}">Nome</td>
+                    <td th:text="${p.marca}">Marca</td>
+                    <td th:text="${p.tarja}">SEM_TARJA</td>
+                    <td th:text="${#lists.size(p.apresentacoes)}">0</td>
+                    <td th:text="${p.ativo} ? 'Ativo' : 'Inativo'">Ativo</td>
+                    <td>
+                        <a th:href="@{/admin/produtos/{id}/editar(id=${p.id})}">Editar</a>
+                        <form th:action="@{/admin/produtos/{id}/excluir(id=${p.id})}" method="post" style="display:inline"
+                              onsubmit="return confirm('Excluir este produto? Se houver pedidos, ele será apenas inativado.')">
+                            <button type="submit">Excluir</button>
+                        </form>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
     <p th:if="${pagina.totalPages > 1}">
         <a th:if="${pagina.hasPrevious()}"

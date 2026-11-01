@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Alterar senha | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1>Alterar senha</h1>
+
+    <p class="alerta alerta--erro" role="alert" th:if="${temErros}">
+        Corrija os campos indicados e tente de novo.
+    </p>
+
+    <form th:action="@{/conta/senha}" th:object="${senhaForm}" method="post">
+        <div class="campo">
+            <label for="senhaAtual">Senha atual</label>
+            <input type="password"
+                   id="senhaAtual"
+                   th:field="*{senhaAtual}"
+                   autocomplete="current-password"
+                   required
+                   th:aria-invalid="${#fields.hasErrors('senhaAtual')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('senhaAtual')} ? 'senhaAtual-erro'">
+            <p class="campo__erro" role="alert" id="senhaAtual-erro" th:if="${#fields.hasErrors('senhaAtual')}" th:errors="*{senhaAtual}"></p>
+        </div>
+        <div class="campo">
+            <label for="novaSenha">Nova senha</label>
+            <p class="campo__ajuda" id="novaSenha-ajuda">Use 8 caracteres ou mais, com pelo menos uma letra e um número.</p>
+            <input type="password"
+                   id="novaSenha"
+                   th:field="*{novaSenha}"
+                   autocomplete="new-password"
+                   required
+                   th:aria-invalid="${#fields.hasErrors('novaSenha')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('novaSenha')} ? 'novaSenha-ajuda novaSenha-erro' : 'novaSenha-ajuda'">
+            <p class="campo__erro" role="alert" id="novaSenha-erro" th:if="${#fields.hasErrors('novaSenha')}" th:errors="*{novaSenha}"></p>
+        </div>
+        <div class="campo">
+            <label for="confirmarNovaSenha">Repita a nova senha</label>
+            <input type="password"
+                   id="confirmarNovaSenha"
+                   th:field="*{confirmarNovaSenha}"
+                   autocomplete="new-password"
+                   required
+                   th:aria-invalid="${#fields.hasErrors('confirmarNovaSenha')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('confirmarNovaSenha')} ? 'confirmarNovaSenha-erro'">
+            <p class="campo__erro" role="alert" id="confirmarNovaSenha-erro" th:if="${#fields.hasErrors('confirmarNovaSenha')}" th:errors="*{confirmarNovaSenha}"></p>
+        </div>
+
+        <button type="submit" class="btn-primario">Alterar senha</button>
+        <a th:href="@{/conta}">Cancelar</a>
+    </form>
+
+</div>
+</body>
+</html>

@@ -20,10 +20,23 @@ public class RevogacaoDeSessoes {
 
     /** @return quantas sessões foram encerradas */
     public int encerrarSessoesDe(Long usuarioId) {
+        return encerrarOutrasSessoesDe(usuarioId, null);
+    }
+
+    /**
+     * Encerra as sessões da conta menos a de {@code idSessaoAtual}: é o que a troca de senha logado (F-12) usa, para a
+     * pessoa continuar na tela em que acabou de trocar a senha. Sem id (null), encerra todas.
+     *
+     * @return quantas sessões foram encerradas
+     */
+    public int encerrarOutrasSessoesDe(Long usuarioId, String idSessaoAtual) {
         int encerradas = 0;
         for (Object principal : registro.getAllPrincipals()) {
             if (principal instanceof UsuarioAutenticado usuario && usuario.getId().equals(usuarioId)) {
                 for (SessionInformation sessao : registro.getAllSessions(principal, false)) {
+                    if (sessao.getSessionId().equals(idSessaoAtual)) {
+                        continue;
+                    }
                     sessao.expireNow();
                     encerradas++;
                 }

@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Minha conta | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1>Minha conta</h1>
+
+    <p class="alerta alerta--sucesso" role="status" th:if="${sucesso != null}" th:text="${sucesso}">Mensagem de sucesso</p>
+
+    <section aria-labelledby="titulo-dados">
+        <h2 id="titulo-dados">Dados pessoais</h2>
+        <dl class="conta__dados">
+            <dt>Nome</dt>
+            <dd th:text="${dados.nome}">Maria da Silva</dd>
+            <dt>CPF</dt>
+            <dd th:text="${dados.cpfFormatado} ?: 'Não informado'">000.000.000-00</dd>
+            <dt>Data de nascimento</dt>
+            <dd th:text="${#temporals.format(dados.dataNascimento, 'dd/MM/yyyy')}">01/01/2000</dd>
+            <dt>Gênero</dt>
+            <dd th:text="${dados.genero != null} ? ${#strings.capitalize(#strings.toLowerCase(dados.genero))} : 'Não informado'">Feminino</dd>
+        </dl>
+        <p><a class="btn-primario" th:href="@{/conta/editar}">Editar dados</a></p>
+    </section>
+
+    <section class="conta__secao" aria-labelledby="titulo-contatos">
+        <h2 id="titulo-contatos">Contatos</h2>
+        <dl class="conta__dados">
+            <dt>E-mail</dt>
+            <dd>
+                <span th:text="${dados.email}">nome@dominio.com</span>
+                <span th:text="${dados.emailConfirmado} ? '(confirmado)' : '(não confirmado)'">(confirmado)</span>
+            </dd>
+            <dt>Celular</dt>
+            <dd th:if="${dados.celularFormatado != null}">
+                <span th:text="${dados.celularFormatado}">(67) 99999-9999</span>
+                <span th:text="${dados.celularConfirmado} ? '(confirmado)' : '(não confirmado)'">(não confirmado)</span>
+            </dd>
+            <dd th:if="${dados.celularFormatado == null}">Não informado</dd>
+        </dl>
+        <p class="campo__ajuda">
+            A troca de e-mail ou celular exige a confirmação do novo contato por código e ainda não está disponível nesta tela.
+        </p>
+    </section>
+
+    <section class="conta__secao" aria-labelledby="titulo-seguranca">
+        <h2 id="titulo-seguranca">Segurança</h2>
+        <p><a th:href="@{/conta/senha}">Alterar senha</a></p>
+    </section>
+
+</div>
+</body>
+</html>

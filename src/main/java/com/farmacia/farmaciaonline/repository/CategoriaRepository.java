@@ -2,6 +2,7 @@ package com.farmacia.farmaciaonline.repository;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
@@ -22,6 +23,8 @@ public interface CategoriaRepository extends JpaRepository<Categoria, Long> {
     /** Subcategorias ativas das categorias raiz, ordenadas por categoria e ordem de exibição. */
     List<Categoria> findByCategoriaPaiIdInAndAtivaTrueOrderByCategoriaPaiIdAscOrdemAsc(
             Collection<Long> categoriaPaiIds);
+
+    Optional<Categoria> findByIdAndAtivaTrue(Long id);
 
     List<Categoria> findAllByOrderByOrdemAscNomeAsc();
 

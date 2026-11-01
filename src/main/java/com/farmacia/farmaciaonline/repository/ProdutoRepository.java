@@ -13,7 +13,7 @@ import org.springframework.stereotype.Repository;
 import com.farmacia.farmaciaonline.model.Produto;
 
 @Repository
-public interface ProdutoRepository extends JpaRepository<Produto, Long> {
+public interface ProdutoRepository extends JpaRepository<Produto, Long>, ProdutoRepositoryCustom {
 
     /** Produtos ativos (exclusão lógica), paginados. A busca com filtros é da Fase 2 (UC01). */
     Page<Produto> findByAtivoTrue(Pageable pageable);

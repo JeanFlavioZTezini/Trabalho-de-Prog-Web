@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Produtos | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+    <h1>Produtos</h1>
+    <p>Encontre produtos por nome, marca, princípio ativo, EAN ou indicação. A busca por indicação é informativa e não representa diagnóstico médico.</p>
+
+    <form class="filtros-catalogo" th:action="@{/produtos}" method="get">
+        <div class="campo filtros-catalogo__termo">
+            <label for="q">Buscar produtos</label>
+            <input type="search" id="q" name="q" maxlength="120" th:value="${q}"
+                   aria-describedby="busca-ajuda">
+            <p id="busca-ajuda" class="campo__ajuda">
+                A busca por indicação é apenas informativa e não substitui orientação de um profissional de saúde.
+            </p>
+        </div>
+
+        <div class="campo">
+            <label for="categoria">Categoria</label>
+            <select id="categoria" name="categoria">
+                <option value="">Todas as categorias</option>
+                <optgroup th:each="item : ${menuCategorias}" th:label="${item.categoria.nome}">
+                    <option th:value="${item.categoria.id}"
+                            th:selected="${categoriaId == item.categoria.id}"
+                            th:text="${item.categoria.nome}">Categoria</option>
+                    <option th:each="filha : ${item.filhas}" th:value="${filha.id}"
+                            th:selected="${categoriaId == filha.id}"
+                            th:text="${filha.nome}">Subcategoria</option>
+                </optgroup>
+            </select>
+        </div>
+
+        <div class="campo">
+            <label for="precoMin">Preço mínimo</label>
+            <input type="number" id="precoMin" name="precoMin" min="0" step="0.01"
+                   th:value="${precoMin}" th:aria-describedby="${erroFiltro != null ? 'erro-filtro' : null}">
+        </div>
+
+        <div class="campo">
+            <label for="precoMax">Preço máximo</label>
+            <input type="number" id="precoMax" name="precoMax" min="0" step="0.01"
+                   th:value="${precoMax}" th:aria-describedby="${erroFiltro != null ? 'erro-filtro' : null}">
+        </div>
+
+        <div class="campo filtros-catalogo__disponibilidade">
+            <input type="checkbox" id="disponivel" name="disponivel" value="true"
+                   th:checked="${disponivel}">
+            <label for="disponivel">Somente disponíveis</label>
+        </div>
+
+        <div class="campo">
+            <label for="ordenacao">Ordenar por</label>
+            <select id="ordenacao" name="ordenacao">
+                <option value="NOME" th:selected="${ordenacao.name() == 'NOME'}">Nome (A–Z)</option>
+                <option value="NOME_DESC" th:selected="${ordenacao.name() == 'NOME_DESC'}">Nome (Z–A)</option>
+                <option value="PRECO" th:selected="${ordenacao.name() == 'PRECO'}">Menor preço</option>
+                <option value="PRECO_DESC" th:selected="${ordenacao.name() == 'PRECO_DESC'}">Maior preço</option>
+            </select>
+        </div>
+
+        <p id="erro-filtro" class="alerta alerta--erro" role="alert"
+           th:if="${erroFiltro != null}" th:text="${erroFiltro}"></p>
+        <div class="filtros-catalogo__acoes">
+            <button type="submit" class="btn-primario">Buscar produtos</button>
+            <a th:href="@{/produtos}">Limpar filtros</a>
+        </div>
+    </form>
+
+    <section class="secao" aria-labelledby="titulo-resultados">
+        <h2 id="titulo-resultados">Resultados</h2>
+        <div class="alerta alerta--erro" role="alert" th:if="${erroCarregamento != null}">
+            <p th:text="${erroCarregamento}">Não foi possível carregar os produtos agora. Tente novamente.</p>
+            <a th:href="@{/produtos(q=${q}, categoria=${categoriaId}, precoMin=${precoMin},
+                    precoMax=${precoMax}, disponivel=${disponivel}, ordenacao=${ordenacao})}">
+                Tentar novamente
+            </a>
+            <a th:href="@{/}">Voltar para a página inicial</a>
+        </div>
+
+        <div th:if="${erroCarregamento == null and erroFiltro == null and pagina.empty}">
+            <p role="status">Nenhum produto encontrado com esses filtros.</p>
+            <a class="btn-primario" th:href="@{/produtos}">Limpar filtros</a>
+            <a th:href="@{/}">Voltar para a página inicial</a>
+        </div>
+
+        <div class="grade" th:if="${erroCarregamento == null and erroFiltro == null and !pagina.empty}">
+            <th:block th:each="produto : ${pagina.content}">
+                <article th:replace="~{fragments/produto-card :: card(${produto})}"></article>
+            </th:block>
+        </div>
+
+        <nav class="paginacao" aria-label="Paginação de produtos"
+             th:if="${erroCarregamento == null and erroFiltro == null and pagina.totalPages > 1}">
+            <a th:if="${pagina.hasPrevious()}"
+               th:href="@{/produtos(q=${q}, categoria=${categoriaId}, precoMin=${precoMin},
+                    precoMax=${precoMax}, disponivel=${disponivel}, ordenacao=${ordenacao},
+                    pagina=${pagina.number - 1})}">Anterior</a>
+            <span th:text="|Página ${pagina.number + 1} de ${pagina.totalPages}|">Página 1 de 1</span>
+            <a th:if="${pagina.hasNext()}"
+               th:href="@{/produtos(q=${q}, categoria=${categoriaId}, precoMin=${precoMin},
+                    precoMax=${precoMax}, disponivel=${disponivel}, ordenacao=${ordenacao},
+                    pagina=${pagina.number + 1})}">Próxima</a>
+        </nav>
+    </section>
+</div>
+</body>
+</html>

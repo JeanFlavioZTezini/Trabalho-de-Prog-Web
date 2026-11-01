@@ -152,6 +152,16 @@ public class Produto {
                 .orElse(null);
     }
 
+    /** Primeira apresentação ativa por ordem; não exibe preço de uma unidade inativa. */
+    public Apresentacao getApresentacaoReferenciaAtiva() {
+        return apresentacoes.stream()
+                .filter(Apresentacao::isAtiva)
+                .min(Comparator.comparingInt(Apresentacao::getOrdem)
+                        .thenComparing(Apresentacao::getPreco)
+                        .thenComparing(Apresentacao::getId, Comparator.nullsLast(Long::compareTo)))
+                .orElse(null);
+    }
+
     /** Foto usada quando o produto não tem nenhuma foto de verdade. */
     public static final String IMAGEM_PADRAO = "/images/produtos/placeholder.svg";
 

@@ -43,6 +43,12 @@
                         </div>
                     </th:block>
                 </a>
+                <form class="card-carrinho" th:action="@{/carrinho/itens}" method="post"
+                      th:if="${produto.ativo and produto.apresentacaoPadrao != null and produto.apresentacaoPadrao.disponivel}">
+                    <input type="hidden" name="apresentacaoId" th:value="${produto.apresentacaoPadrao.id}">
+                    <input type="hidden" name="quantidade" value="1">
+                    <button type="submit" class="btn-adicionar">Adicionar ao carrinho<span class="visually-hidden" th:text="${' ' + produto.nome}"></span></button>
+                </form>
             </article>
         </div>
     </section>
@@ -71,6 +77,12 @@
                         </div>
                     </th:block>
                 </a>
+                <form class="card-carrinho" th:action="@{/carrinho/itens}" method="post"
+                      th:if="${produto.ativo and produto.apresentacaoPadrao != null and produto.apresentacaoPadrao.disponivel}">
+                    <input type="hidden" name="apresentacaoId" th:value="${produto.apresentacaoPadrao.id}">
+                    <input type="hidden" name="quantidade" value="1">
+                    <button type="submit" class="btn-adicionar">Adicionar ao carrinho<span class="visually-hidden" th:text="${' ' + produto.nome}"></span></button>
+                </form>
             </article>
         </div>
     </section>

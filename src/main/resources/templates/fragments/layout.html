@@ -24,6 +24,7 @@
     <link rel="stylesheet" th:href="@{/css/style.css}">
     <script>document.documentElement.classList.add('js');</script>
     <script th:src="@{/js/menu.js}" defer></script>
+    <script th:src="@{/js/carrinho-rapido.js}" defer></script>
 </head>
 <body>
 
@@ -48,6 +49,10 @@
                 </svg>
             </button>
         </form>
+
+        <!--/* O número vem do CarrinhoContagemAdvice; o carrinho-rapido.js atualiza o mesmo span. Sem espaço entre as
+             tags, para o :empty do CSS valer quando não há itens. */-->
+        <a class="topo__carrinho" th:href="@{/carrinho}">Carrinho<span class="topo__carrinho-contagem" id="carrinho-contagem"><th:block th:if="${carrinhoNoCabecalho != null and carrinhoNoCabecalho.unidades > 0}">(<span th:text="${carrinhoNoCabecalho.unidades}">3</span>)<span class="visually-hidden"> itens no carrinho</span></th:block></span></a>
 
         <!--/* Visitante: convite para entrar/cadastrar. */-->
         <div class="usuario" sec:authorize="isAnonymous()">
@@ -97,6 +102,12 @@
 </header>
 
 <main id="conteudo" class="container" tabindex="-1">
+    <!--/* Aviso único depois do login (guardado em MesclagemCarrinhoNoLogin). */-->
+    <p class="alerta alerta--sucesso" role="status"
+       th:if="${carrinhoNoCabecalho != null and carrinhoNoCabecalho.avisoMantido != null}">
+        <span th:text="${carrinhoNoCabecalho.avisoMantido}">Você tem 2 itens no seu carrinho.</span>
+        <a th:href="@{/carrinho}">Ver carrinho</a>
+    </p>
     <div th:replace="${conteudo}">Conteúdo da página</div>
 </main>
 

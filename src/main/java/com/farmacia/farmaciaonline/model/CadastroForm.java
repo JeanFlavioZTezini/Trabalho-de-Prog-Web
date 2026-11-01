@@ -6,6 +6,7 @@ import org.springframework.format.annotation.DateTimeFormat;
 
 import com.farmacia.farmaciaonline.model.enums.Genero;
 import com.farmacia.farmaciaonline.validacao.CpfValido;
+import com.farmacia.farmaciaonline.validacao.PoliticaDeSenha;
 
 import jakarta.validation.constraints.AssertTrue;
 import jakarta.validation.constraints.Email;
@@ -52,8 +53,7 @@ public class CadastroForm {
     private String email;
 
     @NotBlank(message = "Crie uma senha.")
-    @Pattern(regexp = "^$|^(?=.*\\p{L})(?=.*\\d).{8,}$",
-            message = "A senha deve ter 8 caracteres ou mais, com pelo menos uma letra e um número.")
+    @Pattern(regexp = PoliticaDeSenha.PADRAO, message = PoliticaDeSenha.MENSAGEM)
     private String senha;
 
     @NotBlank(message = "Repita a senha.")

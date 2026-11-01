@@ -321,6 +321,24 @@ class PedidoRepositoryTest {
         assertThat(linhaDoTempo.get(2).getAlteradoPor().getId()).isEqualTo(admin.getId());
     }
 
+    @Test
+    @DisplayName("histórico guarda o status anterior; registro sem origem (criação ou anterior à V5) fica nulo")
+    void historicoGuardaStatusAnterior() {
+        Pedido pedido = pedidoRepository.saveAndFlush(pedidoDeRetirada(cliente(), "NOV-DIP1G-20"));
+        HistoricoStatusPedido criacao = historicoRepository.saveAndFlush(historico(pedido, StatusPedido.AGUARDANDO_PAGAMENTO, null));
+        HistoricoStatusPedido pronto = historico(pedido, StatusPedido.PRONTO_PARA_RETIRADA, admin());
+        pronto.setStatusAnterior(StatusPedido.EM_SEPARACAO);
+        pronto = historicoRepository.saveAndFlush(pronto);
+        definirCriadoEm("historico_status_pedido", criacao.getId(), 2);
+        definirCriadoEm("historico_status_pedido", pronto.getId(), 1);
+        entityManager.clear();
+
+        List<HistoricoStatusPedido> linhaDoTempo = historicoRepository.findByPedidoIdOrderByCriadoEmAsc(pedido.getId());
+
+        assertThat(linhaDoTempo).extracting(HistoricoStatusPedido::getStatusAnterior)
+                .containsExactly(null, StatusPedido.EM_SEPARACAO);
+    }
+
     // ---------- Auditoria ----------
 
     @Test

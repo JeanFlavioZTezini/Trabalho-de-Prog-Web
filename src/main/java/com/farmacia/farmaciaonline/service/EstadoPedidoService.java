@@ -161,12 +161,13 @@ public class EstadoPedidoService {
             pagamento.setMensagem("O valor confirmado não confere com o valor do pedido.");
             return;
         }
+        StatusPedido anterior = pedido.getStatus();
         pagamento.setStatus(StatusPagamento.APROVADO);
         pedido.setStatus(StatusPedido.PAGAMENTO_APROVADO);
         pedido.setExpiraEm(null);
         pedido.getItens().forEach(i -> produtoRepository.somarVendidos(
                 i.getApresentacao().getProduto().getId(), i.getQuantidade()));
-        registrarHistorico(pedido, null, "Pagamento aprovado; reserva de estoque consumida.");
+        registrarHistorico(pedido, anterior, null, "Pagamento aprovado; reserva de estoque consumida.");
     }
 
     private void encerrar(Pedido pedido, Usuario autor, String observacao) {
@@ -175,14 +176,20 @@ public class EstadoPedidoService {
         pedido.getItens().stream()
                 .sorted(Comparator.comparing((ItemPedido i) -> i.getApresentacao().getId()))
                 .forEach(i -> apresentacaoRepository.devolverEstoque(i.getApresentacao().getId(), i.getQuantidade()));
+        StatusPedido anterior = pedido.getStatus();
         pedido.setStatus(StatusPedido.CANCELADO);
         pedido.setExpiraEm(null);
-        registrarHistorico(pedido, autor, observacao);
+        registrarHistorico(pedido, anterior, autor, observacao);
     }
 
-    private void registrarHistorico(Pedido pedido, Usuario autor, String observacao) {
+    /**
+     * Grava a mudança de status. {@code anterior} é lido por quem muda o status, antes de mudá-lo: depois do
+     * {@code setStatus} o pedido já está no estado novo e a origem se perderia.
+     */
+    private void registrarHistorico(Pedido pedido, StatusPedido anterior, Usuario autor, String observacao) {
         HistoricoStatusPedido historico = new HistoricoStatusPedido();
         historico.setPedido(pedido);
+        historico.setStatusAnterior(anterior);
         historico.setStatus(pedido.getStatus());
         historico.setAlteradoPor(autor);
         historico.setObservacao(observacao);

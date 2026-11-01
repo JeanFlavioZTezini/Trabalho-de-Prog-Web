@@ -470,5 +470,6 @@ class CheckoutServiceIntegracaoTest extends CheckoutTesteBase {
         assertThat(historico).hasSize(1);
         assertThat(historico.get(0).getStatus()).isEqualTo(StatusPedido.AGUARDANDO_PAGAMENTO);
         assertThat(historico.get(0).getAlteradoPor()).isNull();
+        assertThat(historico.get(0).getStatusAnterior()).isNull();   // primeiro registro: não há origem
     }
 }

@@ -58,6 +58,12 @@ class PagamentoPedidoIntegracaoTest extends CheckoutTesteBase {
         pedidoRepository.saveAndFlush(pedido);
     }
 
+    /** Última mudança registrada: é a que o teste acabou de provocar. */
+    private HistoricoStatusPedido ultimoHistorico(Long pedidoId) {
+        List<HistoricoStatusPedido> linhaDoTempo = historicoRepository.findByPedidoIdOrderByCriadoEmAsc(pedidoId);
+        return linhaDoTempo.get(linhaDoTempo.size() - 1);
+    }
+
     private long historicosCom(Long pedidoId, StatusPedido status) {
         return historicoRepository.findByPedidoIdOrderByCriadoEmAsc(pedidoId).stream()
                 .map(HistoricoStatusPedido::getStatus).filter(status::equals).count();
@@ -84,6 +90,7 @@ class PagamentoPedidoIntegracaoTest extends CheckoutTesteBase {
         assertThat(estoqueDe(a)).isEqualTo(3);
         assertThat(vendidosDe(a)).isEqualTo(2);
         assertThat(historicosCom(id, StatusPedido.PAGAMENTO_APROVADO)).isEqualTo(1);
+        assertThat(ultimoHistorico(id).getStatusAnterior()).isEqualTo(StatusPedido.AGUARDANDO_PAGAMENTO);
 
         Pagamento pagamento = unicoPagamento(id);
         assertThat(pagamento.getStatus()).isEqualTo(StatusPagamento.APROVADO);
@@ -338,6 +345,7 @@ class PagamentoPedidoIntegracaoTest extends CheckoutTesteBase {
         assertThat(unicoPagamento(id).getStatus()).isEqualTo(StatusPagamento.EXPIRADO);
         assertThat(estoqueDe(a)).isEqualTo(5);
         assertThat(historicosCom(id, StatusPedido.CANCELADO)).isEqualTo(1);
+        assertThat(ultimoHistorico(id).getStatusAnterior()).isEqualTo(StatusPedido.AGUARDANDO_PAGAMENTO);
     }
 
     // ---------- Expiração e cancelamento ----------
@@ -359,6 +367,7 @@ class PagamentoPedidoIntegracaoTest extends CheckoutTesteBase {
         assertThat(unicoPagamento(id).getStatus()).isEqualTo(StatusPagamento.EXPIRADO);
         assertThat(estoqueDe(a)).isEqualTo(5);
         assertThat(historicosCom(id, StatusPedido.CANCELADO)).isEqualTo(1);
+        assertThat(ultimoHistorico(id).getStatusAnterior()).isEqualTo(StatusPedido.AGUARDANDO_PAGAMENTO);
     }
 
     @Test
@@ -482,6 +491,7 @@ class PagamentoPedidoIntegracaoTest extends CheckoutTesteBase {
 
         assertThat(estoqueDe(a)).isEqualTo(5);
         assertThat(vendidosDe(a)).isZero();
+        assertThat(ultimoHistorico(id).getStatusAnterior()).isEqualTo(StatusPedido.PAGAMENTO_APROVADO);
     }
 
     // ---------- Resumo por e-mail ----------

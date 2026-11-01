@@ -43,9 +43,18 @@ public class HistoricoStatusPedido {
     @JoinColumn(name = "pedido_id", nullable = false)
     private Pedido pedido;
 
+    /** Status para o qual o pedido passou nesta mudança. */
     @Enumerated(EnumType.STRING)
     @Column(nullable = false, length = 25)
     private StatusPedido status;
+
+    /**
+     * Status de onde o pedido saiu (UC17). Nulo no primeiro registro do pedido e nos eventos gravados antes da
+     * {@code V5}, que não guardaram o estado anterior: ele não é reconstituído.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(length = 25)
+    private StatusPedido statusAnterior;
 
     /** Quem alterou. Nulo = sistema. */
     @ManyToOne(fetch = FetchType.LAZY)

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Detalhe do pedido | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <!--/* UC06-E1: falha ao carregar. */-->
+    <th:block th:if="${erroAoCarregar}">
+        <h1>Detalhe do pedido</h1>
+        <div class="alerta alerta--erro" role="alert">
+            <p><strong>Não foi possível carregar este pedido agora.</strong> Ele continua registrado.</p>
+            <p><a th:href="@{/pedidos/{id}(id=${pedidoId})}">Tentar novamente</a></p>
+        </div>
+    </th:block>
+
+    <th:block th:unless="${erroAoCarregar}">
+        <h1>Pedido nº <span th:text="${pedido.id}">1</span></h1>
+        <p>Feito em <span th:text="${pedido.criadoEmFormatado}">01/01/2026 às 10:00</span>.
+           Situação: <strong th:text="${pedido.status.rotulo}">Aguardando pagamento</strong></p>
+
+        <p class="alerta" role="status" th:if="${pedido.aguardandoPagamento}">
+            Este pedido aguarda o pagamento.
+            <a th:href="@{/checkout/pedidos/{id}(id=${pedido.id})}">Ver o pagamento</a>
+        </p>
+        <p class="alerta alerta--sucesso" role="status" th:if="${pedido.prontoParaRetirada and pedido.localRetirada != null}">
+            Seu pedido está pronto para retirada em <strong th:text="${pedido.localRetirada.nome}">Loja</strong>.
+        </p>
+        <p class="alerta alerta--erro" role="status" th:if="${pedido.status.name() == 'CANCELADO'}">
+            Este pedido foi cancelado.
+        </p>
+
+        <h2>Itens</h2>
+        <div class="tabela-rolavel" role="region" aria-label="Itens do pedido" tabindex="0">
+            <table class="tabela-admin">
+                <caption class="visually-hidden">Itens do pedido</caption>
+                <thead>
+                    <tr>
+                        <th scope="col">Produto</th>
+                        <th scope="col">Qtd.</th>
+                        <th scope="col">Preço</th>
+                        <th scope="col">Subtotal</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="i : ${pedido.itens}">
+                        <td>
+                            <span th:text="|${i.nome} ${i.descricao}|">Produto</span>
+                            <span class="selo-receita" th:if="${i.exigeReceita}">Exige receita</span>
+                        </td>
+                        <td th:text="${i.quantidade}">1</td>
+                        <td th:text="${#numbers.formatCurrency(i.precoUnitario)}">R$ 10,00</td>
+                        <td th:text="${#numbers.formatCurrency(i.subtotal)}">R$ 10,00</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <dl class="checkout-totais">
+            <dt>Subtotal</dt><dd th:text="${#numbers.formatCurrency(pedido.subtotal)}">R$ 10,00</dd>
+            <dt>Frete</dt><dd th:text="${#numbers.formatCurrency(pedido.frete)}">R$ 0,00</dd>
+            <dt>Total</dt><dd class="checkout-totais__total" th:text="${#numbers.formatCurrency(pedido.total)}">R$ 10,00</dd>
+        </dl>
+
+        <!--/* Cópia gravada no momento da compra: editar ou excluir o endereço salvo não muda isto. */-->
+        <section th:if="${pedido.enderecoEntrega != null}">
+            <h2>Entrega</h2>
+            <p>
+                <span th:text="${pedido.enderecoEntrega.destinatario}">Destinatário</span><br>
+                <span th:text="|${pedido.enderecoEntrega.logradouro}, ${pedido.enderecoEntrega.numero}|">Rua, 1</span>
+                <span th:if="${pedido.enderecoEntrega.complemento != null and !#strings.isEmpty(pedido.enderecoEntrega.complemento)}"
+                      th:text="|- ${pedido.enderecoEntrega.complemento}|">- Apto 2</span><br>
+                <span th:text="|${pedido.enderecoEntrega.bairro} - ${pedido.enderecoEntrega.cidade}/${pedido.enderecoEntrega.uf}|">Bairro - Cidade/UF</span><br>
+                <span th:text="|CEP ${pedido.enderecoEntrega.cep}|">CEP 00000000</span>
+            </p>
+            <p th:if="${pedido.prazoEntregaDias != null}">Prazo: até <span th:text="${pedido.prazoEntregaDias}">2</span> dias úteis.</p>
+        </section>
+
+        <section th:if="${pedido.localRetirada != null}">
+            <h2>Retirada em loja</h2>
+            <p>
+                <span th:text="${pedido.localRetirada.nome}">Loja</span><br>
+                <span th:text="|${pedido.localRetirada.logradouro}, ${pedido.localRetirada.numero} - ${pedido.localRetirada.bairro}, ${pedido.localRetirada.cidade}/${pedido.localRetirada.uf}|">Rua</span><br>
+                <span th:text="${pedido.localRetirada.horarioFuncionamento}">Horário</span>
+            </p>
+        </section>
+
+        <p class="alerta" th:if="${pedido.exigeReceita}">
+            Este pedido tem medicamento que exige receita: <strong>apresente a receita na loja</strong> para retirá-lo.
+        </p>
+
+        <section>
+            <h2>Pagamento</h2>
+            <p th:if="${#lists.isEmpty(pedido.pagamentos)}">Nenhuma tentativa de pagamento registrada.</p>
+            <ul th:unless="${#lists.isEmpty(pedido.pagamentos)}">
+                <li th:each="pg : ${pedido.pagamentos}">
+                    <strong th:text="${pg.metodo}">Cartão de crédito</strong>
+                    <span th:if="${pg.cartaoMascarado != null}" th:text="|(${pg.cartaoMascarado})|">(VISA final 1111)</span>
+                    <span th:if="${pg.parcelas > 1}" th:text="|em ${pg.parcelas}x|">em 3x</span>
+                    - <span th:text="${#numbers.formatCurrency(pg.valor)}">R$ 10,00</span>
+                    - <span th:text="${pg.situacao}">Aprovado</span>
+                    <span th:text="|(${pg.quandoFormatado})|">(01/01/2026 às 10:00)</span>
+                    <span th:if="${pg.motivoRecusa != null}" th:text="|: ${pg.motivoRecusa}|">: motivo</span>
+                </li>
+            </ul>
+        </section>
+
+        <section>
+            <h2>Histórico de status</h2>
+            <ol class="linha-do-tempo">
+                <li th:each="passo : ${pedido.historico}" th:classappend="${passo.atual} ? 'linha-do-tempo__atual'">
+                    <strong th:text="${passo.status.rotulo}">Aguardando pagamento</strong>
+                    <span th:text="${passo.quandoFormatado}">01/01/2026 às 10:00</span>
+                    <span class="visually-hidden" th:if="${passo.atual}">(situação atual)</span>
+                </li>
+            </ol>
+        </section>
+
+        <p class="pagina-texto__rodape-form"><a th:href="@{/pedidos}">Voltar para Meus pedidos</a></p>
+    </th:block>
+
+</div>
+</body>
+</html>

@@ -39,3 +39,7 @@ Thumbs.db
 ### Variáveis de ambiente (se usarem depois) ###
 .env
 uploads/
+
+### Claude Code (arquivos locais) ###
+CLAUDE.md
+.claude/

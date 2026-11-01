@@ -968,3 +968,20 @@ input[type="date"]:focus-within {
 @media (max-width: 767px) {
   .carrinho-painel { right: 0.5rem; bottom: 0.5rem; left: 0.5rem; width: auto; }
 }
+
+/* ---------- F-12: minha conta ---------- */
+.conta__dados {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 0.5rem 1.5rem;
+  margin: 0 0 1rem;
+}
+
+.conta__dados dt { font-weight: 600; }
+.conta__dados dd { margin: 0; }
+.conta__secao { margin-top: 2rem; }
+
+@media (max-width: 767px) {
+  .conta__dados { grid-template-columns: 1fr; gap: 0.25rem 0; }
+  .conta__dados dd { margin-bottom: 0.5rem; }
+}

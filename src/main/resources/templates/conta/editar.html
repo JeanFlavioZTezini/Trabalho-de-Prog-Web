@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Editar dados | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1>Editar dados</h1>
+
+    <p class="alerta alerta--erro" role="alert" th:if="${temErros}">
+        Corrija os campos indicados e tente de novo.
+    </p>
+
+    <p>
+        CPF: <strong th:text="${dados.cpfFormatado} ?: 'Não informado'">000.000.000-00</strong>
+        (não pode ser alterado).
+    </p>
+
+    <form th:action="@{/conta/editar}" th:object="${contaForm}" method="post">
+        <div class="campo">
+            <label for="nome">Nome completo</label>
+            <input type="text"
+                   id="nome"
+                   th:field="*{nome}"
+                   maxlength="150"
+                   autocomplete="name"
+                   required
+                   th:aria-invalid="${#fields.hasErrors('nome')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('nome')} ? 'nome-erro'">
+            <p class="campo__erro" role="alert" id="nome-erro" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></p>
+        </div>
+        <div class="campo">
+            <label for="dataNascimento">Data de nascimento</label>
+            <p class="campo__ajuda" id="dataNascimento-ajuda">É preciso ter 18 anos ou mais.</p>
+            <input type="date"
+                   id="dataNascimento"
+                   th:field="*{dataNascimento}"
+                   autocomplete="bday"
+                   min="1900-01-01" th:max="${hoje}"
+                   required
+                   th:aria-invalid="${#fields.hasErrors('dataNascimento')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('dataNascimento')} ? 'dataNascimento-ajuda dataNascimento-erro' : 'dataNascimento-ajuda'">
+            <p class="campo__erro" role="alert" id="dataNascimento-erro" th:if="${#fields.hasErrors('dataNascimento')}" th:errors="*{dataNascimento}"></p>
+        </div>
+        <div class="campo">
+            <label for="genero">Gênero</label>
+            <select id="genero" th:field="*{genero}" required autocomplete="sex"
+                    th:aria-invalid="${#fields.hasErrors('genero')} ? 'true'"
+                    th:aria-describedby="${#fields.hasErrors('genero')} ? 'genero-erro'">
+                <option value="">Selecione</option>
+                <option th:each="g : ${generos}" th:value="${g}" th:text="${#strings.capitalize(#strings.toLowerCase(g))}">Gênero</option>
+            </select>
+            <p class="campo__erro" role="alert" id="genero-erro" th:if="${#fields.hasErrors('genero')}" th:errors="*{genero}"></p>
+        </div>
+
+        <button type="submit" class="btn-primario">Salvar alterações</button>
+        <a th:href="@{/conta}">Cancelar</a>
+    </form>
+
+</div>
+</body>
+</html>

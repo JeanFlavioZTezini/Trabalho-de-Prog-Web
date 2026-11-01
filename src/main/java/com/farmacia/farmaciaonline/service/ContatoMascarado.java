@@ -14,6 +14,14 @@ public final class ContatoMascarado {
         return email.charAt(0) + "***" + email.substring(email.indexOf('@'));
     }
 
+    /** 52998224725 vira ***.982.247-**: mostra só o miolo, para a lista de clientes não expor o CPF inteiro. */
+    public static String cpf(String cpf) {
+        if (cpf == null || !cpf.matches("\\d{11}")) {
+            return "—";
+        }
+        return "***." + cpf.substring(3, 6) + "." + cpf.substring(6, 9) + "-**";
+    }
+
     /** 67999998888 vira (67) 9****-8888. */
     public static String celular(String celular) {
         String digitos = celular == null ? "" : celular.replaceAll("\\D", "");

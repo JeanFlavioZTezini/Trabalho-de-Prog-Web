@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Cliente | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1 th:text="${cliente.nome}">Nome do cliente</h1>
+
+    <p class="pagina-texto__intro">Consulta somente leitura, registrada na auditoria.</p>
+
+    <section aria-labelledby="titulo-dados">
+        <h2 id="titulo-dados">Dados da conta</h2>
+        <dl class="conta__dados">
+            <dt>CPF</dt>
+            <dd th:text="${cliente.cpfFormatado} ?: 'Não informado'">000.000.000-00</dd>
+            <dt>Data de nascimento</dt>
+            <dd th:text="${#temporals.format(cliente.dataNascimento, 'dd/MM/yyyy')}">01/01/2000</dd>
+            <dt>Gênero</dt>
+            <dd th:text="${cliente.genero != null} ? ${#strings.capitalize(#strings.toLowerCase(cliente.genero))} : 'Não informado'">Feminino</dd>
+            <dt>E-mail</dt>
+            <dd th:text="|${cliente.email} (${cliente.emailConfirmado ? 'confirmado' : 'não confirmado'})|">email@exemplo.com (confirmado)</dd>
+            <dt>Celular</dt>
+            <dd th:text="${cliente.celularFormatado != null} ? |${cliente.celularFormatado} (${cliente.celularConfirmado ? 'confirmado' : 'não confirmado'})| : 'Não informado'">(11) 98765-4321 (confirmado)</dd>
+            <dt>Status da conta</dt>
+            <dd th:text="${cliente.statusRotulo}">Ativa</dd>
+            <dt>Cadastro em</dt>
+            <dd th:text="${#temporals.format(cliente.criadoEm, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</dd>
+        </dl>
+    </section>
+
+    <section class="conta__secao" aria-labelledby="titulo-pedidos">
+        <h2 id="titulo-pedidos">Pedidos recentes</h2>
+        <p th:if="${#lists.isEmpty(cliente.pedidosRecentes)}">Nenhum pedido ainda.</p>
+        <div class="tabela-rolavel" role="region" aria-label="Pedidos recentes do cliente" tabindex="0"
+             th:unless="${#lists.isEmpty(cliente.pedidosRecentes)}">
+            <table class="tabela-admin">
+                <thead>
+                    <tr>
+                        <th scope="col">Pedido</th>
+                        <th scope="col">Data</th>
+                        <th scope="col">Total</th>
+                        <th scope="col">Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="p : ${cliente.pedidosRecentes}">
+                        <td th:text="${p.id}">1</td>
+                        <td th:text="${#temporals.format(p.criadoEm, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</td>
+                        <td th:text="${#numbers.formatCurrency(p.total)}">R$ 10,00</td>
+                        <td th:text="${p.statusRotulo}">Pagamento aprovado</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </section>
+
+    <p><a th:href="@{/admin/clientes}">Voltar à lista</a></p>
+
+</div>
+</body>
+</html>

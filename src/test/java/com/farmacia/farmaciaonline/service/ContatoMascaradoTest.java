@@ -22,6 +22,20 @@ class ContatoMascaradoTest {
     }
 
     @Test
+    void cpfMostraSoOMiolo() {
+        assertThat(ContatoMascarado.cpf("52998224725")).isEqualTo("***.982.247-**");
+        assertThat(ContatoMascarado.cpf("11144477735")).isEqualTo("***.444.777-**");
+    }
+
+    @Test
+    void cpfAusenteOuInvalidoViraTraco() {
+        assertThat(ContatoMascarado.cpf(null)).isEqualTo("—");
+        assertThat(ContatoMascarado.cpf("")).isEqualTo("—");
+        assertThat(ContatoMascarado.cpf("5299822472")).isEqualTo("—");
+        assertThat(ContatoMascarado.cpf("529.982.247-25")).isEqualTo("—");
+    }
+
+    @Test
     void contatoAusenteOuInvalidoViraVazio() {
         assertThat(ContatoMascarado.email(null)).isEmpty();
         assertThat(ContatoMascarado.email("sem-arroba")).isEmpty();

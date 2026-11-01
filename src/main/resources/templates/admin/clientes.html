@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Clientes | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1>Clientes</h1>
+
+    <p class="pagina-texto__intro">Consulta somente leitura. Cada consulta fica registrada na auditoria.</p>
+
+    <form th:action="@{/admin/clientes}" method="get">
+        <div class="campo">
+            <label for="q">Buscar por nome, CPF ou e-mail</label>
+            <input type="search" id="q" name="q" th:value="${q}">
+        </div>
+        <div class="campo">
+            <label for="status">Status</label>
+            <select id="status" name="status">
+                <option value="">Todos</option>
+                <option th:each="s : ${statuses}" th:value="${s.name()}" th:selected="${status == s.name()}"
+                        th:text="${s.name() == 'ATIVA'} ? 'Ativa' : (${s.name() == 'PENDENTE'} ? 'Pendente' : 'Excluída')">Ativa</option>
+            </select>
+        </div>
+        <button type="submit" class="btn-primario">Filtrar</button>
+    </form>
+
+    <p th:if="${pagina.empty}">Nenhum cliente encontrado.</p>
+
+    <div class="tabela-rolavel" role="region" aria-label="Lista de clientes" tabindex="0" th:unless="${pagina.empty}">
+        <table class="tabela-admin">
+            <thead>
+                <tr>
+                    <th scope="col">Nome</th>
+                    <th scope="col">CPF</th>
+                    <th scope="col">E-mail</th>
+                    <th scope="col">Status</th>
+                    <th scope="col">Cadastro</th>
+                    <th scope="col">Detalhes</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="c : ${pagina.content}">
+                    <td th:text="${c.nome}">Nome</td>
+                    <td th:text="${c.cpfMascarado}">***.000.000-**</td>
+                    <td th:text="${c.email}">email@exemplo.com</td>
+                    <td th:text="${c.statusRotulo}">Ativa</td>
+                    <td th:text="${#temporals.format(c.criadoEm, 'dd/MM/yyyy')}">01/01/2026</td>
+                    <td>
+                        <a th:href="@{/admin/clientes/{id}(id=${c.id})}">Ver<span class="visually-hidden"
+                           th:text="| ${c.nome}|"> cliente</span></a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <p th:if="${pagina.totalPages > 1}">
+        <a th:if="${pagina.hasPrevious()}"
+           th:href="@{/admin/clientes(q=${q}, status=${status}, pagina=${pagina.number - 1})}">Anterior</a>
+        <span th:text="|Página ${pagina.number + 1} de ${pagina.totalPages}|">Página 1 de 1</span>
+        <a th:if="${pagina.hasNext()}"
+           th:href="@{/admin/clientes(q=${q}, status=${status}, pagina=${pagina.number + 1})}">Próxima</a>
+    </p>
+
+    <p><a th:href="@{/admin}">Voltar ao painel</a></p>
+
+</div>
+</body>
+</html>

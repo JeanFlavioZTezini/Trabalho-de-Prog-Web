@@ -14,19 +14,6 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 import com.farmacia.farmaciaonline.security.LoginFailureHandler;
 import com.farmacia.farmaciaonline.security.LoginSuccessHandler;
 
-/**
- * Regras de acesso do site.
- *
- * - Públicas: vitrine, carrinho, login, cadastro, páginas institucionais e arquivos estáticos.
- * - /admin/** e /demo/** : só o papel ADMIN (cliente logado recebe 403; visitante é mandado para /login).
- * - O resto exige login.
- *
- * O CSRF fica LIGADO (padrão do Spring): todo formulário POST precisa do token, e o Thymeleaf
- * o inclui sozinho quando o formulário usa {@code th:action}. O logout é um POST pelo mesmo motivo.
- *
- * Quem carrega o usuário no login é o {@code UsuarioDetailsService} (o Spring o encontra
- * sozinho, por ser o único UserDetailsService da aplicação) junto com o PasswordEncoder abaixo.
- */
 @Configuration
 @EnableWebSecurity
 public class SecurityConfig {

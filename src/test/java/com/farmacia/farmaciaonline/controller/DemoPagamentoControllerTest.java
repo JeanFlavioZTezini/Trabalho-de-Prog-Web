@@ -27,6 +27,7 @@ import com.farmacia.farmaciaonline.gateway.dto.RespostaPagamento;
 import com.farmacia.farmaciaonline.model.enums.StatusPagamento;
 import com.farmacia.farmaciaonline.repository.CategoriaRepository;
 import com.farmacia.farmaciaonline.repository.ProdutoRepository;
+import com.farmacia.farmaciaonline.service.PagamentoPedidoService;
 
 @WebMvcTest(DemoPagamentoController.class)
 @Import(SecurityConfig.class)
@@ -37,6 +38,9 @@ class DemoPagamentoControllerTest {
 
     @MockBean
     private DemoGatewayAdapter demoGatewayAdapter;
+
+    @MockBean
+    private PagamentoPedidoService pagamentos;
 
     @MockBean
     private CategoriaRepository categoriaRepository;
@@ -100,6 +104,7 @@ class DemoPagamentoControllerTest {
                 .andExpect(jsonPath("$.status").value("APROVADO"));
 
         verify(demoGatewayAdapter).forcarStatus("PIX-123", StatusPagamento.APROVADO);
+        verify(pagamentos).processarEvento("PIX-123");
     }
 
     @Test

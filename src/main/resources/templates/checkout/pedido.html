@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Seu pedido | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto" th:with="pedido=${tela.pedido}">
+
+    <h1>Pedido nº <span th:text="${pedido.id}">1</span></h1>
+
+    <p class="alerta alerta--sucesso" role="status" th:if="${sucesso != null}" th:text="${sucesso}"></p>
+    <div class="alerta alerta--erro" role="alert" th:if="${erros != null}">
+        <ul><li th:each="e : ${erros}" th:text="${e}">Erro</li></ul>
+    </div>
+
+    <p>Situação: <strong th:text="${pedido.status.rotulo}">Aguardando pagamento</strong></p>
+
+    <!--/* Aprovado. */-->
+    <p class="alerta alerta--sucesso" role="status"
+       th:if="${pedido.status.name() != 'AGUARDANDO_PAGAMENTO' and pedido.status.name() != 'CANCELADO'}">
+        Pagamento aprovado. Seu pedido foi confirmado.
+    </p>
+
+    <!--/* Encerrado. */-->
+    <p class="alerta alerta--erro" role="status" th:if="${pedido.status.name() == 'CANCELADO'}">
+        Este pedido foi cancelado e os itens voltaram ao estoque. Se ainda quiser os produtos, faça uma nova compra.
+    </p>
+
+    <!--/* Pix ou boleto aguardando. */-->
+    <section th:if="${tela.aguardandoGateway}">
+        <h2 th:text="|Pagamento por ${tela.pendente.metodo.rotulo}|">Pagamento por Pix</h2>
+        <p class="alerta" role="status" th:text="${tela.pendente.mensagem}">Aguardando pagamento</p>
+        <p>Código de pagamento:</p>
+        <p class="checkout-codigo" th:text="${tela.pendente.codigoPagamento}">DEMO-PIX</p>
+        <p>Os itens ficam reservados até <strong th:text="${tela.reservaAte}">hoje</strong>. Depois disso, o pedido é
+           cancelado e os itens voltam ao estoque.</p>
+        <form th:action="@{/checkout/pedidos/{id}/atualizar(id=${pedido.id})}" method="post">
+            <button type="submit" class="btn-primario">Já paguei: atualizar situação</button>
+        </form>
+        <div class="checkout-demo" th:if="${demo}">
+            <p>Controles de demonstração (só no perfil demo):</p>
+            <form th:action="@{/checkout/pedidos/{id}/demo/aprovar(id=${pedido.id})}" method="post">
+                <button type="submit">Simular pagamento aprovado</button>
+            </form>
+            <form th:action="@{/checkout/pedidos/{id}/demo/expirar(id=${pedido.id})}" method="post">
+                <button type="submit">Simular expiração</button>
+            </form>
+        </div>
+    </section>
+
+    <!--/* Recusado ou sem resposta: nova tentativa no mesmo pedido. */-->
+    <div class="alerta alerta--erro" role="alert" th:if="${tela.podePagar and tela.recusado != null}">
+        <p><strong>Pagamento recusado.</strong> <span th:text="${tela.recusado.mensagem}">Motivo</span></p>
+        <p>Seus itens continuam reservados neste pedido até <strong th:text="${tela.reservaAte}">hoje</strong>. Tente de novo
+           abaixo; não é preciso refazer a compra.</p>
+    </div>
+    <div class="alerta alerta--erro" role="alert" th:if="${tela.semResposta}">
+        <p><strong>Não recebemos a resposta do pagamento.</strong> Repita abaixo: se a cobrança já tiver acontecido, ela não
+           será feita de novo.</p>
+    </div>
+
+    <form th:if="${tela.podePagar}" th:action="@{/checkout/pedidos/{id}/pagamento(id=${pedido.id})}" method="post"
+          autocomplete="off">
+        <h2>Pagar este pedido</h2>
+        <input type="hidden" name="chave" th:value="${tela.chave}">
+        <fieldset class="campo--opcoes">
+            <legend>Forma de pagamento</legend>
+            <label th:each="m, estado : ${tela.metodos}">
+                <input type="radio" name="metodo" th:value="${m}" th:checked="${estado.first}"> <span th:text="${m.rotulo}">Pix</span>
+            </label>
+        </fieldset>
+        <th:block th:if="${tela.pedeCartao}">
+            <div th:replace="~{checkout/fragmentos :: parcelas(selecionada=1)}"></div>
+            <p>Preencha os dados abaixo só se for pagar com cartão.</p>
+            <th:block th:replace="~{checkout/fragmentos :: cartao(demo=${demo})}"></th:block>
+        </th:block>
+        <button type="submit" class="btn-primario">Pagar</button>
+    </form>
+
+    <!--/* Falha no envio do resumo não afeta o pedido. */-->
+    <div class="alerta" role="status" th:if="${tela.resumoNaoEnviado}">
+        <p>Seu pedido está registrado, mas não conseguimos enviar o resumo por e-mail.</p>
+        <form th:action="@{/checkout/pedidos/{id}/resumo(id=${pedido.id})}" method="post">
+            <button type="submit" class="btn-primario">Reenviar resumo</button>
+        </form>
+    </div>
+    <p th:if="${pedido.resumoEnviadoEm != null}">Enviamos o resumo deste pedido para o seu e-mail.</p>
+
+    <h2>Itens</h2>
+    <div class="tabela-rolavel" role="region" aria-label="Itens do pedido" tabindex="0">
+        <table class="tabela-admin">
+            <caption class="visually-hidden">Itens do pedido</caption>
+            <thead>
+                <tr>
+                    <th scope="col">Produto</th>
+                    <th scope="col">Qtd.</th>
+                    <th scope="col">Preço</th>
+                    <th scope="col">Subtotal</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr th:each="i : ${pedido.itens}">
+                    <td>
+                        <span th:text="|${i.nomeProduto} ${i.descricaoApresentacao}|">Produto</span>
+                        <span class="selo-receita" th:if="${i.exigeReceita}">Exige receita</span>
+                    </td>
+                    <td th:text="${i.quantidade}">1</td>
+                    <td th:text="${#numbers.formatCurrency(i.precoUnitario)}">R$ 10,00</td>
+                    <td th:text="${#numbers.formatCurrency(i.subtotal)}">R$ 10,00</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <dl class="checkout-totais">
+        <dt>Subtotal</dt><dd th:text="${#numbers.formatCurrency(pedido.subtotal)}">R$ 10,00</dd>
+        <dt>Frete</dt><dd th:text="${#numbers.formatCurrency(pedido.frete)}">R$ 0,00</dd>
+        <dt>Total</dt><dd class="checkout-totais__total" th:text="${#numbers.formatCurrency(pedido.total)}">R$ 10,00</dd>
+    </dl>
+
+    <section th:if="${pedido.enderecoEntrega != null}">
+        <h2>Entrega</h2>
+        <p>
+            <span th:text="${pedido.enderecoEntrega.destinatario}">Destinatário</span><br>
+            <span th:text="|${pedido.enderecoEntrega.logradouro}, ${pedido.enderecoEntrega.numero}|">Rua, 1</span><br>
+            <span th:text="|${pedido.enderecoEntrega.bairro} - ${pedido.enderecoEntrega.cidade}/${pedido.enderecoEntrega.uf}|">Bairro</span>
+        </p>
+        <p th:if="${pedido.prazoEntregaDias != null}">Prazo: até <span th:text="${pedido.prazoEntregaDias}">2</span> dias úteis.</p>
+    </section>
+
+    <section th:if="${pedido.localRetirada != null}">
+        <h2>Retirada em loja</h2>
+        <p>
+            <span th:text="${pedido.localRetirada.nome}">Loja</span><br>
+            <span th:text="|${pedido.localRetirada.logradouro}, ${pedido.localRetirada.numero} - ${pedido.localRetirada.bairro}, ${pedido.localRetirada.cidade}/${pedido.localRetirada.uf}|">Rua</span><br>
+            <span th:text="${pedido.localRetirada.horarioFuncionamento}">Horário</span>
+        </p>
+    </section>
+
+    <p class="alerta" th:if="${pedido.temItemQueExigeReceita()}">
+        Este pedido tem medicamento que exige receita: <strong>apresente a receita na loja</strong> para retirá-lo.
+    </p>
+
+    <p class="pagina-texto__rodape-form"><a th:href="@{/}">Voltar à página inicial</a></p>
+
+</div>
+</body>
+</html>

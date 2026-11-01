@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Finalizar compra | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1>Finalizar compra</h1>
+
+    <div th:if="${tela.carrinhoVazio}">
+        <p class="alerta" role="status">Seu carrinho está vazio. Adicione produtos para finalizar uma compra.</p>
+        <p><a class="btn-primario" th:href="@{/}">Ver produtos</a></p>
+    </div>
+
+    <form th:unless="${tela.carrinhoVazio}" th:action="@{/checkout/resumo}" method="get">
+
+        <p class="alerta" role="status" th:if="${tela.exigeReceita}">
+            Seu carrinho tem medicamento que exige receita: este pedido só pode ser <strong>retirado em loja</strong>,
+            com a receita apresentada no balcão. Não é preciso enviar a receita pelo site.
+        </p>
+
+        <fieldset class="campo--opcoes">
+            <legend>Como você quer receber?</legend>
+            <label th:unless="${tela.exigeReceita}">
+                <input type="radio" name="tipoEntrega" value="ENTREGA" th:checked="${enderecoId != null}"> Entrega no endereço
+            </label>
+            <label>
+                <input type="radio" name="tipoEntrega" value="RETIRADA" th:checked="${tela.exigeReceita}"> Retirada em loja (frete grátis)
+            </label>
+        </fieldset>
+
+        <section th:unless="${tela.exigeReceita}">
+            <h2>Endereço de entrega</h2>
+            <p>Entregamos somente em Mato Grosso do Sul (MS).</p>
+            <fieldset class="campo--opcoes" th:unless="${#lists.isEmpty(tela.enderecos)}">
+                <legend class="visually-hidden">Endereço de entrega</legend>
+                <label th:each="e, estado : ${tela.enderecos}">
+                    <input type="radio" name="enderecoId" th:value="${e.id}"
+                           th:checked="${enderecoId != null ? enderecoId == e.id : estado.first}">
+                    <span th:text="|${e.destinatario}: ${e.logradouro}, ${e.numero} - ${e.bairro}, ${e.cidade}/${e.uf}|">Endereço</span>
+                </label>
+            </fieldset>
+            <p th:if="${#lists.isEmpty(tela.enderecos)}">Você ainda não cadastrou nenhum endereço.</p>
+            <p><a th:href="@{/enderecos(retorno='checkout')}">Gerenciar endereços</a> ou
+               <a th:href="@{/enderecos/novo(retorno='checkout')}">cadastrar um novo</a></p>
+        </section>
+
+        <section>
+            <h2>Loja para retirada</h2>
+            <fieldset class="campo--opcoes" th:unless="${#lists.isEmpty(tela.lojas)}">
+                <legend class="visually-hidden">Loja para retirada</legend>
+                <label th:each="l, estado : ${tela.lojas}">
+                    <input type="radio" name="lojaId" th:value="${l.id}" th:checked="${estado.first}">
+                    <span th:text="|${l.nome}: ${l.logradouro}, ${l.numero} - ${l.cidade}/${l.uf} (${l.horarioFuncionamento})|">Loja</span>
+                </label>
+            </fieldset>
+            <p th:if="${#lists.isEmpty(tela.lojas)}">Nenhuma loja disponível para retirada no momento.</p>
+        </section>
+
+        <section>
+            <h2>Forma de pagamento</h2>
+            <fieldset class="campo--opcoes">
+                <legend class="visually-hidden">Forma de pagamento</legend>
+                <label th:each="m : ${metodos}">
+                    <input type="radio" name="metodo" th:value="${m}"> <span th:text="${m.rotulo}">Pix</span>
+                </label>
+            </fieldset>
+            <div th:replace="~{checkout/fragmentos :: parcelas(selecionada=1)}"></div>
+        </section>
+
+        <button type="submit" class="btn-primario">Ver resumo do pedido</button>
+    </form>
+
+</div>
+</body>
+</html>

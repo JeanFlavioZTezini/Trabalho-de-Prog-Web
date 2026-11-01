@@ -23,8 +23,16 @@ public class DemoGatewayAdapter implements GatewayDePagamento {
     private static final long MINUTOS_EXPIRACAO_PIX = 30;
     private static final long DIAS_EXPIRACAO_BOLETO = 3;
     private final Map<String, EstadoTransacaoDemo> estadosDemo = new ConcurrentHashMap<>();
+    private final Map<String, RespostaPagamento> respostasPorChave = new ConcurrentHashMap<>();
     @Override
     public RespostaPagamento processar(RequisicaoPagamento req) {
+        if (req.chaveIdempotencia() == null) {
+            return executar(req);
+        }
+        return respostasPorChave.computeIfAbsent(req.chaveIdempotencia(), chave -> executar(req));
+    }
+
+    private RespostaPagamento executar(RequisicaoPagamento req) {
         validarParcelas(req);
 
         return switch (req.metodo()) {

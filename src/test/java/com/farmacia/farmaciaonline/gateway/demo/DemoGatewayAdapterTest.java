@@ -41,6 +41,48 @@ class DemoGatewayAdapterTest {
                 null);
     }
 
+    // ---------- Idempotência ----------
+    private RequisicaoPagamento pixComChave(String chave) {
+        return new RequisicaoPagamento(1L, new BigDecimal("99.90"), MetodoPagamento.PIX,
+                null, null, null, null, 1, null, chave);
+    }
+
+    @Test
+    @DisplayName("mesma chave devolve a mesma transação, sem gerar outra cobrança")
+    void mesmaChaveMesmaResposta() {
+        RespostaPagamento primeira = adapter.processar(pixComChave("chave-1"));
+        RespostaPagamento repetida = adapter.processar(pixComChave("chave-1"));
+
+        assertThat(repetida.transacaoGatewayId()).isEqualTo(primeira.transacaoGatewayId());
+    }
+
+    @Test
+    @DisplayName("chaves diferentes, ou sem chave, geram transações diferentes")
+    void chavesDiferentes() {
+        assertThat(adapter.processar(pixComChave("chave-1")).transacaoGatewayId())
+                .isNotEqualTo(adapter.processar(pixComChave("chave-2")).transacaoGatewayId());
+        assertThat(adapter.processar(pixComChave(null)).transacaoGatewayId())
+                .isNotEqualTo(adapter.processar(pixComChave(null)).transacaoGatewayId());
+    }
+
+    @Test
+    @DisplayName("dados recusados não ficam guardados na chave: corrigir e repetir funciona")
+    void recusaDeDadosNaoFicaNaChave() {
+        RequisicaoPagamento invalida = new RequisicaoPagamento(1L, new BigDecimal("99.90"), MetodoPagamento.CARTAO_CREDITO,
+                "123", "123", validadeFutura, "CLIENTE", 1, null, "chave-3");
+        RequisicaoPagamento valida = new RequisicaoPagamento(1L, new BigDecimal("99.90"), MetodoPagamento.CARTAO_CREDITO,
+                "4000000000000002", "123", validadeFutura, "CLIENTE", 1, null, "chave-3");
+
+        assertThatThrownBy(() -> adapter.processar(invalida)).isInstanceOf(IllegalArgumentException.class);
+        assertThat(adapter.processar(valida).status()).isEqualTo(StatusPagamento.APROVADO);
+    }
+
+    @Test
+    @DisplayName("o toString da requisição não mostra o número nem o código de segurança")
+    void toStringNaoVazaDadosDoCartao() {
+        assertThat(requisicaoCartao("4000000000000002", 1).toString()).doesNotContain("4000000000000002").doesNotContain("123");
+    }
+
     // ---------- Cartão de Crédito / Débito ----------
     @Test
     @DisplayName("cartão com número válido terminando diferente de zero é aprovado")

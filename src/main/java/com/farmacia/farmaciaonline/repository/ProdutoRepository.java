@@ -5,6 +5,7 @@ import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -23,6 +24,11 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long> {
 
     /** Produtos vinculados a uma categoria (UC13: reatribuição antes de excluir). */
     List<Produto> findByCategoriasId(Long categoriaId);
+
+    /** Soma ao "Mais comprados" (negativo ao cancelar um pedido pago). Direto no banco: compras simultâneas não se perdem. */
+    @Modifying
+    @Query("update Produto p set p.qtdVendida = p.qtdVendida + :quantidade where p.id = :id")
+    int somarVendidos(@Param("id") Long id, @Param("quantidade") long quantidade);
 
     /** Lista administrativa (UC12): nome, marca, princípio ativo, SKU ou EAN; {@code termo} já vem com %...%. */
     @Query("""

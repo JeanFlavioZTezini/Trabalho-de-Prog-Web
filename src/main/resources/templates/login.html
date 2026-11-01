@@ -19,6 +19,9 @@
     <p class="alerta alerta--sucesso" role="status" th:if="${saiu}">Você saiu da sua conta.</p>
     <p class="alerta alerta--sucesso" role="status" th:if="${contaConfirmada}">Conta confirmada. Agora é só entrar com
         seu e-mail ou CPF e a senha.</p>
+    <p class="alerta alerta--sucesso" role="status" th:if="${senhaAlterada}">Senha alterada. Entre com a nova senha.</p>
+    <p class="alerta" role="status" th:if="${sessaoExpirada}">Sua sessão foi encerrada porque a senha da conta foi
+        alterada. Entre de novo.</p>
 
     <!--/* th:action coloca o token CSRF no formulário; sem ele o POST /login é recusado (403). */-->
     <form th:action="@{/login}" method="post">
@@ -31,6 +34,9 @@
         <button type="submit" class="btn-primario btn-primario--bloco">Entrar</button>
     </form>
 
+    <p class="pagina-texto__rodape-form">
+        <a th:href="@{/recuperar-senha}">Esqueci minha senha</a>
+    </p>
     <p class="pagina-texto__rodape-form">
         Ainda não tem conta? <a th:href="@{/cadastro}">Cadastre-se</a>
     </p>

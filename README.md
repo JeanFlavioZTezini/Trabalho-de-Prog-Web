@@ -394,6 +394,31 @@ Telas em `/enderecos` (lista, `novo`, `{id}/editar`, `{id}/excluir`); exigem log
   incorreto, uso repetido, finalidade errada, bloqueio por tentativas, reenvio, limite por hora, código fora do log e
   tentativa gravada mesmo com a recusa) e `ConfirmacaoContaIntegracaoTest` (fluxo completo, SMS, retomada e caixa demo).
 
+## Recuperação de senha e revogação de sessões (F-06 / UC14)
+
+- **Fluxo, sem login:** `/recuperar-senha` (e-mail ou CPF, mais o canal preferido) → `/recuperar-senha/codigo` (o código
+  de 6 números) → `/recuperar-senha/nova-senha`. A tela de login tem o atalho "Esqueci minha senha". A conta em
+  recuperação fica na sessão, nunca na URL, e a nova senha só é aceita depois de um código válido.
+- **Resposta sempre igual:** para conta elegível, inexistente, pendente, excluída ou sem contato confirmado, o pedido mostra
+  a mesma mensagem ("Se houver uma conta com esses dados..."), e o código errado também. O código só vai para um contato
+  **já confirmado** (`email_confirmado_em` ou `celular_confirmado_em`), do canal preferido ou, se ele não estiver
+  confirmado, do outro.
+- **Limites:** o código usa a finalidade `RECUPERAR_SENHA` e as regras da F-05 (`app.codigos.*`: 10 min, 5 tentativas,
+  uso único, 60 s entre pedidos, 5 por hora). Além disso, o `LimiteDeSolicitacoes` aplica os mesmos 60 s e 5 por hora
+  **por identificador digitado**, exista a conta ou não, para o "aguarde" também não denunciar contas. Esse limite fica
+  na memória e zera quando a aplicação reinicia.
+- **Nova senha:** mesma regra do cadastro (`validacao/PoliticaDeSenha`: 8 ou mais, letra e número, até 72 bytes), gravada
+  em BCrypt, e precisa ser diferente da atual. Cliente e administrador recuperam do mesmo jeito; o vínculo com Google ou Facebook não é apagado, e conta
+  sem senha local passa a ter uma.
+- **Sessões antigas:** ao trocar a senha, `RevogacaoDeSessoes` encerra todas as sessões da conta, em qualquer navegador.
+  A `SecurityConfig` registra as sessões (`SessionRegistry`, sem limite de sessões por pessoa); a sessão encerrada é
+  barrada na próxima requisição e vai para `/login?expirada`. A troca de senha logado (F-12) e o login (F-18) podem
+  reaproveitar o mesmo `RevogacaoDeSessoes`.
+- **Testes:** `LimiteDeSolicitacoesTest` e `RevogacaoDeSessoesTest` (unitários), `RecuperacaoSenhaServiceIntegracaoTest`
+  (elegibilidade, resposta igual, limite por identificador, canal confirmado, troca, reutilização, administrador, conta
+  social, sessões) e `RecuperacaoSenhaIntegracaoTest` (fluxo completo, código reutilizado, mensagens iguais, aguardar,
+  sessão aberta antes da troca perde o acesso, senha fraca, administrador e o atalho no login).
+
 ## Como criar uma página nova
 
 Toda página usa o layout `templates/fragments/layout.html` (cabeçalho com busca, menu de

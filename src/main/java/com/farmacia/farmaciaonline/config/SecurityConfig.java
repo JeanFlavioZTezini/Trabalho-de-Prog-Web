@@ -5,8 +5,11 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.security.core.session.SessionRegistry;
+import org.springframework.security.core.session.SessionRegistryImpl;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 import com.farmacia.farmaciaonline.security.LoginFailureHandler;
 import com.farmacia.farmaciaonline.security.LoginSuccessHandler;
@@ -46,7 +49,7 @@ public class SecurityConfig {
     };
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, SessionRegistry sessionRegistry) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(ROTAS_PUBLICAS).permitAll()
@@ -64,8 +67,26 @@ public class SecurityConfig {
                 .logoutUrl("/logout") // com CSRF ligado, só aceita POST
                 .logoutSuccessUrl("/login?logout")
                 .invalidateHttpSession(true)
-                .deleteCookies("JSESSIONID"));
+                .deleteCookies("JSESSIONID"))
+            // Registro de todas as sessões: a recuperação de senha (F-06) encerra as sessões da conta, e a sessão
+            // encerrada é barrada na próxima requisição e vai para /login?expirada. Sem limite de sessões por pessoa.
+            .sessionManagement(sessao -> sessao
+                .sessionConcurrency(concorrencia -> concorrencia
+                    .maximumSessions(-1)
+                    .sessionRegistry(sessionRegistry)
+                    .expiredUrl("/login?expirada")));
         return http.build();
+    }
+
+    @Bean
+    public SessionRegistry sessionRegistry() {
+        return new SessionRegistryImpl();
+    }
+
+    /** Avisa o registro quando uma sessão termina (logout, tempo esgotado), para ele não guardar sessões mortas. */
+    @Bean
+    public HttpSessionEventPublisher httpSessionEventPublisher() {
+        return new HttpSessionEventPublisher();
     }
 
     @Bean

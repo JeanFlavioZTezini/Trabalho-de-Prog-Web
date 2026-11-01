@@ -1,6 +1,5 @@
 package com.farmacia.farmaciaonline.service;
 
-import java.nio.charset.StandardCharsets;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
@@ -20,6 +19,7 @@ import com.farmacia.farmaciaonline.model.enums.Perfil;
 import com.farmacia.farmaciaonline.model.enums.StatusUsuario;
 import com.farmacia.farmaciaonline.repository.UsuarioRepository;
 import com.farmacia.farmaciaonline.validacao.CpfValidator;
+import com.farmacia.farmaciaonline.validacao.PoliticaDeSenha;
 
 /**
  * Cadastro de cliente (UC03). A conta nasce PENDENTE e com perfil CLIENTE, sempre: nada disso vem do navegador.
@@ -29,8 +29,6 @@ import com.farmacia.farmaciaonline.validacao.CpfValidator;
 public class CadastroService {
 
     static final int IDADE_MINIMA = 18;
-    /** O BCrypt só lê os primeiros 72 bytes da senha; mais que isso o Spring recusa. */
-    static final int LIMITE_BYTES_SENHA = 72;
     private static final LocalDate NASCIMENTO_MAIS_ANTIGO = LocalDate.of(1900, 1, 1);
 
     private static final String MENSAGEM_CPF_USADO = "Já existe uma conta com este CPF.";
@@ -59,8 +57,8 @@ public class CadastroService {
         if (senha != null && form.getConfirmarSenha() != null && !senha.equals(form.getConfirmarSenha())) {
             erros.put("confirmarSenha", "As senhas não conferem.");
         }
-        if (senha != null && senha.getBytes(StandardCharsets.UTF_8).length > LIMITE_BYTES_SENHA) {
-            erros.put("senha", "A senha é longa demais: use até 72 caracteres (letras com acento contam mais).");
+        if (PoliticaDeSenha.excedeLimite(senha)) {
+            erros.put("senha", PoliticaDeSenha.MENSAGEM_LIMITE);
         }
 
         LocalDate nascimento = form.getDataNascimento();

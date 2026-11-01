@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Recuperar senha | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1>Recuperar senha</h1>
+
+    <p>Informe o e-mail ou CPF da conta e escolha como prefere receber o código. Ele será enviado para um contato
+        que você já confirmou.</p>
+
+    <p class="alerta alerta--erro" role="alert" th:if="${erro}" th:text="${erro}">Erro.</p>
+
+    <form th:action="@{/recuperar-senha}" method="post">
+        <div th:replace="~{fragments/campo :: campo(id='identificador', nome='identificador', rotulo='E-mail ou CPF',
+                 tipo='text', ajuda='Se usar o CPF, pode digitar com ou sem pontos e traço.', erro=null, autocomplete='username')}"></div>
+
+        <fieldset class="campo campo--opcoes">
+            <legend>Prefiro receber o código por</legend>
+            <label for="canal-email">
+                <input type="radio" id="canal-email" name="canal" value="EMAIL" checked> E-mail
+            </label>
+            <label for="canal-sms">
+                <input type="radio" id="canal-sms" name="canal" value="SMS"> SMS
+            </label>
+        </fieldset>
+
+        <button type="submit" class="btn-primario btn-primario--bloco">Enviar código</button>
+    </form>
+
+    <p class="pagina-texto__rodape-form"><a th:href="@{/login}">Voltar ao login</a></p>
+
+</div>
+</body>
+</html>

@@ -608,6 +608,44 @@ carrinho; o dono é o usuário **ou** o token, nunca os dois). Regras em `servic
   "navegadores" com cookies separados, para provar a revogação das outras sessões) (PostgreSQL real; incluem campos forjados ignorados, senha atual
   errada, nova igual à atual, senha acima de 72 bytes, cancelar sem gravar, nome novo no cabeçalho e sessões revogadas).
 
+## Consulta de clientes (F-09 / UC11)
+
+Consulta administrativa **somente leitura** de clientes, com auditoria. Regras em `service/ClienteAdminService`, telas em
+`AdminClienteController` + `templates/admin/clientes.html` e `cliente-detalhe.html`. Fica sob `/admin/**` (só `ADMIN`:
+visitante vai para `/login`, cliente logado recebe 403, inclusive por URL direta). Não há rota de escrita: o controller só
+tem `GET`, e não existe edição administrativa de conta.
+
+| Rota | O que faz |
+|---|---|
+| `GET /admin/clientes` | lista paginada (20 por página, por nome) com busca `q` e filtro `status` (todos, pendente, ativa, excluída) |
+| `GET /admin/clientes/{id}` | detalhe do cliente e seus 10 pedidos mais recentes |
+
+- **Busca:** `q` procura em nome e e-mail (sem diferenciar maiúsculas) e em CPF (aceita pontuação; só vale com 3 dígitos ou
+  mais). `%`, `_` e `!` digitados são texto comum, não curinga. Status desconhecido vira "todos". Só contas `CLIENTE`
+  aparecem; um id de administrador no detalhe responde 404, como id inexistente.
+- **O que aparece:** a lista mostra o CPF **mascarado** (`***.982.247-**`, `ContatoMascarado.cpf`). O detalhe mostra o CPF
+  completo (a consulta é auditada), nascimento, gênero, e-mail e celular com "confirmado" ou "não confirmado", status e data
+  de cadastro. Nunca aparecem senha, hash, tentativas de login, termos, códigos de verificação nem dados de pagamento.
+- **Histórico:** lista mínima (número, data, total e status) dos 10 pedidos mais recentes, lida do `PedidoRepository`.
+  **Lacuna:** a consulta própria de histórico depende da F-16; quando existir, a fonte desta lista pode ser trocada.
+- **Auditoria (`log_auditoria`):** cada consulta grava o log **na mesma transação** da leitura; se o log falhar, a consulta
+  falha. Sem administrador identificado na sessão também não há consulta.
+
+  | Ação | Quando | `alvo_tipo` / `alvo_id` | `detalhes` |
+  |---|---|---|---|
+  | `CLIENTE_LISTAR` | abrir a lista (com ou sem filtro) | vazios | `status=<ATIVA\|...\|TODOS>, busca=sim\|nao, pagina=<n>` |
+  | `CLIENTE_VISUALIZAR` | abrir o detalhe de um cliente | `USUARIO` / id do cliente | vazio |
+
+  Todos gravam autor, IP (`getRemoteAddr()`; `X-Forwarded-For` não é confiável) e data. O texto buscado **nunca** vai para o
+  log (pode ser CPF ou e-mail). Detalhe de cliente inexistente ou de administrador responde 404 e não grava log.
+- **Fora do escopo:** exportação CSV e filtro por período (F-23, que pode reaproveitar `ClienteAdminService` e gravar
+  `CLIENTE_EXPORTAR`).
+- **Sem migration:** a tabela `log_auditoria` já existe desde a V1.
+- **Testes:** `ContatoMascaradoTest` (unitário), `AdminClienteSegurancaTest` (visitante, cliente, sem rota de escrita),
+  `AdminClienteTelaTest` (HTML: um único h1, CPF mascarado, tabela em região rolável, detalhe sem formulário) e
+  `ClienteAdminServiceIntegracaoTest` (PostgreSQL real: busca por nome, e-mail e CPF, status, só cliente, paginação,
+  curingas como texto, auditoria sem o termo buscado, 404 sem log, pedidos recentes, log que falha derruba a consulta).
+
 ## Como criar uma página nova
 
 Toda página usa o layout `templates/fragments/layout.html` (cabeçalho com busca, menu de
@@ -718,7 +756,7 @@ Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: a
 | Recuperação de senha sem login e revogação de sessões (UC14, UC10-A4) | F-06 | Kauê (@KaueAlves09), pessoa B | |
 | CRUD de categorias hierárquicas (UC13) | F-07 | Pessoa C: _preencher_ | |
 | CRUD de produtos, apresentações, estoque e imagens (UC12) | F-08 | Pessoa C: _preencher_ | |
-| Consulta administrativa de clientes com auditoria (UC11) | F-09 | Pessoa C: _preencher_ | |
+| Consulta administrativa de clientes com auditoria (UC11) | F-09 (#32) | Kauê (@KaueAlves09), repassada da trilha C | |
 | Carrinho de visitante e cliente, com mesclagem no login (UC05) | F-10 | Pessoa D: _preencher_ | |
 | CRUD de endereços e seleção no checkout (UC16) | F-11 | Pessoa D: _preencher_ | |
 | Edição de dados pessoais e senha autenticada (UC07) | F-12 (#35) | Aieser (pessoa D), integração por Kauê (@KaueAlves09) | |

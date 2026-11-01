@@ -21,11 +21,15 @@ public class LoginController {
             @RequestParam(name = "erro", required = false) String erro,
             @RequestParam(name = "logout", required = false) String logout,
             @RequestParam(name = "confirmada", required = false) String confirmada,
+            @RequestParam(name = "senhaAlterada", required = false) String senhaAlterada,
+            @RequestParam(name = "expirada", required = false) String expirada,
             Model model) {
         model.addAttribute("erroLogin", mensagemDeErro(erro));
         model.addAttribute("contaPendente", LoginFailureHandler.MOTIVO_PENDENTE.equals(erro));
         model.addAttribute("saiu", logout != null);
         model.addAttribute("contaConfirmada", confirmada != null);
+        model.addAttribute("senhaAlterada", senhaAlterada != null);
+        model.addAttribute("sessaoExpirada", expirada != null);
         return "login";
     }
 

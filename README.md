@@ -76,7 +76,17 @@ Essas contas existem só para desenvolvimento e demonstração.
 - **Recomeçar do zero:** ver [Como zerar o banco para a demonstração](#como-zerar-o-banco-para-a-demonstração).
   Quem aplicou uma versão antiga do `V2` localmente precisa disso.
 - **Não edite uma migração que já está na `main`:** o Flyway guarda o checksum e a aplicação deixa de
-  subir em quem já a aplicou. Para mudar dados, crie uma migração nova (`V3__...sql`).
+  subir em quem já a aplicou. Para mudar dados, crie uma migração nova com o próximo número livre (hoje, `V6`).
+- **Numeração das migrações:** duas branches com o mesmo número quebram o Flyway no merge. Antes de abrir PR com
+  migração, confira a `main` e as branches abertas e avise o grupo do número escolhido.
+
+  | Versão | Conteúdo | Issue |
+  |---|---|---|
+  | `V1` | schema | fundação |
+  | `V2` | seed de demonstração | fundação |
+  | `V3` | `usuario.email_confirmado_em` e `celular_confirmado_em` | F-05 |
+  | `V4` | checkout: `pedido.versao`, chave de idempotência, cópia da loja (`retirada_*`), índices de pagamento | F-14 |
+  | `V5` | `historico_status_pedido.status_anterior` | F-15 |
 - **Textos com várias linhas no seed:** use `E'linha 1\nlinha 2'`. Quebrar a linha dentro das aspas
   grava um fim de linha diferente no Windows e no Linux.
 - **Imagens de produto:** ficam em `src/main/resources/static/images/produtos/`, em WebP de até 800 px,
@@ -217,7 +227,7 @@ com.farmacia.farmaciaonline
 └── FarmaciaOnlineApplication.java
 
 src/main/resources
-├── db/migration       (scripts Flyway: V1__init.sql, V2__seed.sql...)
+├── db/migration       (scripts Flyway: V1__init.sql, V2__seed.sql, V3 a V5...)
 ├── static
 │   ├── css            (tokens.css = cores; style.css = estilos globais — carregar nessa ordem)
 │   ├── images         (logo.png; produtos/ com as fotos e o placeholder.svg)
@@ -294,7 +304,8 @@ Entidades em `model` (`Carrinho`, `ItemCarrinho`, `Endereco`, `CartaoSalvo`, `Lo
 
 ## Modelo de pedido
 
-Entidades em `model` (`Pedido`, `ItemPedido`, `Pagamento`, `HistoricoStatusPedido`, `LogAuditoria`); o schema vem da `V1__init.sql`.
+Entidades em `model` (`Pedido`, `ItemPedido`, `Pagamento`, `HistoricoStatusPedido`, `LogAuditoria`); o schema vem da `V1__init.sql`,
+com os acréscimos da `V4` (checkout) e da `V5` (`status_anterior`).
 
 - **O pedido guarda cópias (snapshots).** O endereço de entrega vai no `@Embeddable EnderecoEntrega`, que o `Pedido`
   mapeia para as colunas `entrega_*`, e o `ItemPedido` guarda nome, descrição, SKU, preço e `exigeReceita` do momento
@@ -310,6 +321,10 @@ Entidades em `model` (`Pedido`, `ItemPedido`, `Pagamento`, `HistoricoStatusPedid
 - Um pedido tem várias tentativas de `Pagamento` (UC08-E2). Do cartão só ficam dados mascarados, e parcelas acima de 1
   só no crédito.
 - `HistoricoStatusPedido.alteradoPor` nulo significa que a mudança foi do sistema.
+- `HistoricoStatusPedido.statusAnterior` é o status de onde o pedido saiu (UC17). É nulo no registro de criação do pedido e
+  nos eventos gravados antes da `V5`, que não guardaram a origem: a migration não a reconstitui. Quem muda o status lê o
+  anterior **antes** de chamar `setStatus` e o passa ao registrar o histórico (`EstadoPedidoService#registrarHistorico`);
+  a F-17 deve seguir o mesmo caminho.
 - `PedidoRepository#findByIdAndUsuarioId` é o jeito de buscar um pedido para o cliente: de outro usuário, volta vazio (UC06).
 - `PRONTO_PARA_RETIRADA` é o status do pedido de retirada em loja. Quem decide as transições entre status é o service (Fase 2).
 
@@ -413,8 +428,9 @@ Esses botões e o `POST /demo/pagamento/forcar-status` (só `ADMIN`) existem ape
 - **F-17 (administração):** cancelar é `EstadoPedidoService#cancelar(pedidoId, autor, observacao)`, que devolve o estoque uma
   vez e funciona até `EM_SEPARACAO`; registrar a necessidade de estorno fica com a F-17. `Pedido.versao` (`@Version`) já existe
   para a atualização concorrente. Pagamento aprovado só vem de `PagamentoPedidoService#processarEvento`.
-- **F-15:** a `V4` já criou o que o checkout precisa (`pedido.versao` e as colunas `retirada_*`); falta só o `status_anterior`
-  do histórico. `PRONTO_PARA_RETIRADA` já está nas constraints desde a `V1`.
+- **F-15:** a `V4` criou o que o checkout precisa (`pedido.versao` e as colunas `retirada_*`) e a `V5` acrescentou o
+  `status_anterior` ao histórico, que o `EstadoPedidoService` já preenche (aprovação, expiração e cancelamento).
+  `PRONTO_PARA_RETIRADA` está nas constraints desde a `V1`.
 
 **Testes:** `FreteDemoTest` e `CartaoFormTest` (sem banco); `CheckoutServiceIntegracaoTest` (acesso, total, frete, receita, preço
 alterado, última unidade e envio repetido, com threads de verdade); `PagamentoPedidoIntegracaoTest` (recusa, evento repetido,

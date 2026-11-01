@@ -552,6 +552,35 @@ carrinho; o dono é o usuário **ou** o token, nunca os dois). Regras em `servic
   social, sessões) e `RecuperacaoSenhaIntegracaoTest` (fluxo completo, código reutilizado, mensagens iguais, aguardar,
   sessão aberta antes da troca perde o acesso, senha fraca, administrador e o atalho no login).
 
+## Minha conta: dados pessoais e senha (F-12 / parte do UC07)
+
+Área do cliente logado para ver e editar os próprios dados e trocar a senha. Regras em `service/ContaService`, telas em
+`ContaController` + `templates/conta/*.html`. As rotas não estão em `ROTAS_PUBLICAS`: exigem login (regra "todo o resto").
+
+| Rota | O que faz |
+|---|---|
+| `GET /conta` | dados pessoais (CPF, nascimento, gênero) e contatos (e-mail e celular, com "confirmado" ou "não confirmado") |
+| `GET/POST /conta/editar` | altera **nome, data de nascimento e gênero**; "Cancelar" é um link para `/conta` e não salva nada |
+| `GET/POST /conta/senha` | troca a senha: exige a senha atual, a nova e a confirmação |
+
+- **Mesmas regras do cadastro (F-04/F-06):** nome obrigatório (até 150), nascimento válido (de 1900 até hoje, 18 anos ou
+  mais) e gênero obrigatório. A nova senha segue `validacao/PoliticaDeSenha` (8 caracteres ou mais, com letra e número, até
+  72 bytes), é gravada em BCrypt com o mesmo `PasswordEncoder` e precisa ser diferente da atual.
+- **O que o formulário não consegue alterar:** `ContaForm` só tem `nome`, `dataNascimento` e `genero`, e o controller
+  libera só esses campos no binder. CPF, e-mail, perfil, status e id enviados à força no POST são ignorados; o dono da
+  conta é sempre o usuário da sessão (nenhuma rota recebe id). Só conta `ATIVA` usa estas telas (cliente ou administrador).
+- **Cabeçalho:** depois de salvar os dados, `security/SessaoAutenticada` recria o principal da sessão com o nome novo, então
+  o primeiro nome do cabeçalho muda sem novo login. O link "Minha conta" fica no cabeçalho, ao lado de "Meus endereços".
+- **Sessões na troca de senha:** `RevogacaoDeSessoes.encerrarOutrasSessoesDe(usuarioId, idDaSessaoAtual)` encerra as
+  **outras** sessões da conta (outro navegador ou aparelho; vão para `/login?expirada`). A sessão em que a senha foi trocada
+  continua logada, com o id da sessão renovado (`changeSessionId`).
+- **Contatos:** e-mail e celular são só exibidos. A troca com confirmação por código é a F-21 e **continua sendo lacuna**:
+  esta entrega não completa o UC07.
+- **Testes:** `ContaFormsTest` e `DadosDaContaTest` (unitários), `ContaControllerTest` (camada web),
+  `ContaServiceIntegracaoTest`, `ContaIntegracaoTest` e `ContaSessoesServidorRealTest` (Tomcat de verdade, dois
+  "navegadores" com cookies separados, para provar a revogação das outras sessões) (PostgreSQL real; incluem campos forjados ignorados, senha atual
+  errada, nova igual à atual, senha acima de 72 bytes, cancelar sem gravar, nome novo no cabeçalho e sessões revogadas).
+
 ## Como criar uma página nova
 
 Toda página usa o layout `templates/fragments/layout.html` (cabeçalho com busca, menu de
@@ -665,7 +694,7 @@ Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: a
 | Consulta administrativa de clientes com auditoria (UC11) | F-09 | Pessoa C: _preencher_ | |
 | Carrinho de visitante e cliente, com mesclagem no login (UC05) | F-10 | Pessoa D: _preencher_ | |
 | CRUD de endereços e seleção no checkout (UC16) | F-11 | Pessoa D: _preencher_ | |
-| Edição de dados pessoais e senha autenticada (UC07) | F-12 | Pessoa D: _preencher_ | |
+| Edição de dados pessoais e senha autenticada (UC07) | F-12 (#35) | Aieser (pessoa D), integração por Kauê (@KaueAlves09) | |
 | Gateway de pagamento simulado e retorno idempotente (UC08/UC09) | F-13 | Pessoa E: _preencher_ | |
 | Checkout transacional, entrega ou retirada, estoque e expiração (UC08/UC09) | F-14 (#37) | @Joaomarceloap | |
 | Contratos e modelos de pedidos e migrations de compatibilidade (UC06/UC08/UC14/UC17) | F-15 | Pessoa F: _preencher_, com Kauê (contatos confirmados) e a pessoa E | |

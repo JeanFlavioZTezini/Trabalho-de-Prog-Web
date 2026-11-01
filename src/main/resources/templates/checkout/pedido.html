@@ -141,7 +141,9 @@
         Este pedido tem medicamento que exige receita: <strong>apresente a receita na loja</strong> para retirá-lo.
     </p>
 
-    <p class="pagina-texto__rodape-form"><a th:href="@{/}">Voltar à página inicial</a></p>
+    <p class="pagina-texto__rodape-form"><a th:href="@{/pedidos/{id}(id=${pedido.id})}">Ver o histórico deste pedido</a>
+       · <a th:href="@{/pedidos}">Meus pedidos</a>
+       · <a th:href="@{/}">Voltar à página inicial</a></p>
 
 </div>
 </body>

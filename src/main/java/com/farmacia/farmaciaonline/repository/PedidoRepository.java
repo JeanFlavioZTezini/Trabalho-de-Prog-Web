@@ -22,6 +22,9 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     /** Pedidos do usuário, do mais recente para o mais antigo (UC06). */
     Page<Pedido> findByUsuarioIdOrderByCriadoEmDesc(Long usuarioId, Pageable pageable);
 
+    /** Igual ao anterior, com desempate pelo número: dois pedidos no mesmo instante não trocam de lugar entre páginas. */
+    Page<Pedido> findByUsuarioIdOrderByCriadoEmDescIdDesc(Long usuarioId, Pageable pageable);
+
     /** Garante que o usuário só enxerga os próprios pedidos (UC06): de outro usuário, vem vazio. */
     Optional<Pedido> findByIdAndUsuarioId(Long id, Long usuarioId);
 

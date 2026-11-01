@@ -12,4 +12,7 @@ public interface HistoricoStatusPedidoRepository extends JpaRepository<Historico
 
     /** Linha do tempo do pedido, da mais antiga para a mais recente. */
     List<HistoricoStatusPedido> findByPedidoIdOrderByCriadoEmAsc(Long pedidoId);
+
+    /** Igual ao anterior, com desempate pelo id: duas mudanças no mesmo instante mantêm a ordem em que foram gravadas. */
+    List<HistoricoStatusPedido> findByPedidoIdOrderByCriadoEmAscIdAsc(Long pedidoId);
 }

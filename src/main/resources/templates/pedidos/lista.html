@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Meus pedidos | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1>Meus pedidos</h1>
+
+    <!--/* UC06-E1: falha ao carregar. */-->
+    <div class="alerta alerta--erro" role="alert" th:if="${erroAoCarregar}">
+        <p><strong>Não foi possível carregar seus pedidos agora.</strong> Eles continuam registrados.</p>
+        <p><a th:href="@{/pedidos}">Tentar novamente</a></p>
+    </div>
+
+    <th:block th:if="${!erroAoCarregar}">
+
+        <!--/* UC06-A1: nenhum pedido. */-->
+        <div th:if="${lista.vazia}">
+            <p>Você ainda não fez nenhum pedido.</p>
+            <p><a class="btn-primario" th:href="@{/produtos}">Ver produtos</a></p>
+        </div>
+
+        <th:block th:unless="${lista.vazia}">
+            <p th:text="${lista.totalPedidos == 1} ? '1 pedido.' : |${lista.totalPedidos} pedidos, do mais recente para o mais antigo.|">3 pedidos.</p>
+
+            <div class="tabela-rolavel" role="region" aria-label="Lista de pedidos" tabindex="0">
+                <table class="tabela-admin">
+                    <caption class="visually-hidden">Seus pedidos, do mais recente para o mais antigo</caption>
+                    <thead>
+                        <tr>
+                            <th scope="col">Pedido</th>
+                            <th scope="col">Data</th>
+                            <th scope="col">Itens</th>
+                            <th scope="col">Total</th>
+                            <th scope="col">Situação</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="p : ${lista.pedidos}">
+                            <td><a th:href="@{/pedidos/{id}(id=${p.id})}" th:text="|Pedido nº ${p.id}|">Pedido nº 1</a></td>
+                            <td th:text="${p.criadoEmFormatado}">01/01/2026 às 10:00</td>
+                            <td th:text="${p.unidades == 1} ? '1 unidade' : |${p.unidades} unidades|">2 unidades</td>
+                            <td th:text="${#numbers.formatCurrency(p.total)}">R$ 10,00</td>
+                            <td th:text="${p.status.rotulo}">Aguardando pagamento</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <nav class="paginacao" aria-label="Paginação de pedidos" th:if="${lista.totalPaginas > 1}">
+                <a th:if="${lista.temAnterior}" th:href="@{/pedidos(pagina=${lista.pagina - 1})}">Anterior</a>
+                <span th:text="|Página ${lista.pagina + 1} de ${lista.totalPaginas}|">Página 1 de 1</span>
+                <a th:if="${lista.temProxima}" th:href="@{/pedidos(pagina=${lista.pagina + 1})}">Próxima</a>
+            </nav>
+        </th:block>
+
+    </th:block>
+
+    <p class="pagina-texto__rodape-form"><a th:href="@{/conta}">Voltar para Minha conta</a></p>
+</div>
+</body>
+</html>

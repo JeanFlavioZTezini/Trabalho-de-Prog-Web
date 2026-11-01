@@ -423,8 +423,9 @@ Esses botões e o `POST /demo/pagamento/forcar-status` (só `ADMIN`) existem ape
 
 **Contratos para outras issues:**
 
-- **F-16 (pedidos do cliente):** o pedido tem as cópias em `enderecoEntrega` ou `localRetirada`, e `MetodoPagamento` e
-  `StatusPedido` têm `getRotulo()`. Dá para trocar o redirecionamento final para a nova tela quando ela existir.
+- **F-16 (pedidos do cliente):** entregue em "Meus pedidos" (seção própria, abaixo). A confirmação continua em
+  `/checkout/pedidos/{id}`, que também cuida do pagamento (Pix, boleto, nova tentativa); o detalhe em `/pedidos/{id}` leva até ela
+  enquanto o pedido aguarda pagamento.
 - **F-17 (administração):** cancelar é `EstadoPedidoService#cancelar(pedidoId, autor, observacao)`, que devolve o estoque uma
   vez e funciona até `EM_SEPARACAO`; registrar a necessidade de estorno fica com a F-17. `Pedido.versao` (`@Version`) já existe
   para a atualização concorrente. Pagamento aprovado só vem de `PagamentoPedidoService#processarEvento`.
@@ -439,6 +440,35 @@ expiração, cancelamento, gateway fora do ar e falha no envio); `CheckoutFluxoW
 propósito: um rollback no fim do teste esconderia os commits e as travas, que são o assunto.
 
 **Fora do escopo:** escolher um cartão salvo no pagamento (opcional, F-25).
+
+## Meus pedidos (F-16 / UC06)
+
+O cliente acompanha os próprios pedidos em `/pedidos` (lista) e `/pedidos/{id}` (detalhe). O link **Meus pedidos** aparece no
+cabeçalho só para o perfil `CLIENTE`. Código: `PedidosClienteController`, `PedidosClienteService`, `templates/pedidos/`.
+
+- **Só leitura.** Não há POST, PUT nem DELETE em `/pedidos`: o cliente não altera status nem dados do pedido (responde 405).
+  Quem muda o status é o administrador (F-17); a tela reflete o que o `EstadoPedidoService` gravou no histórico.
+- **De quem é o pedido.** O serviço sempre recebe o id da **sessão** (nunca um id da URL ou do formulário) e busca o pedido por
+  `id` **e** dono (`findByIdAndUsuarioId`). Pedido de outra pessoa responde igual a pedido inexistente: **404**, sem revelar que
+  existe. Administrador, conta pendente e conta excluída recebem **403**. Visitante e sessão expirada vão para o login.
+- **Lista:** do mais recente para o mais antigo (desempate pelo número), 10 por página, com número, data, total de unidades,
+  total e situação. As unidades vêm de uma consulta agrupada, não item a item. Página além do fim cai na última; página
+  negativa, na primeira. Sem pedidos: mensagem e link para o catálogo. Falha ao carregar: aviso com "Tentar novamente" e
+  status 503, sem mostrar a mensagem técnica.
+- **Detalhe:** itens com nome, apresentação, preço e quantidade **da hora da compra** (snapshots: mudar o preço do produto não
+  altera pedido antigo), subtotal, frete, total, a **cópia** do endereço de entrega ou da loja de retirada (editar ou excluir o
+  endereço salvo não muda pedidos já feitos), pagamento e histórico de status. Pedido que exige receita lembra de levar a
+  receita à loja; pedido aguardando pagamento leva à tela `/checkout/pedidos/{id}`.
+- **Pagamento mascarado:** método, situação, valor, parcelas e, no cartão, bandeira e final (`VISA final 1111`). O motivo da
+  recusa aparece só quando recusado. Nunca aparecem número do cartão, CVV, código do Pix/boleto nem o id do gateway.
+- **Linha do tempo:** do passo mais antigo ao mais recente, o último marcado como atual, incluindo `PRONTO_PARA_RETIRADA`.
+  Mostra o status e o horário; **não** mostra o autor da mudança (é um administrador) nem a observação (pode ser anotação
+  interna da F-17). Pedido sem histórico gravado mostra ao menos a situação atual.
+- **Para a F-09/F-17:** `PedidosClienteService` é a consulta **do cliente sobre si mesmo**; ela recusa administrador de
+  propósito. O histórico de um cliente na tela do administrador continua sendo uma consulta própria, atrás de `/admin/**`.
+  Reaproveite os métodos `findByUsuarioIdOrderByCriadoEmDescIdDesc` e `findByPedidoIdOrderByCriadoEmAscIdAsc`, que desempatam
+  por id.
+- **Fica para a F-23:** filtros por período e por status (UC06-A2). "Comprar novamente" (UC06-A3) é opcional (F-25).
 
 ## Carrinho (F-10 / UC05)
 
@@ -627,7 +657,8 @@ tem `GET`, e não existe edição administrativa de conta.
   completo (a consulta é auditada), nascimento, gênero, e-mail e celular com "confirmado" ou "não confirmado", status e data
   de cadastro. Nunca aparecem senha, hash, tentativas de login, termos, códigos de verificação nem dados de pagamento.
 - **Histórico:** lista mínima (número, data, total e status) dos 10 pedidos mais recentes, lida do `PedidoRepository`.
-  **Lacuna:** a consulta própria de histórico depende da F-16; quando existir, a fonte desta lista pode ser trocada.
+  A F-16 entregou só a consulta **do próprio cliente** (`/pedidos`), que recusa administrador; esta lista continua usando o
+  `PedidoRepository` por ser uma consulta de administrador, auditada.
 - **Auditoria (`log_auditoria`):** cada consulta grava o log **na mesma transação** da leitura; se o log falhar, a consulta
   falha. Sem administrador identificado na sessão também não há consulta.
 

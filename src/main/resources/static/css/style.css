@@ -1091,3 +1091,25 @@ input[type="date"]:focus-within {
   .conta__dados { grid-template-columns: 1fr; gap: 0.25rem 0; }
   .conta__dados dd { margin-bottom: 0.5rem; }
 }
+
+/* F-16: histórico de pedidos */
+.linha-do-tempo { list-style: none; margin: 0 0 1rem; padding: 0; }
+.linha-do-tempo li {
+  position: relative;
+  margin: 0;
+  padding: 0 0 0.75rem 1.25rem;
+  border-left: 2px solid var(--cor-borda-controle);
+}
+.linha-do-tempo li::before {
+  content: "";
+  position: absolute;
+  left: -0.4rem;
+  top: 0.3rem;
+  width: 0.65rem;
+  height: 0.65rem;
+  border-radius: 50%;
+  background-color: var(--cor-borda-controle);
+}
+.linha-do-tempo li:last-child { border-left-color: transparent; padding-bottom: 0; }
+.linha-do-tempo__atual::before { background-color: var(--cor-azul); }
+.linha-do-tempo li > span:not(.visually-hidden) { display: block; font-size: 0.875rem; }

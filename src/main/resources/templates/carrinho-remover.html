@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Remover item do carrinho | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1>Remover item do carrinho?</h1>
+
+    <p>
+        Você vai tirar <strong th:text="${linha.nome + ' ' + linha.descricao}">Produto</strong>
+        (<span th:text="${linha.quantidade}">1</span> un.) do carrinho.
+    </p>
+
+    <form th:action="@{/carrinho/itens/{id}/remover(id=${linha.itemId})}" method="post">
+        <button type="submit" class="btn-primario">Sim, remover</button>
+        <a class="btn-link" th:href="@{/carrinho}">Não, voltar ao carrinho</a>
+    </form>
+
+</div>
+</body>
+</html>

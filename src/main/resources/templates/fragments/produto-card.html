@@ -19,4 +19,13 @@
             </div>
         </th:block>
     </a>
+    <!--/* F-10: adiciona a apresentação que o card mostra; o carrinho-rapido.js responde sem sair da página. */-->
+    <th:block th:with="apresentacaoCarrinho=${produto.apresentacaoReferenciaAtiva}">
+        <form class="card-carrinho" th:action="@{/carrinho/itens}" method="post"
+              th:if="${produto.ativo and apresentacaoCarrinho != null and apresentacaoCarrinho.disponivel}">
+            <input type="hidden" name="apresentacaoId" th:value="${apresentacaoCarrinho.id}">
+            <input type="hidden" name="quantidade" value="1">
+            <button type="submit" class="btn-adicionar">Adicionar ao carrinho<span class="visually-hidden" th:text="${' ' + produto.nome}"></span></button>
+        </form>
+    </th:block>
 </article>

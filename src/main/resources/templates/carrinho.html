@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Carrinho | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="carrinho">
+
+    <h1>Meu carrinho</h1>
+
+    <p class="alerta alerta--erro" role="alert" th:if="${erro != null}" th:text="${erro}">Mensagem de erro</p>
+    <p class="alerta alerta--sucesso" role="status" th:if="${sucesso != null}" th:text="${sucesso}">Mensagem de sucesso</p>
+
+    <div class="alerta" role="status" th:if="${avisos != null}">
+        <p class="carrinho__aviso-titulo">Atenção:</p>
+        <ul>
+            <li th:each="aviso : ${avisos}" th:text="${aviso}">Aviso</li>
+        </ul>
+    </div>
+
+    <div class="alerta" role="status" th:if="${avisosDoLogin != null}">
+        <p class="carrinho__aviso-titulo">Ao entrar, juntamos o carrinho que você montou antes ao da sua conta:</p>
+        <ul>
+            <li th:each="aviso : ${avisosDoLogin}" th:text="${aviso}">Aviso</li>
+        </ul>
+    </div>
+
+    <p class="alerta" role="status" th:if="${resumo.temPrecoAlterado}">
+        O preço de algum item mudou desde que você o adicionou. O total abaixo já usa o preço atual.
+    </p>
+
+    <div th:if="${resumo.vazio}">
+        <p>Seu carrinho está vazio.</p>
+        <p><a class="btn-primario" th:href="@{/}">Continuar comprando</a></p>
+    </div>
+
+    <div th:unless="${resumo.vazio}">
+        <div class="tabela-rolavel">
+            <table class="carrinho__tabela">
+                <caption class="visually-hidden">Itens do carrinho</caption>
+                <thead>
+                <tr>
+                    <th scope="col">Produto</th>
+                    <th scope="col">Preço</th>
+                    <th scope="col">Quantidade</th>
+                    <th scope="col">Subtotal</th>
+                    <th scope="col"><span class="visually-hidden">Ações</span></th>
+                </tr>
+                </thead>
+                <tbody>
+                <tr th:each="linha : ${resumo.linhas}" th:classappend="${linha.comProblema} ? 'carrinho__linha--problema'">
+                    <th scope="row">
+                        <div class="carrinho__produto">
+                            <img th:src="@{${linha.imagem}}" th:alt="${linha.nome}" width="64" height="64">
+                            <span>
+                                <span class="carrinho__nome" th:text="${linha.nome}">Nome do produto</span>
+                                <span class="carrinho__descricao" th:text="${linha.descricao}">20 comprimidos</span>
+                                <span class="carrinho__problema" th:if="${linha.comProblema}" th:text="${linha.problema}">Problema</span>
+                            </span>
+                        </div>
+                    </th>
+                    <td>
+                        <span th:text="${#numbers.formatCurrency(linha.precoUnitario)}">R$ 0,00</span>
+                        <span class="carrinho__preco-antigo" th:if="${linha.precoAlterado}">
+                            <span class="visually-hidden">Preço anterior:</span>
+                            antes <span th:text="${#numbers.formatCurrency(linha.precoVisto)}">R$ 0,00</span>
+                        </span>
+                        <form th:if="${linha.precoAlterado}" th:action="@{/carrinho/itens/{id}/aceitar-preco(id=${linha.itemId})}" method="post">
+                            <button type="submit" class="btn-link">Aceitar novo preço<span class="visually-hidden" th:text="${' de ' + linha.nome}"></span></button>
+                        </form>
+                    </td>
+                    <td>
+                        <form class="carrinho__quantidade" th:action="@{/carrinho/itens/{id}/quantidade(id=${linha.itemId})}" method="post">
+                            <label th:for="${'quantidade-' + linha.itemId}" class="visually-hidden"
+                                   th:text="${'Quantidade de ' + linha.nome + ' ' + linha.descricao}">Quantidade</label>
+                            <input type="number" min="0" inputmode="numeric"
+                                   th:id="${'quantidade-' + linha.itemId}" name="quantidade" th:value="${linha.quantidade}">
+                            <button type="submit" class="btn-secundario">Atualizar</button>
+                        </form>
+                    </td>
+                    <td>
+                        <span th:if="${!linha.comProblema}" th:text="${#numbers.formatCurrency(linha.subtotal)}">R$ 0,00</span>
+                        <span th:if="${linha.comProblema}">Fora do total</span>
+                    </td>
+                    <td>
+                        <a class="btn-link" th:href="@{/carrinho/itens/{id}/remover(id=${linha.itemId})}">Remover<span class="visually-hidden" th:text="${' ' + linha.nome + ' ' + linha.descricao}"></span></a>
+                    </td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="carrinho__resumo">
+            <p class="carrinho__total">
+                Total (<span th:text="${resumo.totalUnidades}">0</span> un.):
+                <strong th:text="${#numbers.formatCurrency(resumo.total)}">R$ 0,00</strong>
+            </p>
+
+            <p class="alerta alerta--erro" th:unless="${resumo.podeFinalizar}">
+                Corrija os itens destacados para poder finalizar a compra.
+            </p>
+            <p class="carrinho__ajuda" sec:authorize="isAnonymous()" th:if="${resumo.podeFinalizar}">
+                Para finalizar a compra você precisa entrar na sua conta ou <a th:href="@{/cadastro(retorno='checkout')}">criar uma</a>. Seu carrinho será mantido.
+            </p>
+
+            <div class="carrinho__acoes">
+                <a class="btn-primario" th:if="${resumo.podeFinalizar}" th:href="@{/carrinho/finalizar}">Finalizar compra</a>
+                <button type="button" class="btn-primario" th:unless="${resumo.podeFinalizar}" disabled aria-disabled="true">Finalizar compra</button>
+
+                <form th:action="@{/carrinho/esvaziar}" method="post">
+                    <button type="submit" class="btn-secundario">Esvaziar carrinho</button>
+                </form>
+                <a class="btn-link" th:href="@{/}">Continuar comprando</a>
+            </div>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

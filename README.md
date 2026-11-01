@@ -424,6 +424,50 @@ propósito: um rollback no fim do teste esconderia os commits e as travas, que s
 
 **Fora do escopo:** escolher um cartão salvo no pagamento (opcional, F-25).
 
+## Carrinho (F-10 / UC05)
+
+Entidades `Carrinho` e `ItemCarrinho` (as tabelas e unicidades já vinham da `V1`: um item por apresentação em cada
+carrinho; o dono é o usuário **ou** o token, nunca os dois). Regras em `service/CarrinhoService`, telas em
+`CarrinhoController` + `templates/carrinho*.html`.
+
+| Rota | O que faz |
+|---|---|
+| `GET /carrinho` | lista o carrinho, com total recalculado no servidor (`BigDecimal`) |
+| `POST /carrinho/itens` (`apresentacaoId`, `quantidade`) | adiciona; se já existe, **soma** |
+| `POST /carrinho/itens/{id}/quantidade` | altera; quantidade menor que 1 leva à confirmação de remoção |
+| `GET/POST /carrinho/itens/{id}/remover` | confirmação e remoção |
+| `POST /carrinho/itens/{id}/aceitar-preco` | aceita o preço novo (UC05-E3) |
+| `POST /carrinho/esvaziar` | esvazia |
+| `GET /carrinho/finalizar` | revalida e segue para `/checkout`; visitante vai ao login e **volta aqui** depois |
+
+- **De quem é o carrinho:** quem decide é o servidor. Usuário logado: o id do login. Visitante: o cookie `carrinho_token`
+  (UUID, `HttpOnly`, `SameSite=Lax`, 30 dias; `security/CarrinhoCookie`). Nenhuma rota recebe "id de carrinho"; o id de item
+  é procurado só dentro do carrinho do dono, então id alheio (inclusive por POST direto) dá "não está no seu carrinho".
+- **Revalidação a cada operação e a cada exibição:** produto ativo, apresentação ativa, estoque e limite por pedido.
+  Passou do limite ou do estoque ao adicionar: o servidor ajusta e avisa. Item que ficou indisponível depois fica
+  destacado, fora do total, e **bloqueia** o "Finalizar" até ser corrigido ou removido.
+- **Login:** `security/MesclagemCarrinhoNoLogin` ouve o evento de login bem-sucedido (publicado antes do
+  `LoginSuccessHandler`, que **não foi alterado**, para não conflitar com a F-18). Une por apresentação, soma
+  respeitando limite e estoque, guarda os avisos na sessão (aparecem em `/carrinho`), apaga o carrinho do visitante e o
+  cookie. Falha na mesclagem não impede o login. Sair não apaga o carrinho da conta.
+- **Para a página do produto (UC02) e o checkout (F-14):** adicionar é `POST /carrinho/itens`; o destino do
+  "Finalizar" é a constante `CarrinhoController.DESTINO_CHECKOUT` (`/checkout`, F-14). Administrador e conta pendente
+  chegam lá e recebem 403. A home já tem o botão "Adicionar ao carrinho" na apresentação padrão disponível de cada card.
+- **Adicionar sem sair da página:** `static/js/carrinho-rapido.js` intercepta o envio de `form.card-carrinho` e faz o mesmo
+  `POST /carrinho/itens` pedindo JSON (`Accept: application/json`). A resposta traz a mensagem, os avisos, o item
+  (nome, apresentação, imagem, quantidade, preço, subtotal), `totalUnidades` e `total`; recusa de regra volta como 422 com
+  `{"erro": ...}`. Um painel pequeno mostra o item e tem "Continuar comprando" (fecha e devolve o foco ao botão) e "Ver
+  carrinho"; Esc também fecha, e ele não some sozinho. Sem JavaScript, ou se a chamada falhar, o formulário segue o caminho
+  normal e redireciona para `/carrinho` (a página do produto, F-02, continua assim).
+- **Contador e aviso no cabeçalho:** `CarrinhoContagemAdvice` entrega ao `layout.html` o número de unidades (`Carrinho (3)`,
+  com " itens no carrinho" em `.visually-hidden`; sem número quando vazio; conta todas as unidades, inclusive de item
+  indisponível, ao contrário do total de `/carrinho`). No login, `MesclagemCarrinhoNoLogin` guarda na sessão "Você tem N
+  itens no seu carrinho." (também quando não havia cookie, se a conta já tinha itens) e o layout mostra o aviso **uma vez**,
+  na primeira página realmente exibida (redirect não consome). Quem veio de "Finalizar" ainda cai onde o login mandar: voltar
+  a `/checkout` depois do cadastro é da F-18.
+- **Layout do card:** `.card` virou coluna flex e o botão fica preso ao fundo (`margin-top: auto`), em vez de vazar por cima
+  do card da linha de baixo.
+
 ## Cadastro de clientes (F-04 / UC03)
 
 - **Telas:** `/cadastro` (formulário e POST) e `/confirmar-conta` (página provisória até a F-05). Quem já está logado é

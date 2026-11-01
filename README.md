@@ -468,6 +468,17 @@ carrinho; o dono é o usuário **ou** o token, nunca os dois). Regras em `servic
 - **Layout do card:** `.card` virou coluna flex e o botão fica preso ao fundo (`margin-top: auto`), em vez de vazar por cima
   do card da linha de baixo.
 
+## Detalhes do produto (F-02 / UC02)
+
+- `GET /produtos/{id}` mostra dados do produto, indicações em tópicos, bula quando há um endereço HTTP(S) válido
+  (link cadastrado inválido é sinalizado e não aberto),
+  avisos, informações de pagamento e imagens. O contador de visualizações sobe uma vez por abertura válida da página.
+- A apresentação inicial é a primeira ativa por ordem; a seleção mostra preço, estoque e imagens gerais ou específicas
+  daquela apresentação. Apresentações inativas ou pertencentes a outro produto não são aceitas na URL.
+- O botão envia `apresentacaoId` e quantidade por `POST /carrinho/itens` (contrato da F-10). Estoque e limite são
+  revalidados no servidor pelo `CarrinhoService`; sem estoque, a compra fica desabilitada. Produto inexistente/inativo
+  retorna 404 com orientação para o catálogo.
+
 ## Cadastro de clientes (F-04 / UC03)
 
 - **Telas:** `/cadastro` (formulário e POST) e `/confirmar-conta` (página provisória até a F-05). Quem já está logado é
@@ -684,7 +695,7 @@ Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: a
 | Módulo | Issue | Integrante | PR |
 |---|---|---|---|
 | Catálogo público: busca, categoria, filtros e paginação (UC01) | F-01 | Cássio (@cassioqm) | |
-| Detalhes do produto e apresentação comprável (UC02) | F-02 | Pessoa A: _preencher_ | |
+| Detalhes do produto e apresentação comprável (UC02) | F-02 | Cássio (@cassioqm) | |
 | Navegação integrada, páginas de termos e revisão de interface (UC03/UC15) | F-03 | Pessoa A: _preencher_ | |
 | Cadastro com validação e conta pendente (UC03) | F-04 | Kauê (@KaueAlves09), pessoa B | |
 | Serviço de códigos e confirmação de conta com envio simulado (UC04) | F-05 | Kauê (@KaueAlves09), pessoa B | |

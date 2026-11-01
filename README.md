@@ -261,6 +261,12 @@ Entidades em `model` (`Categoria`, `Produto`, `Apresentacao`, `ImagemProduto`); 
 - `Produto#getApresentacaoPadrao()` devolve a de menor `ordem` (sem olhar estoque nem se está ativa;
   `null` se o produto não tem apresentações). `Apresentacao#isDisponivel()` é "ativa e estoque > 0".
   `Produto#isIndisponivel()` é "nenhuma apresentação disponível" (sem apresentações também é indisponível).
+- A vitrine e `GET /produtos` exibem o preço da primeira apresentação ativa por ordem
+  (`Produto#getApresentacaoReferenciaAtiva()`). Produtos sem estoque continuam no catálogo, a menos
+  que o filtro "Somente disponíveis" seja selecionado. A listagem aceita termo (`q`), categoria,
+  preço mínimo/máximo, disponibilidade, ordenação por nome/preço e paginação; os links de página
+  preservam os filtros. A busca também consulta a indicação cadastrada, mas isso não é diagnóstico
+  nem substitui orientação profissional. Sem termo, a listagem mostra o catálogo ativo sem busca textual.
 - `ImagemProduto.apresentacao` nula significa que a imagem vale para todas as apresentações do produto.
 - `Apresentacao.versao` (`@Version`) protege a edição do produto no admin: quem abriu a tela antes de uma compra não
   sobrescreve o estoque. O checkout não depende dela para disputar estoque: usa atualização condicional
@@ -648,7 +654,7 @@ Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: a
 
 | Módulo | Issue | Integrante | PR |
 |---|---|---|---|
-| Catálogo público: busca, categoria, filtros e paginação (UC01) | F-01 | Pessoa A: _preencher_ | |
+| Catálogo público: busca, categoria, filtros e paginação (UC01) | F-01 | Cássio (@cassioqm) | |
 | Detalhes do produto e apresentação comprável (UC02) | F-02 | Pessoa A: _preencher_ | |
 | Navegação integrada, páginas de termos e revisão de interface (UC03/UC15) | F-03 | Pessoa A: _preencher_ | |
 | Cadastro com validação e conta pendente (UC03) | F-04 | Kauê (@KaueAlves09), pessoa B | |

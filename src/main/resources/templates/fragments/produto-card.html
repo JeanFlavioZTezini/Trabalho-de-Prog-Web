@@ -1,0 +1,31 @@
+<article class="card" th:fragment="card(produto)" xmlns:th="http://www.thymeleaf.org">
+    <a class="card-link" th:href="@{/produtos/{id}(id=${produto.id})}">
+        <div class="imagem">
+            <img th:src="@{${produto.urlCapa}}" th:alt="${produto.nome}">
+        </div>
+        <p class="nome" th:text="${produto.nome}">Nome do produto</p>
+        <th:block th:with="apresentacao=${produto.apresentacaoReferenciaAtiva}">
+            <p class="qtd" th:if="${apresentacao != null}"
+               th:text="${apresentacao.descricao}">Apresentação</p>
+            <p class="qtd" th:unless="${apresentacao != null}">Sem apresentação ativa</p>
+            <div class="selos">
+                <span class="selo selo--indisponivel" th:if="${produto.indisponivel}">Indisponível</span>
+                <span class="selo selo--receita" th:if="${produto.exigeReceita}">Exige receita</span>
+            </div>
+            <div class="card-rodape">
+                <span class="preco" th:if="${apresentacao != null}"
+                      th:text="${#numbers.formatCurrency(apresentacao.preco)}">R$ 0,00</span>
+                <span class="preco" th:unless="${apresentacao != null}">Preço indisponível</span>
+            </div>
+        </th:block>
+    </a>
+    <!--/* F-10: adiciona a apresentação que o card mostra; o carrinho-rapido.js responde sem sair da página. */-->
+    <th:block th:with="apresentacaoCarrinho=${produto.apresentacaoReferenciaAtiva}">
+        <form class="card-carrinho" th:action="@{/carrinho/itens}" method="post"
+              th:if="${produto.ativo and apresentacaoCarrinho != null and apresentacaoCarrinho.disponivel}">
+            <input type="hidden" name="apresentacaoId" th:value="${apresentacaoCarrinho.id}">
+            <input type="hidden" name="quantidade" value="1">
+            <button type="submit" class="btn-adicionar">Adicionar ao carrinho<span class="visually-hidden" th:text="${' ' + produto.nome}"></span></button>
+        </form>
+    </th:block>
+</article>

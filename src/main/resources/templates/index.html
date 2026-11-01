@@ -22,68 +22,18 @@
     <section class="secao" aria-labelledby="titulo-mais-comprados">
         <h2 id="titulo-mais-comprados">Mais comprados</h2>
         <div class="grade">
-            <article class="card" th:each="produto : ${maisComprados}">
-                <a class="card-link" th:href="@{/produtos/{id}(id=${produto.id})}">
-                    <div class="imagem">
-                        <img th:src="@{${produto.urlCapa}}"
-                             th:alt="${produto.nome}">
-                    </div>
-                    <p class="nome" th:text="${produto.nome}">Nome do produto</p>
-                    <th:block th:with="apresentacao=${produto.apresentacaoPadrao}">
-                        <p class="qtd" th:if="${apresentacao != null}"
-                           th:text="${apresentacao.descricao}">Apresentação</p>
-                        <div class="selos">
-                            <span class="selo selo--indisponivel" th:if="${produto.indisponivel}">Indisponível</span>
-                            <span class="selo selo--receita" th:if="${produto.exigeReceita}">Exige receita</span>
-                        </div>
-                        <div class="card-rodape">
-                            <span class="preco" th:if="${apresentacao != null}"
-                                  th:text="${#numbers.formatCurrency(apresentacao.preco)}">R$ 0,00</span>
-                            <span class="preco" th:unless="${apresentacao != null}">Preço indisponível</span>
-                        </div>
-                    </th:block>
-                </a>
-                <form class="card-carrinho" th:action="@{/carrinho/itens}" method="post"
-                      th:if="${produto.ativo and produto.apresentacaoPadrao != null and produto.apresentacaoPadrao.disponivel}">
-                    <input type="hidden" name="apresentacaoId" th:value="${produto.apresentacaoPadrao.id}">
-                    <input type="hidden" name="quantidade" value="1">
-                    <button type="submit" class="btn-adicionar">Adicionar ao carrinho<span class="visually-hidden" th:text="${' ' + produto.nome}"></span></button>
-                </form>
-            </article>
+            <th:block th:each="produto : ${maisComprados}">
+                <article th:replace="~{fragments/produto-card :: card(${produto})}"></article>
+            </th:block>
         </div>
     </section>
 
     <section class="secao" aria-labelledby="titulo-mais-vistos">
         <h2 id="titulo-mais-vistos">Mais vistos</h2>
         <div class="grade">
-            <article class="card" th:each="produto : ${maisVistos}">
-                <a class="card-link" th:href="@{/produtos/{id}(id=${produto.id})}">
-                    <div class="imagem">
-                        <img th:src="@{${produto.urlCapa}}"
-                             th:alt="${produto.nome}">
-                    </div>
-                    <p class="nome" th:text="${produto.nome}">Nome do produto</p>
-                    <th:block th:with="apresentacao=${produto.apresentacaoPadrao}">
-                        <p class="qtd" th:if="${apresentacao != null}"
-                           th:text="${apresentacao.descricao}">Apresentação</p>
-                        <div class="selos">
-                            <span class="selo selo--indisponivel" th:if="${produto.indisponivel}">Indisponível</span>
-                            <span class="selo selo--receita" th:if="${produto.exigeReceita}">Exige receita</span>
-                        </div>
-                        <div class="card-rodape">
-                            <span class="preco" th:if="${apresentacao != null}"
-                                  th:text="${#numbers.formatCurrency(apresentacao.preco)}">R$ 0,00</span>
-                            <span class="preco" th:unless="${apresentacao != null}">Preço indisponível</span>
-                        </div>
-                    </th:block>
-                </a>
-                <form class="card-carrinho" th:action="@{/carrinho/itens}" method="post"
-                      th:if="${produto.ativo and produto.apresentacaoPadrao != null and produto.apresentacaoPadrao.disponivel}">
-                    <input type="hidden" name="apresentacaoId" th:value="${produto.apresentacaoPadrao.id}">
-                    <input type="hidden" name="quantidade" value="1">
-                    <button type="submit" class="btn-adicionar">Adicionar ao carrinho<span class="visually-hidden" th:text="${' ' + produto.nome}"></span></button>
-                </form>
-            </article>
+            <th:block th:each="produto : ${maisVistos}">
+                <article th:replace="~{fragments/produto-card :: card(${produto})}"></article>
+            </th:block>
         </div>
     </section>
 

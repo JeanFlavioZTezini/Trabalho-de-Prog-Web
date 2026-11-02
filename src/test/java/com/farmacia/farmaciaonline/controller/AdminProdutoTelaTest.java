@@ -152,4 +152,67 @@ class AdminProdutoTelaTest {
                 .contains("aria-label=\"Lista de produtos\"").contains("tabindex=\"0\"");
         assertThat(html).contains("<td>Dipirona</td>").doesNotContain("Nenhum produto encontrado.");
     }
+
+    @Test
+    @DisplayName("lista de produtos tem o link 'Voltar ao painel' para /admin")
+    void listaTemVoltarAoPainel() throws Exception {
+        when(service.buscar(any(), any(), any())).thenReturn(new PageImpl<>(List.of()));
+
+        assertThat(html("/admin/produtos")).containsPattern("<a href=\"/admin\">Voltar ao painel</a>");
+    }
+
+    @Test
+    @DisplayName("apresentações em cartões: um fieldset por linha, rótulos ligados aos campos, interruptor em ativo/ativa e demais checkboxes em label.campo__marcador")
+    void apresentacoesEmCartoes() throws Exception {
+        ProdutoForm form = new ProdutoForm();
+        form.getApresentacoes().add(new ProdutoForm.ApresentacaoForm());
+        form.getApresentacoes().add(new ProdutoForm.ApresentacaoForm());
+        when(service.formDe(1L)).thenReturn(form);
+
+        String html = html("/admin/produtos/1/editar");
+
+        assertThat(html).doesNotContain("<table");
+        assertThat(ocorrencias(html, "<fieldset class=\"apresentacao\"")).isEqualTo(2);
+        assertThat(html).containsPattern("<legend>Apresentação 1</legend>").containsPattern("<legend>Apresentação 2</legend>");
+        for (int i = 0; i < 2; i++) {
+            for (String campo : List.of("descricao", "sku", "ean", "preco", "estoque", "limitePorPedido", "ativa")) {
+                String id = "apr-" + campo + "-" + i;
+                assertThat(html).containsPattern("<label [^>]*for=\"" + id + "\"").contains("id=\"" + id + "\"")
+                        .contains("name=\"apresentacoes[" + i + "]." + campo + "\"");
+            }
+        }
+        assertThat(html).containsPattern("(?s)<label class=\"interruptor\" for=\"apr-ativa-0\">\\s*<input type=\"checkbox\" role=\"switch\"");
+        assertThat(html).containsPattern("<label class=\"interruptor\"><input type=\"checkbox\" role=\"switch\"[^>]*id=\"ativo\\d*\"")
+                .containsPattern("<label class=\"campo__marcador\"><input type=\"checkbox\"[^>]*id=\"exigeReceita\\d*\"");
+    }
+
+    @Test
+    @DisplayName("foto: remover é um ícone com nome acessível sobre o checkbox removerImagemIds; 'todas as apresentações' não aparece")
+    void fotoComIconeDeRemover() throws Exception {
+        com.farmacia.farmaciaonline.model.ImagemProduto img = new com.farmacia.farmaciaonline.model.ImagemProduto();
+        img.setId(7L);
+        img.setArquivo("/uploads/x.png");
+        when(service.formDe(1L)).thenReturn(new ProdutoForm());
+        when(service.imagensDe(1L)).thenReturn(List.of(img));
+
+        String html = html("/admin/produtos/1/editar");
+
+        assertThat(html).containsPattern("(?s)<label class=\"remover-foto\">\\s*<input type=\"checkbox\" name=\"removerImagemIds\" value=\"7\"");
+        assertThat(html).contains("Remover esta foto").doesNotContain("todas as apresentações");
+    }
+
+    @Test
+    @DisplayName("lista: editar e excluir são ícones com nome acessível que traz o nome do produto")
+    void acoesComoIcones() throws Exception {
+        com.farmacia.farmaciaonline.model.Produto p = new com.farmacia.farmaciaonline.model.Produto();
+        p.setId(5L);
+        p.setNome("Dipirona");
+        when(service.buscar(any(), any(), any())).thenReturn(new PageImpl<>(List.of(p)));
+
+        String html = html("/admin/produtos");
+
+        assertThat(html).contains("href=\"/admin/produtos/5/editar\"").contains("action=\"/admin/produtos/5/excluir\"");
+        assertThat(html).contains(">Editar Dipirona</span>").contains(">Excluir Dipirona</span>");
+        assertThat(html).containsPattern("class=\"acao-icone\"").containsPattern("acao-icone acao-icone--perigo");
+    }
 }

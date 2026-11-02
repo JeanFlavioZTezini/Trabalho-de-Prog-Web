@@ -991,4 +991,4 @@ Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: a
 | Correção de busca e refinamentos do catálogo (UC01) | F-22 | Kauê (@KaueAlves09) | #75 |
 | Filtros completos de pedidos/clientes e exportação CSV (UC06/UC11) | F-23 | Kauê (@KaueAlves09) | #75 |
 | Excluir a própria conta preservando histórico necessário (regra I14) | F-24 | Kauê (@KaueAlves09) | |
-| Facilidades explicitamente opcionais | F-25 | Kauê (@KaueAlves09) | |
+| Facilidades explicitamente opcionais | F-25 | Kauê (@KaueAlves09) | #76 |

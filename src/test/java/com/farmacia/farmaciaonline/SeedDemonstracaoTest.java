@@ -11,6 +11,7 @@ import org.junit.jupiter.params.provider.ValueSource;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
+import org.springframework.core.io.ClassPathResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.transaction.annotation.Transactional;
@@ -141,6 +142,21 @@ class SeedDemonstracaoTest {
                 + "(SELECT 1 FROM apresentacao a WHERE a.produto_id = p.id)")).isZero();
         assertThat(contar("SELECT count(*) FROM produto p WHERE NOT EXISTS "
                 + "(SELECT 1 FROM imagem_produto i WHERE i.produto_id = p.id)")).isZero();
+    }
+
+    @Test
+    void todaFotoDoSeedExisteNoProjeto() {
+        List<String> arquivos = jdbc.queryForList(
+                "SELECT DISTINCT arquivo FROM imagem_produto WHERE arquivo LIKE '/images/%'", String.class);
+
+        assertThat(arquivos).isNotEmpty().allSatisfy(arquivo ->
+                assertThat(new ClassPathResource("static" + arquivo).exists()).as(arquivo).isTrue());
+    }
+
+    @Test
+    void medicamentoSobPrescricaoContinuaSemFotoDaCaixa() {
+        assertThat(contar("SELECT count(*) FROM imagem_produto i JOIN produto p ON p.id = i.produto_id "
+                + "WHERE p.exige_receita AND i.arquivo <> '/images/produtos/placeholder.svg'")).isZero();
     }
 
     @Test

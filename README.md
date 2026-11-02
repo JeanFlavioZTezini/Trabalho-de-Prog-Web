@@ -76,7 +76,7 @@ Essas contas existem só para desenvolvimento e demonstração.
 - **Recomeçar do zero:** ver [Como zerar o banco para a demonstração](#como-zerar-o-banco-para-a-demonstração).
   Quem aplicou uma versão antiga do `V2` localmente precisa disso.
 - **Não edite uma migração que já está na `main`:** o Flyway guarda o checksum e a aplicação deixa de
-  subir em quem já a aplicou. Para mudar dados, crie uma migração nova com o próximo número livre (hoje, `V6`).
+  subir em quem já a aplicou. Para mudar dados, crie uma migração nova com o próximo número livre (hoje, `V8`).
 - **Numeração das migrações:** duas branches com o mesmo número quebram o Flyway no merge. Antes de abrir PR com
   migração, confira a `main` e as branches abertas e avise o grupo do número escolhido.
 
@@ -87,12 +87,16 @@ Essas contas existem só para desenvolvimento e demonstração.
   | `V3` | `usuario.email_confirmado_em` e `celular_confirmado_em` | F-05 |
   | `V4` | checkout: `pedido.versao`, chave de idempotência, cópia da loja (`retirada_*`), índices de pagamento | F-14 |
   | `V5` | `historico_status_pedido.status_anterior` | F-15 |
+  | `V6` | conferência da receita e estorno pendente no pedido | F-17 |
+  | `V7` | fotos dos produtos do seed, no lugar do placeholder | |
 - **Textos com várias linhas no seed:** use `E'linha 1\nlinha 2'`. Quebrar a linha dentro das aspas
   grava um fim de linha diferente no Windows e no Linux.
 - **Imagens de produto:** ficam em `src/main/resources/static/images/produtos/`, em WebP de até 800 px,
   com nome descritivo em minúsculas e hífens (ex.: `dipirona-monoidratada-500mg-20-comprimidos.webp`).
   A coluna `imagem_produto.arquivo` guarda o caminho a partir da raiz do site (`/images/produtos/...`).
   Produto sem foto usa `placeholder.svg`. O texto alternativo (`alt`) vem do nome do produto.
+  Medicamento sob prescrição fica no `placeholder.svg`: as farmácias não mostram a caixa (RDC 96/2008 da ANVISA).
+  As fotos do seed vêm de lojas e fabricantes, e servem só para a demonstração acadêmica.
 
 ## Como zerar o banco para a demonstração
 

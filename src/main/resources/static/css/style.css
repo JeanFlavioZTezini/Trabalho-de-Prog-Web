@@ -79,6 +79,12 @@ textarea:focus-visible {
 }
 
 /* ---------- Cabeçalho ---------- */
+/* Acompanha a rolagem só em tela grande: no celular o cabeçalho (com menu) ocuparia boa parte da altura. */
+@media (min-width: 48rem) and (min-height: 40rem) {
+  html { scroll-padding-top: 7rem; }
+  .topo { position: sticky; top: 0; z-index: 40; }
+}
+
 .topo {
   background-color: var(--cor-branco);
   border-bottom: 1px solid var(--cor-borda);

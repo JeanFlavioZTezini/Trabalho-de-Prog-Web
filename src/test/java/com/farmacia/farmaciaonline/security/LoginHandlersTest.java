@@ -114,4 +114,85 @@ class LoginHandlersTest {
 
         assertThat(destinoDaFalha(banco)).isEqualTo("/login?erro=indisponivel");
     }
+
+    // ---------- F-18: retorno depois do cadastro ----------
+
+    private static MockHttpServletRequest loginComRetorno(Object retorno) {
+        MockHttpServletRequest login = new MockHttpServletRequest("POST", "/login");
+        login.getSession().setAttribute(com.farmacia.farmaciaonline.controller.CadastroController.SESSAO_RETORNO, retorno);
+        return login;
+    }
+
+    @Test
+    void clienteQueVeioDoCadastroNoCheckoutVoltaParaOCheckout() throws Exception {
+        MockHttpServletResponse resposta = new MockHttpServletResponse();
+        MockHttpServletRequest login = loginComRetorno("checkout");
+
+        sucesso.onAuthenticationSuccess(login, resposta, autenticado("CLIENTE"));
+
+        assertThat(resposta.getRedirectedUrl()).isEqualTo("/checkout");
+        assertThat(login.getSession().getAttribute("retornoCadastro")).isNull();
+    }
+
+    @Test
+    void clienteQueVeioDoCadastroNoCarrinhoVoltaParaOCarrinho() throws Exception {
+        MockHttpServletResponse resposta = new MockHttpServletResponse();
+
+        sucesso.onAuthenticationSuccess(loginComRetorno("carrinho"), resposta, autenticado("CLIENTE"));
+
+        assertThat(resposta.getRedirectedUrl()).isEqualTo("/carrinho");
+    }
+
+    @Test
+    void retornoDesconhecidoNaSessaoEIgnoradoEApagado() throws Exception {
+        MockHttpServletResponse resposta = new MockHttpServletResponse();
+        MockHttpServletRequest login = loginComRetorno("https://site-malicioso.example");
+
+        sucesso.onAuthenticationSuccess(login, resposta, autenticado("CLIENTE"));
+
+        assertThat(resposta.getRedirectedUrl()).isEqualTo("/");
+        assertThat(login.getSession().getAttribute("retornoCadastro")).isNull();
+    }
+
+    @Test
+    void adminContinuaNoPainelMesmoComRetornoNaSessao() throws Exception {
+        MockHttpServletResponse resposta = new MockHttpServletResponse();
+
+        sucesso.onAuthenticationSuccess(loginComRetorno("checkout"), resposta, autenticado("ADMIN"));
+
+        assertThat(resposta.getRedirectedUrl()).isEqualTo("/admin");
+    }
+
+    // ---------- F-18: só senha incorreta conta como tentativa ----------
+
+    @Test
+    void soSenhaIncorretaRegistraFalha() throws Exception {
+        var servico = org.mockito.Mockito.mock(LoginTentativasService.class);
+        var handler = new LoginFailureHandler(servico);
+        MockHttpServletRequest pedido = new MockHttpServletRequest("POST", "/login");
+        pedido.setParameter("identificador", "cliente@farma.com");
+
+        handler.onAuthenticationFailure(pedido, new MockHttpServletResponse(), new BadCredentialsException("x"));
+        handler.onAuthenticationFailure(pedido, new MockHttpServletResponse(),
+                new InternalAuthenticationServiceException("x", new LockedException("bloqueada")));
+        handler.onAuthenticationFailure(pedido, new MockHttpServletResponse(),
+                new InternalAuthenticationServiceException("x", new DisabledException("pendente")));
+        handler.onAuthenticationFailure(pedido, new MockHttpServletResponse(),
+                new InternalAuthenticationServiceException("x", new IllegalStateException("banco")));
+
+        org.mockito.Mockito.verify(servico, org.mockito.Mockito.times(1)).registrarFalha("cliente@farma.com");
+    }
+
+    @Test
+    void erroAoGravarATentativaNaoDerrubaOLogin() throws Exception {
+        var servico = org.mockito.Mockito.mock(LoginTentativasService.class);
+        org.mockito.Mockito.doThrow(new org.springframework.dao.DataAccessResourceFailureException("banco"))
+                .when(servico).registrarFalha(org.mockito.ArgumentMatchers.any());
+        MockHttpServletResponse resposta = new MockHttpServletResponse();
+
+        new LoginFailureHandler(servico).onAuthenticationFailure(new MockHttpServletRequest("POST", "/login"),
+                resposta, new BadCredentialsException("x"));
+
+        assertThat(resposta.getRedirectedUrl()).isEqualTo("/login?erro=credenciais");
+    }
 }

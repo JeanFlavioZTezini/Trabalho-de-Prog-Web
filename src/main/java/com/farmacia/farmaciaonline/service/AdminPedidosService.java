@@ -64,7 +64,8 @@ public class AdminPedidosService {
                 itens.stream().anyMatch(LinhaItem::exigeReceita), pedido.getReceitaConferidaEm(),
                 pedido.getReceitaConferidaEm() == null ? null : formatar(pedido.getReceitaConferidaEm()),
                 conferidoPor == null ? null : conferidoPor.getNome(), pedido.isEstornoPendente(),
-                proximosStatus(pedido.getStatus(), pedido.getTipoEntrega(), pedido.getReceitaConferidaEm() != null));
+                proximosStatus(pedido.getStatus(), pedido.getTipoEntrega(), pedido.temItemQueExigeReceita(),
+                        pedido.getReceitaConferidaEm() != null));
     }
 
     @Transactional
@@ -127,7 +128,8 @@ public class AdminPedidosService {
                 + " — CEP " + endereco.getCep();
     }
 
-    private static List<StatusPedido> proximosStatus(StatusPedido atual, TipoEntrega tipo, boolean receitaConferida) {
+    private static List<StatusPedido> proximosStatus(StatusPedido atual, TipoEntrega tipo, boolean exigeReceita,
+            boolean receitaConferida) {
         return switch (atual) {
             case AGUARDANDO_PAGAMENTO -> List.of(StatusPedido.CANCELADO);
             case PAGAMENTO_APROVADO -> List.of(StatusPedido.EM_SEPARACAO, StatusPedido.CANCELADO);
@@ -135,7 +137,7 @@ public class AdminPedidosService {
                     ? List.of(StatusPedido.ENVIADO, StatusPedido.CANCELADO)
                     : List.of(StatusPedido.PRONTO_PARA_RETIRADA, StatusPedido.CANCELADO);
             case ENVIADO -> List.of(StatusPedido.ENTREGUE);
-            case PRONTO_PARA_RETIRADA -> receitaConferida || tipo != TipoEntrega.RETIRADA
+            case PRONTO_PARA_RETIRADA -> !exigeReceita || receitaConferida
                     ? List.of(StatusPedido.ENTREGUE) : List.of();
             case ENTREGUE, CANCELADO -> List.of();
         };

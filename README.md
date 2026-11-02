@@ -905,7 +905,8 @@ tem `GET`, e não existe edição administrativa de conta.
   - Pagar com cartão salvo pede o **código de segurança de novo**. O dono é conferido (`CartaoSalvoRepository.findByIdAndUsuarioId`)
     **antes** de registrar o pedido: cartão de outra pessoa dá 404 sem pedido nem cobrança.
   - O pagamento registra o cartão usado (`pagamento.cartao_salvo_id`).
-  - Remover o cartão em "Meus cartões" (`/conta/cartoes`); pagamentos antigos ficam com o cartão nulo.
+  - Remover o cartão em "Meus cartões" (`/conta/cartoes`), depois de confirmar em `GET /conta/cartoes/{id}/remover`
+    (cartão de outra pessoa: 404); pagamentos antigos ficam com o cartão nulo.
   - Número completo e CVV nunca vão para o banco, log nem `toString`.
   - No gateway demo, o token vive na memória: depois de reiniciar o app, o cartão salvo é recusado com
     "Cartão salvo não reconhecido" e basta informar o cartão de novo.

@@ -277,6 +277,7 @@ Entidades em `model` (`Categoria`, `Produto`, `Apresentacao`, `ImagemProduto`); 
   preço mínimo/máximo, disponibilidade, ordenação por nome/preço e paginação; os links de página
   preservam os filtros. A busca também consulta a indicação cadastrada, mas isso não é diagnóstico
   nem substitui orientação profissional. Sem termo, a listagem mostra o catálogo ativo sem busca textual.
+  A busca ignora acento e caixa e há filtros por marca, princípio ativo, tipo, forma e receita (F-22, abaixo).
 - `ImagemProduto.apresentacao` nula significa que a imagem vale para todas as apresentações do produto.
 - `Apresentacao.versao` (`@Version`) protege a edição do produto no admin: quem abriu a tela antes de uma compra não
   sobrescreve o estoque. O checkout não depende dela para disputar estoque: usa atualização condicional
@@ -745,6 +746,27 @@ tem `GET`, e não existe edição administrativa de conta.
   `AdminClienteTelaTest` (HTML: um único h1, CPF mascarado, tabela em região rolável, detalhe sem formulário) e
   `ClienteAdminServiceIntegracaoTest` (PostgreSQL real: busca por nome, e-mail e CPF, status, só cliente, paginação,
   curingas como texto, auditoria sem o termo buscado, 404 sem log, pedidos recentes, log que falha derruba a consulta).
+
+## Busca tolerante e refinamentos do catálogo (F-22 / UC01-A2)
+
+- **Sem acento nem caixa:** `GET /produtos?q=` compara `unaccent(lower(...))` em nome, marca, princípio ativo,
+  indicação e EAN ("Paracetamól" acha "Paracetamol"). A `V8__busca_tolerante.sql` só cria as extensões
+  `unaccent` e `pg_trgm` (confiáveis no PostgreSQL 13+, sem superusuário). **Não há índice**: `unaccent()` não é
+  IMMUTABLE, então o índice funcional fica como melhoria futura (o catálogo é pequeno).
+- **Filtros novos** (selects montados só com valores de produtos ativos; combinam por AND com os antigos):
+  `marca`, `principioAtivo`, `forma` (igualdade sem acento/caixa), `tipo` (GENERICO, SIMILAR, REFERENCIA; valor
+  inválido é ignorado) e `receita` (`sim` / `nao`; vazio = qualquer).
+- **Ordenação nova:** `MAIS_VENDIDOS` (`qtd_vendida` desc, desempate por id) e `RELEVANCIA` (nome começa com o termo,
+  nome contém, marca/princípio ativo, resto; depois nome; sem termo vale `NOME`). O padrão continua `NOME`.
+  Não há filtro nem ordenação por **avaliação**: o sistema não guarda avaliações.
+- **"Você quis dizer":** quando a busca por texto volta vazia, cada palavra com 3+ letras que não existe é trocada
+  pela mais parecida (nome, marca e princípio ativo de produtos ativos) via `similarity()` do `pg_trgm`. Limite
+  `app.catalogo.sugestao-similaridade` (padrão `0.4`). A sugestão aparece em `role="status"` e o link refaz a busca
+  com `?q=`. Falha ao calcular a sugestão não derruba a página; o texto digitado não vai para o log.
+- **Código:** `FiltroCatalogo` (record) em `repository`; as assinaturas antigas de `buscarCatalogo` e
+  `CatalogoService#buscar` continuam e delegam.
+- **Testes:** `CatalogoBuscaToleranteTest` (acento, cada filtro isolado e composto, ordenações, sugestão, tela e
+  paginação). `CatalogoErroTest` passou a simular `buscar(FiltroCatalogo, ...)`.
 
 ## Produtos, apresentações, estoque e imagens (F-08 / UC12)
 

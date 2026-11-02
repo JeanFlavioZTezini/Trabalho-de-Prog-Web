@@ -53,6 +53,7 @@ public class CheckoutController {
         model.addAttribute("tela", checkout.telaEscolha(usuarioId));
         model.addAttribute("enderecoId", enderecoId);
         model.addAttribute("metodos", List.of(MetodoPagamento.values()));
+        model.addAttribute("demo", modoDemo());
         return "checkout/escolha";
     }
 

@@ -55,7 +55,10 @@ class LayoutTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/", "/institucional/boas-praticas", "/login"})
+    @ValueSource(strings = {
+            "/", "/institucional/boas-praticas", "/institucional/termos-de-uso",
+            "/institucional/privacidade", "/login"
+    })
     void paginaUsaOLayoutComLandmarksUnicos(String url) throws Exception {
         String html = pagina(url);
 
@@ -67,7 +70,10 @@ class LayoutTest {
     }
 
     @ParameterizedTest
-    @ValueSource(strings = {"/", "/institucional/boas-praticas", "/login"})
+    @ValueSource(strings = {
+            "/", "/institucional/boas-praticas", "/institucional/termos-de-uso",
+            "/institucional/privacidade", "/login"
+    })
     void primeiroElementoFocavelEOLinkParaPularParaOConteudo(String url) throws Exception {
         String html = pagina(url);
 
@@ -97,6 +103,31 @@ class LayoutTest {
         assertThat(html).contains("Seja bem-vindo!");
         assertThat(html).contains("href=\"/login\"");
         assertThat(html).contains("href=\"/cadastro\"");
+    }
+
+    @Test
+    @WithMockUser(username = "cliente", roles = "CLIENTE")
+    void clienteVeAtalhosDeContaEnderecoPedidoECarrinho() throws Exception {
+        String html = pagina("/");
+
+        assertThat(html).contains("aria-label=\"Atalhos da conta\"");
+        assertThat(html).contains("href=\"/carrinho\"")
+                .contains("href=\"/conta\"")
+                .contains("href=\"/enderecos\"")
+                .contains("href=\"/pedidos\"");
+        assertThat(html).doesNotContain("href=\"/admin\"");
+        assertThat(html).contains("action=\"/logout\" method=\"post\"");
+    }
+
+    @Test
+    @WithMockUser(username = "admin", roles = "ADMIN")
+    void administradorVePainelSemLinkParaPedidosDeCliente() throws Exception {
+        String html = pagina("/");
+
+        assertThat(html).contains("href=\"/conta\"")
+                .contains("href=\"/enderecos\"")
+                .contains("href=\"/admin\">Painel admin");
+        assertThat(html).doesNotContain("href=\"/pedidos\"");
     }
 
     @Test
@@ -143,5 +174,26 @@ class LayoutTest {
             assertThat(home).contains("href=\"/institucional/boas-praticas#" + ancora + "\"");
             assertThat(boasPraticas).contains("id=\"" + ancora + "\"");
         }
+        assertThat(home).contains("href=\"/institucional/termos-de-uso\"");
+        assertThat(home).contains("href=\"/institucional/privacidade\"");
+    }
+
+    @Test
+    void paginasDeTermosEPrivacidadeSaoPublicasEMostramVersaoDemonstrativa() throws Exception {
+        String termos = pagina("/institucional/termos-de-uso");
+        String privacidade = pagina("/institucional/privacidade");
+
+        assertThat(termos).contains("Termos de Uso", "versão", ">1.0<", "texto demonstrativo");
+        assertThat(privacidade).contains("Política de Privacidade", "versão", ">1.0<", "texto demonstrativo");
+        assertThat(termos).contains("href=\"/institucional/privacidade\"");
+        assertThat(privacidade).contains("href=\"/institucional/termos-de-uso\"");
+    }
+
+    @Test
+    void ambienteDemoFicaIdentificadoSemDetalhesTecnicosNoRodape() throws Exception {
+        String html = pagina("/");
+
+        assertThat(html).contains("Ambiente de demonstração acadêmica.")
+                .contains("nenhuma compra ou pagamento é real");
     }
 }

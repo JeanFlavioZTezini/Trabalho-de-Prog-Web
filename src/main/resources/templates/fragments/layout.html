@@ -60,14 +60,16 @@
             <a th:href="@{/login}">Entrar</a> ou <a th:href="@{/cadastro}">cadastrar-se</a>
         </div>
 
-        <!--/* Logado: primeiro nome (vem do UsuarioLogadoAdvice) e botão Sair.
+        <!--/* Logado: primeiro nome (vem do UsuarioLogadoAdvice), atalhos do perfil e botão Sair.
              O logout é POST, então o formulário precisa de th:action (ele injeta o token CSRF). */-->
         <div class="usuario usuario--logado" sec:authorize="isAuthenticated()">
             <span class="usuario__nome">Olá, <strong th:text="${primeiroNomeUsuario} ?: ${#authentication.name}">usuário</strong></span>
-            <a th:href="@{/conta}">Minha conta</a>
-            <a th:href="@{/pedidos}" sec:authorize="hasRole('CLIENTE')">Meus pedidos</a>
-            <a th:href="@{/admin}" sec:authorize="hasRole('ADMIN')">Painel admin</a>
-            <a th:href="@{/enderecos}">Meus endereços</a>
+            <nav class="usuario__atalhos" aria-label="Atalhos da conta">
+                <a th:href="@{/conta}">Minha conta</a>
+                <a th:href="@{/enderecos}">Meus endereços</a>
+                <a th:href="@{/pedidos}" sec:authorize="hasRole('CLIENTE')">Meus pedidos</a>
+                <a th:href="@{/admin}" sec:authorize="hasRole('ADMIN')">Painel admin</a>
+            </nav>
             <form class="usuario__sair" th:action="@{/logout}" method="post">
                 <button type="submit" class="usuario__sair-botao">Sair</button>
             </form>
@@ -135,9 +137,9 @@
         <div>
             <h2 class="site-rodape__titulo">Institucional</h2>
             <ul>
-                <li>Nossa história</li>
-                <li>Missão, visão e valores</li>
                 <li><a th:href="@{/institucional/boas-praticas}">Boas práticas</a></li>
+                <li><a th:href="@{/institucional/termos-de-uso}">Termos de Uso</a></li>
+                <li><a th:href="@{/institucional/privacidade}">Política de Privacidade</a></li>
             </ul>
         </div>
 
@@ -153,7 +155,9 @@
             </ul>
         </div>
 
-        <p class="site-rodape__aviso">Farma++ é um projeto acadêmico (ProgWeb): farmácia fictícia, sem venda real de medicamentos.</p>
+        <p class="site-rodape__aviso" role="note" th:if="${ambienteDemo}">
+            Ambiente de demonstração acadêmica. A farmácia é fictícia; nenhuma compra ou pagamento é real.
+        </p>
     </div>
 </footer>
 

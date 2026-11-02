@@ -174,6 +174,7 @@ textarea:focus-visible {
 
 .usuario--logado {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 0.75rem;
   padding-top: 0.625rem;
@@ -191,6 +192,15 @@ textarea:focus-visible {
 }
 
 .usuario__sair { margin: 0; }
+
+.usuario__atalhos {
+  display: flex;
+  flex: 1 1 100%;
+  flex-wrap: wrap;
+  gap: 0.25rem 0.75rem;
+}
+
+.usuario__atalhos a { white-space: normal; }
 
 /* Botão "Sair" com cara de link (o logout é POST, então precisa ser <button>). */
 .usuario__sair-botao {
@@ -772,8 +782,7 @@ textarea:focus-visible {
 }
 
 /* ---------- F-11: endereços ---------- */
-.usuario--logado { max-width: 24rem; }
-.usuario--logado a { white-space: nowrap; }
+.usuario--logado { max-width: 32rem; }
 
 .campo select[aria-invalid="true"],
 .campo textarea[aria-invalid="true"] { border-color: var(--cor-erro); }

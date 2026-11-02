@@ -8,6 +8,10 @@
 
     <h1>Finalizar compra</h1>
 
+    <p class="alerta" role="note" th:if="${demo}">
+        Ambiente de demonstração: nenhuma compra ou cobrança é real.
+    </p>
+
     <div th:if="${tela.carrinhoVazio}">
         <p class="alerta" role="status">Seu carrinho está vazio. Adicione produtos para finalizar uma compra.</p>
         <p><a class="btn-primario" th:href="@{/}">Ver produtos</a></p>

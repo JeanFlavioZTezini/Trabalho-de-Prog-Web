@@ -549,6 +549,17 @@ carrinho; o dono é o usuário **ou** o token, nunca os dois). Regras em `servic
 - **Testes:** `CpfValidatorTest`, `CadastroFormTest`, `CadastroControllerTest` (sem banco), `CadastroServiceIntegracaoTest`
   e `CadastroIntegracaoTest` (PostgreSQL real; este último inclui a tentativa de elevar o perfil e o login da conta pendente).
 
+## Termos, privacidade e ambiente de demonstração (F-03)
+
+- O cadastro liga o aceite aos documentos públicos `/institucional/termos-de-uso` e `/institucional/privacidade`.
+  Ambos mostram a mesma versão de `app.termos.versao`, que é a versão gravada na conta no momento do aceite.
+  Se o conteúdo de qualquer documento mudar, atualize essa propriedade.
+- Os documentos são explicitamente demonstrativos, assim como o ambiente acadêmico. Não solicite nem use dados pessoais
+  ou dados de pagamento reais na demonstração. O aviso geral não detalha integrações; fluxos específicos informam quando
+  mensagens ou pagamentos são simulados.
+- O cabeçalho oferece atalhos para conta e endereços a quem está autenticado, pedidos para CLIENTE e painel para ADMIN.
+  O logout continua sendo somente formulário POST com proteção CSRF.
+
 ## Confirmação da conta e códigos de verificação (F-05 / UC04)
 
 - **Fluxo:** depois do cadastro, `/confirmar-conta` mostra o e-mail e o celular mascarados (`m***@dominio.com`,
@@ -858,7 +869,7 @@ Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: a
 |---|---|---|---|
 | Catálogo público: busca, categoria, filtros e paginação (UC01) | F-01 | Cássio (@cassioqm) | |
 | Detalhes do produto e apresentação comprável (UC02) | F-02 | Cássio (@cassioqm) | |
-| Navegação integrada, páginas de termos e revisão de interface (UC03/UC15) | F-03 | Pessoa A: _preencher_ | |
+| Navegação integrada, páginas de termos e revisão de interface (UC03/UC15) | F-03 (#42) | Cássio (@cassioqm) | |
 | Cadastro com validação e conta pendente (UC03) | F-04 | Kauê (@KaueAlves09) | |
 | Serviço de códigos e confirmação de conta com envio simulado (UC04) | F-05 | Kauê (@KaueAlves09) | |
 | Recuperação de senha sem login e revogação de sessões (UC14, UC10-A4) | F-06 | Kauê (@KaueAlves09) | |

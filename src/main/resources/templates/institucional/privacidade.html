@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Política de Privacidade | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+    <h1>Política de Privacidade</h1>
+    <p class="pagina-texto__intro">
+        Versão <strong th:text="${termosVersao}">1.0</strong>.
+        Este é um texto demonstrativo de um projeto acadêmico, não é uma política de produção nem substitui orientação jurídica.
+    </p>
+
+    <section aria-labelledby="titulo-dados-tratados">
+        <h2 id="titulo-dados-tratados">Dados usados na demonstração</h2>
+        <p>
+            Para experimentar os fluxos, a aplicação pode armazenar os dados informados no cadastro, como nome, CPF,
+            data de nascimento, gênero, e-mail e celular; endereços cadastrados; e informações de carrinho e pedidos.
+            Senhas são armazenadas em formato protegido, não como texto legível.
+        </p>
+        <p>
+            Não informe dados reais, dados de pagamento verdadeiros ou informações de saúde identificáveis. Os dados
+            podem permanecer no banco local do ambiente acadêmico até sua limpeza ou reinicialização.
+        </p>
+    </section>
+
+    <section aria-labelledby="titulo-finalidades">
+        <h2 id="titulo-finalidades">Finalidades</h2>
+        <p>
+            Esses dados são usados para demonstrar cadastro e confirmação de conta, manutenção de endereços,
+            carrinho, pedidos e controles de acesso. Não são usados para uma venda real ou para aconselhamento médico.
+        </p>
+    </section>
+
+    <section aria-labelledby="titulo-integracoes">
+        <h2 id="titulo-integracoes">Serviços externos e demonstração</h2>
+        <p>
+            Algumas interações do ambiente são simuladas. Mensagens e pagamentos de demonstração não são enviados
+            nem cobrados como serviços reais. A página de boas práticas explica o contexto acadêmico do projeto.
+        </p>
+        <p><a th:href="@{/institucional/boas-praticas}">Ler boas práticas e regulamentação</a></p>
+    </section>
+
+    <section aria-labelledby="titulo-direitos">
+        <h2 id="titulo-direitos">Privacidade e direitos</h2>
+        <p>
+            Esta página descreve o comportamento demonstrativo da aplicação; ela não oferece um canal automatizado
+            de atendimento ou de solicitação de direitos. Para este trabalho, não cadastre informações pessoais reais.
+        </p>
+        <p>
+            A versão atual desta Política de Privacidade é
+            <strong th:text="${termosVersao}">1.0</strong>, a mesma informada no aceite do cadastro.
+        </p>
+    </section>
+
+    <p><a th:href="@{/institucional/termos-de-uso}">Ler os Termos de Uso</a> ·
+        <a th:href="@{/cadastro}">Voltar ao cadastro</a></p>
+</div>
+</body>
+</html>

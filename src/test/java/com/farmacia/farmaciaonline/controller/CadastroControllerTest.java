@@ -117,6 +117,10 @@ class CadastroControllerTest {
         assertThat(html).contains("autocomplete=\"new-password\"").contains("data-mascara=\"cpf\"")
                 .contains("data-mascara=\"celular\"").contains("src=\"/js/mascaras.js\"");
         assertThat(html).contains(">Masculino<").contains(">Feminino<");
+        assertThat(html).contains("href=\"/institucional/termos-de-uso\"")
+                .contains("href=\"/institucional/privacidade\"")
+                .contains("versão")
+                .contains(">1.0<");
         assertThat(html).doesNotContain("name=\"retorno\"");
     }
 

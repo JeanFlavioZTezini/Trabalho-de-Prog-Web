@@ -75,7 +75,7 @@ class ContaIntegracaoTest {
     void mostraOsDadosDaConta() throws Exception {
         String conteudo = pagina("/conta", entrar(SENHA));
 
-        assertThat(conteudo).contains("529.982.247-25", EMAIL, "ainda não está disponível");
+        assertThat(conteudo).contains("529.982.247-25", EMAIL, "/conta/contato/email");
     }
 
     @Test

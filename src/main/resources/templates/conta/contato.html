@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Alterar contato | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1 th:text="${ehEmail} ? 'Alterar e-mail' : 'Alterar celular'">Alterar e-mail</h1>
+
+    <p>
+        <span th:text="${ehEmail} ? 'E-mail atual:' : 'Celular atual:'">E-mail atual:</span>
+        <strong th:text="${ehEmail} ? ${dados.email} : (${dados.celularFormatado} ?: 'Não informado')">nome@dominio.com</strong>.
+        O contato atual continua valendo até você confirmar o novo com o código.
+    </p>
+
+    <p class="alerta alerta--sucesso" role="status" th:if="${sucesso}" th:text="${sucesso}">Código enviado.</p>
+    <p class="alerta alerta--erro" role="alert" th:if="${erro}" th:text="${erro}">Erro.</p>
+    <p class="alerta alerta--erro" role="alert" th:if="${temErros}">
+        Corrija os campos indicados e tente de novo.
+    </p>
+
+    <h2>1. Receber o código no novo contato</h2>
+    <form th:action="@{/conta/contato/{tipo}/enviar(tipo=${tipo})}" th:object="${contatoForm}" method="post">
+        <div class="campo">
+            <label for="novoContato" th:text="${ehEmail} ? 'Novo e-mail' : 'Novo celular'">Novo e-mail</label>
+            <input th:type="${ehEmail} ? 'email' : 'tel'"
+                   id="novoContato"
+                   th:field="*{novoContato}"
+                   th:autocomplete="${ehEmail} ? 'email' : 'tel'"
+                   th:attr="inputmode=${ehEmail} ? 'email' : 'tel', data-mascara=${ehEmail} ? null : 'celular'"
+                   required
+                   th:aria-invalid="${#fields.hasErrors('novoContato')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('novoContato')} ? 'novoContato-erro'">
+            <p class="campo__erro" role="alert" id="novoContato-erro" th:if="${#fields.hasErrors('novoContato')}" th:errors="*{novoContato}"></p>
+        </div>
+        <div class="campo">
+            <label for="senhaAtual">Senha atual</label>
+            <p class="campo__ajuda" id="senhaAtual-ajuda">Pedimos a senha para confirmar que é você quem está trocando o contato.</p>
+            <input type="password"
+                   id="senhaAtual"
+                   th:field="*{senhaAtual}"
+                   autocomplete="current-password"
+                   required
+                   th:aria-invalid="${#fields.hasErrors('senhaAtual')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('senhaAtual')} ? 'senhaAtual-ajuda senhaAtual-erro' : 'senhaAtual-ajuda'">
+            <p class="campo__erro" role="alert" id="senhaAtual-erro" th:if="${#fields.hasErrors('senhaAtual')}" th:errors="*{senhaAtual}"></p>
+        </div>
+        <button type="submit" class="btn-primario">Enviar código</button>
+    </form>
+
+    <h2>2. Digitar o código</h2>
+    <form th:action="@{/conta/contato/{tipo}/confirmar(tipo=${tipo})}" method="post">
+        <div class="campo">
+            <label for="codigo">Código de 6 números</label>
+            <p class="campo__ajuda" id="codigo-ajuda"
+               th:text="|Vale por ${validadeMinutos} minutos e aceita ${tentativasMaximas} tentativas. Pedir outro código invalida o anterior.|">
+                Vale por 10 minutos.</p>
+            <input type="text" id="codigo" name="codigo" inputmode="numeric" autocomplete="one-time-code"
+                   maxlength="6" pattern="[0-9]{6}" required aria-describedby="codigo-ajuda">
+        </div>
+        <button type="submit" class="btn-primario">Confirmar e alterar</button>
+        <a th:href="@{/conta}">Cancelar</a>
+    </form>
+
+    <p class="pagina-texto__rodape-form" th:if="${demo}">
+        Demonstração: nenhum e-mail ou SMS sai de verdade. Veja o código na
+        <a th:href="@{/caixa-demo}" target="_blank" rel="noopener">caixa de mensagens de teste<span
+                class="visually-hidden"> (abre em nova aba)</span></a>.
+    </p>
+
+    <script th:unless="${ehEmail}" th:src="@{/js/mascaras.js}" defer></script>
+</div>
+</body>
+</html>

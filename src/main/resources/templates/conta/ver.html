@@ -40,9 +40,12 @@
             </dd>
             <dd th:if="${dados.celularFormatado == null}">Não informado</dd>
         </dl>
-        <p class="campo__ajuda">
-            A troca de e-mail ou celular exige a confirmação do novo contato por código e ainda não está disponível nesta tela.
+        <p>
+            <a th:href="@{/conta/contato/email}">Alterar e-mail</a>
+            <span aria-hidden="true"> · </span>
+            <a th:href="@{/conta/contato/celular}">Alterar celular</a>
         </p>
+        <p class="campo__ajuda">A troca só vale depois de confirmar o novo contato com um código.</p>
     </section>
 
     <section class="conta__secao" aria-labelledby="titulo-seguranca">

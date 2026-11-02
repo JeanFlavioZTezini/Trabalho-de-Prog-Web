@@ -159,4 +159,12 @@ class AdminClienteTelaTest {
         assertThat(html).contains("59,90");
         assertThat(html).doesNotContain("Nenhum pedido ainda.");
     }
+
+    @Test
+    @DisplayName("cabeçalho do administrador logado tem o link Painel admin")
+    void cabecalhoTemLinkDoPainel() throws Exception {
+        when(service.listar(any(), any(), any(), any(), any())).thenReturn(new PageImpl<>(List.of()));
+
+        assertThat(html("/admin/clientes")).contains("<a href=\"/admin\">Painel admin</a>");
+    }
 }

@@ -1190,6 +1190,9 @@ input[type="date"]:focus-within {
   background-color: var(--cor-branco);
 }
 
+/* Na grade da coluna de compra o selo esticaria na largura toda. */
+.produto-detalhe__compra .selo { justify-self: start; margin: 0; }
+
 .produto-detalhe__selecao .campo,
 .produto-detalhe__adicionar .campo { margin-bottom: 0; }
 
@@ -1225,7 +1228,8 @@ input[type="date"]:focus-within {
 }
 
 /* Avisos do produto (bula, receita): um .alerta informativo logo abaixo da marca, antes da foto. */
-.produto-detalhe__aviso { margin: var(--esp-4) 0 0; border-left-color: var(--cor-azul); background-color: var(--cor-branco); }
+/* Fundo azul-suave para destacar do fundo da página (texto 11,4:1 e link 6,9:1, pares do ContrasteTokensTest). */
+.produto-detalhe__aviso { margin: var(--esp-4) 0 0; border-left-color: var(--cor-azul); background-color: var(--cor-azul-suave); }
 .produto-detalhe__aviso p { margin: 0 0 var(--esp-1); }
 
 .produto-detalhe__secao { margin: 2rem 0; }

@@ -346,7 +346,7 @@ class PedidosClienteControllerTest {
         when(service.listar(CLIENTE, 0)).thenReturn(new PaginaDePedidos(List.of(), 0, 0, 0));
         when(service.listar(1L, 0)).thenReturn(new PaginaDePedidos(List.of(), 0, 0, 0));
 
-        assertThat(html(get("/pedidos").with(cliente()))).contains(">Meus pedidos</a>");
+        assertThat(html(get("/pedidos").with(cliente()))).contains(">Meus pedidos</a>").doesNotContain("Painel admin");
         assertThat(html(get("/pedidos").with(como(1L, Perfil.ADMIN)))).doesNotContain("href=\"/pedidos\">Meus pedidos");
     }
 }

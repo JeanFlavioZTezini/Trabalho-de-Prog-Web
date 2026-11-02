@@ -12,4 +12,6 @@ public interface ProdutoRepositoryCustom {
 
     Page<Produto> buscarCatalogo(String termo, List<Long> categoriaIds, BigDecimal precoMinimo,
             BigDecimal precoMaximo, boolean somenteDisponiveis, OrdenacaoCatalogo ordenacao, Pageable pageable);
+
+    Page<Produto> buscarCatalogo(FiltroCatalogo filtro, OrdenacaoCatalogo ordenacao, Pageable pageable);
 }

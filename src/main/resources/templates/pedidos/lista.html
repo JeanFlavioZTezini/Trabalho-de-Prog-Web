@@ -16,8 +16,41 @@
 
     <th:block th:if="${!erroAoCarregar}">
 
+        <!--/* F-23 (UC06-A2): filtros por situação e período. */-->
+        <form class="filtros-pedidos" th:action="@{/pedidos}" method="get" th:if="${!lista.vazia or filtrado or erroFiltro != null}">
+            <div class="campo">
+                <label for="status">Situação</label>
+                <select id="status" name="status">
+                    <option value="">Todas</option>
+                    <option th:each="s : ${statuses}" th:value="${s.name()}" th:selected="${status == s.name()}"
+                            th:text="${s.rotulo}">Aguardando pagamento</option>
+                </select>
+            </div>
+            <div class="campo">
+                <label for="de">De</label>
+                <input type="date" id="de" name="de" th:value="${de}"
+                       th:aria-describedby="${erroFiltro != null ? 'erro-filtro' : null}">
+            </div>
+            <div class="campo">
+                <label for="ate">Até</label>
+                <input type="date" id="ate" name="ate" th:value="${ate}"
+                       th:aria-invalid="${erroFiltro != null ? 'true' : null}"
+                       th:aria-describedby="${erroFiltro != null ? 'erro-filtro' : null}">
+            </div>
+            <p id="erro-filtro" class="alerta alerta--erro" role="alert" th:if="${erroFiltro != null}"
+               th:text="${erroFiltro}">A data inicial não pode ser depois da data final.</p>
+            <div class="filtros-pedidos__acoes">
+                <button type="submit" class="btn-primario">Filtrar</button>
+                <a th:href="@{/pedidos}">Limpar filtros</a>
+            </div>
+        </form>
+
+        <div th:if="${lista.vazia and (filtrado or erroFiltro != null)}">
+            <p role="status">Nenhum pedido encontrado com esses filtros.</p>
+        </div>
+
         <!--/* UC06-A1: nenhum pedido. */-->
-        <div th:if="${lista.vazia}">
+        <div th:if="${lista.vazia and !filtrado and erroFiltro == null}">
             <p>Você ainda não fez nenhum pedido.</p>
             <p><a class="btn-primario" th:href="@{/produtos}">Ver produtos</a></p>
         </div>
@@ -50,9 +83,9 @@
             </div>
 
             <nav class="paginacao" aria-label="Paginação de pedidos" th:if="${lista.totalPaginas > 1}">
-                <a th:if="${lista.temAnterior}" th:href="@{/pedidos(pagina=${lista.pagina - 1})}">Anterior</a>
+                <a th:if="${lista.temAnterior}" th:href="@{/pedidos(status=${status}, de=${de}, ate=${ate}, pagina=${lista.pagina - 1})}">Anterior</a>
                 <span th:text="|Página ${lista.pagina + 1} de ${lista.totalPaginas}|">Página 1 de 1</span>
-                <a th:if="${lista.temProxima}" th:href="@{/pedidos(pagina=${lista.pagina + 1})}">Próxima</a>
+                <a th:if="${lista.temProxima}" th:href="@{/pedidos(status=${status}, de=${de}, ate=${ate}, pagina=${lista.pagina + 1})}">Próxima</a>
             </nav>
         </th:block>
 

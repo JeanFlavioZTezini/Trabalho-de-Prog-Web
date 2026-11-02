@@ -1,5 +1,6 @@
 package com.farmacia.farmaciaonline.repository;
 
+import java.time.Instant;
 import java.util.Collection;
 import java.util.Optional;
 
@@ -36,7 +37,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
      * Consulta administrativa de clientes (UC11): só perfil CLIENTE. {@code padraoTexto} é um LIKE em minúsculas
      * (com "%" nas pontas e %, _ e "!" escapados com "!") aplicado a nome e e-mail; {@code padraoCpf} é um LIKE só
      * com dígitos, ou "" quando o termo não tem dígitos suficientes. Nada é nulo para o PostgreSQL não reclamar
-     * do tipo do parâmetro.
+     * do tipo do parâmetro. {@code inicio}/{@code fim} recortam a data de cadastro (F-23; fim exclusivo).
      */
     @Query(value = """
             select u from Usuario u
@@ -45,6 +46,7 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
               and (lower(u.nome) like :padraoTexto escape '!'
                    or lower(u.email) like :padraoTexto escape '!'
                    or u.cpf like :padraoCpf)
+              and u.criadoEm >= :inicio and u.criadoEm < :fim
             """, countQuery = """
             select count(u) from Usuario u
             where u.perfil = com.farmacia.farmaciaonline.model.enums.Perfil.CLIENTE
@@ -52,7 +54,9 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
               and (lower(u.nome) like :padraoTexto escape '!'
                    or lower(u.email) like :padraoTexto escape '!'
                    or u.cpf like :padraoCpf)
+              and u.criadoEm >= :inicio and u.criadoEm < :fim
             """)
     Page<Usuario> buscarClientes(@Param("statuses") Collection<StatusUsuario> statuses,
-            @Param("padraoTexto") String padraoTexto, @Param("padraoCpf") String padraoCpf, Pageable pageable);
+            @Param("padraoTexto") String padraoTexto, @Param("padraoCpf") String padraoCpf,
+            @Param("inicio") Instant inicio, @Param("fim") Instant fim, Pageable pageable);
 }

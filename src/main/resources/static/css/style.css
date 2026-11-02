@@ -390,12 +390,11 @@ textarea:focus-visible {
 }
 
 .filtros-catalogo {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
-  align-items: end;
-  gap: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
   margin: 1.5rem 0 2rem;
-  padding: 1rem;
+  padding: 1.25rem;
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
   background-color: var(--cor-branco);
@@ -412,12 +411,55 @@ textarea:focus-visible {
   padding: 0;
   accent-color: var(--cor-azul);
 }
-.filtros-catalogo__termo { grid-column: 1 / -1; }
-.filtros-catalogo__disponibilidade { display: flex; align-items: center; gap: 0.5rem; }
+
+/* Cada linha é uma grade que quebra sozinha em telas estreitas (sem rolagem lateral em 360 px). */
+.filtros-catalogo__linha,
+.filtros-catalogo__avancado-campos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 13rem), 1fr));
+  align-items: end;
+  gap: 1rem;
+}
+.filtros-catalogo__linha--preco { grid-template-columns: repeat(auto-fit, minmax(min(100%, 9rem), 1fr)); }
+
+.filtros-catalogo__disponibilidade {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.75rem;
+}
 .filtros-catalogo__disponibilidade label { margin: 0; }
-.filtros-catalogo__acoes { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
+
+.filtros-catalogo__avancado {
+  border: 1px dashed var(--cor-borda-controle);
+  border-radius: var(--raio);
+  padding: 0.75rem 1rem;
+}
+.filtros-catalogo__avancado summary { cursor: pointer; color: var(--cor-azul); font-weight: 600; }
+.filtros-catalogo__avancado[open] summary { margin-bottom: 1rem; }
+
+.filtros-catalogo__acoes {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--cor-borda);
+}
 .filtros-catalogo__acoes a,
 .paginacao a { color: var(--cor-azul); font-weight: 600; }
+
+/* F-23: filtros de "Meus pedidos". */
+.filtros-pedidos {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  align-items: end;
+  gap: 1rem;
+  margin: 1rem 0 1.5rem;
+}
+.filtros-pedidos .campo { margin: 0; }
+.filtros-pedidos .alerta { grid-column: 1 / -1; margin: 0; }
+.filtros-pedidos__acoes { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
 
 .paginacao {
   display: flex;

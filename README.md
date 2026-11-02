@@ -281,6 +281,7 @@ Entidades em `model` (`Categoria`, `Produto`, `Apresentacao`, `ImagemProduto`); 
   preço mínimo/máximo, disponibilidade, ordenação por nome/preço e paginação; os links de página
   preservam os filtros. A busca também consulta a indicação cadastrada, mas isso não é diagnóstico
   nem substitui orientação profissional. Sem termo, a listagem mostra o catálogo ativo sem busca textual.
+  A busca ignora acento e caixa e há filtros por marca, princípio ativo, tipo, forma e receita (F-22, abaixo).
 - `ImagemProduto.apresentacao` nula significa que a imagem vale para todas as apresentações do produto.
 - `Apresentacao.versao` (`@Version`) protege a edição do produto no admin: quem abriu a tela antes de uma compra não
   sobrescreve o estoque. O checkout não depende dela para disputar estoque: usa atualização condicional
@@ -472,7 +473,8 @@ cabeçalho só para o perfil `CLIENTE`. Código: `PedidosClienteController`, `Pe
   propósito. O histórico de um cliente na tela do administrador continua sendo uma consulta própria, atrás de `/admin/**`.
   Reaproveite os métodos `findByUsuarioIdOrderByCriadoEmDescIdDesc` e `findByPedidoIdOrderByCriadoEmAscIdAsc`, que desempatam
   por id.
-- **Fica para a F-23:** filtros por período e por status (UC06-A2). "Comprar novamente" (UC06-A3) é opcional (F-25).
+- **Filtros por situação e período (UC06-A2):** vieram na F-23 (seção "Filtros por período e exportação CSV"). "Comprar
+  novamente" (UC06-A3) é opcional (F-25).
 
 ## Carrinho (F-10 / UC05)
 
@@ -742,13 +744,58 @@ tem `GET`, e não existe edição administrativa de conta.
 
   Todos gravam autor, IP (`getRemoteAddr()`; `X-Forwarded-For` não é confiável) e data. O texto buscado **nunca** vai para o
   log (pode ser CPF ou e-mail). Detalhe de cliente inexistente ou de administrador responde 404 e não grava log.
-- **Fora do escopo:** exportação CSV e filtro por período (F-23, que pode reaproveitar `ClienteAdminService` e gravar
-  `CLIENTE_EXPORTAR`).
+- **Período e CSV:** vieram na F-23 (seção abaixo).
 - **Sem migration:** a tabela `log_auditoria` já existe desde a V1.
 - **Testes:** `ContatoMascaradoTest` (unitário), `AdminClienteSegurancaTest` (visitante, cliente, sem rota de escrita),
   `AdminClienteTelaTest` (HTML: um único h1, CPF mascarado, tabela em região rolável, detalhe sem formulário) e
   `ClienteAdminServiceIntegracaoTest` (PostgreSQL real: busca por nome, e-mail e CPF, status, só cliente, paginação,
   curingas como texto, auditoria sem o termo buscado, 404 sem log, pedidos recentes, log que falha derruba a consulta).
+
+## Filtros por período e exportação CSV (F-23 / UC06-A2, UC11-A2, UC17)
+
+- **Período:** `de` e `ate` (datas `AAAA-MM-DD`, as duas inclusivas, no horário de São Paulo) em três listas. Data inicial
+  depois da final mostra erro ligado aos campos e não consulta. `PeriodoFiltro` vira um intervalo `[início, fim)` com
+  limites largos quando a data falta (o PostgreSQL não aceita parâmetro nulo sem tipo).
+  - **Meus pedidos** (`/pedidos`): situação (`status`) e período de criação. O dono continua vindo só da sessão.
+  - **Pedidos do admin** (`/admin/pedidos`): número, status, cliente (nome, e-mail ou CPF) e período. Status desconhecido
+    vira "todos" em vez de erro 400.
+  - **Clientes do admin** (`/admin/clientes`): período de cadastro somado à busca e ao status. O log `CLIENTE_LISTAR` ganha
+    `periodo=sim` quando há período.
+- **Paginação:** os links de "Anterior" e "Próxima" levam todos os filtros.
+- **CSV de clientes:** `GET /admin/clientes/exportar.csv` (só ADMIN, regra `/admin/**`), com os mesmos filtros da tela,
+  até 5.000 linhas.
+  - UTF-8 com BOM, separador `;` (abre direto no Excel em português) e anexo `clientes-AAAAMMDD.csv`, sem cache.
+  - Colunas: id, nome, CPF, e-mail e celular **mascarados** (`ContatoMascarado`), status e cadastro. Nada de senha, hash,
+    termos ou tentativas de login.
+  - Toda célula vai entre aspas (aspas internas dobradas). Valor que começa com `=`, `+`, `-`, `@`, tab ou CR ganha um `'`
+    na frente para a planilha não executar como fórmula.
+  - Cada exportação grava `CLIENTE_EXPORTAR` na auditoria com os filtros e o número de linhas, sem o texto buscado.
+- **Sem migration.**
+- **Testes:** `FiltrosEExportacaoIntegracaoTest` (limites do período, status combinado, pedido de outro cliente, cliente
+  por nome/CPF, paginação com filtros, período inválido, CSV mascarado e auditado, fórmula, rota só para admin). Os mocks
+  de `AdminClienteTelaTest`, `AdminClienteSegurancaTest`, `AdminPedidoSegurancaTest` e `PedidosClienteControllerTest`
+  seguem as assinaturas novas.
+
+## Busca tolerante e refinamentos do catálogo (F-22 / UC01-A2)
+
+- **Sem acento nem caixa:** `GET /produtos?q=` compara `unaccent(lower(...))` em nome, marca, princípio ativo,
+  indicação e EAN ("Paracetamól" acha "Paracetamol"). A `V8__busca_tolerante.sql` só cria as extensões
+  `unaccent` e `pg_trgm` (confiáveis no PostgreSQL 13+, sem superusuário). **Não há índice**: `unaccent()` não é
+  IMMUTABLE, então o índice funcional fica como melhoria futura (o catálogo é pequeno).
+- **Filtros novos** (selects montados só com valores de produtos ativos; combinam por AND com os antigos):
+  `marca`, `principioAtivo`, `forma` (igualdade sem acento/caixa), `tipo` (GENERICO, SIMILAR, REFERENCIA; valor
+  inválido é ignorado) e `receita` (`sim` / `nao`; vazio = qualquer).
+- **Ordenação nova:** `MAIS_VENDIDOS` (`qtd_vendida` desc, desempate por id) e `RELEVANCIA` (nome começa com o termo,
+  nome contém, marca/princípio ativo, resto; depois nome; sem termo vale `NOME`). O padrão continua `NOME`.
+  Não há filtro nem ordenação por **avaliação**: o sistema não guarda avaliações.
+- **"Você quis dizer":** quando a busca por texto volta vazia, cada palavra com 3+ letras que não existe é trocada
+  pela mais parecida (nome, marca e princípio ativo de produtos ativos) via `similarity()` do `pg_trgm`. Limite
+  `app.catalogo.sugestao-similaridade` (padrão `0.4`). A sugestão aparece em `role="status"` e o link refaz a busca
+  com `?q=`. Falha ao calcular a sugestão não derruba a página; o texto digitado não vai para o log.
+- **Código:** `FiltroCatalogo` (record) em `repository`; as assinaturas antigas de `buscarCatalogo` e
+  `CatalogoService#buscar` continuam e delegam.
+- **Testes:** `CatalogoBuscaToleranteTest` (acento, cada filtro isolado e composto, ordenações, sugestão, tela e
+  paginação). `CatalogoErroTest` passou a simular `buscar(FiltroCatalogo, ...)`.
 
 ## Produtos, apresentações, estoque e imagens (F-08 / UC12)
 
@@ -913,7 +960,7 @@ Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: a
 | Integração, teste do percurso completo e entrega reproduzível | F-19 | Todos | |
 | Login social demonstrável com vínculo seguro de CPF (UC10) | F-20 | Kauê (@KaueAlves09) | |
 | Alteração de e-mail/celular com confirmação do novo contato (UC07) | F-21 | Kauê (@KaueAlves09) | #67 |
-| Correção de busca e refinamentos do catálogo (UC01) | F-22 | Kauê (@KaueAlves09) | |
-| Filtros completos de pedidos/clientes e exportação CSV (UC06/UC11) | F-23 | Kauê (@KaueAlves09) | |
+| Correção de busca e refinamentos do catálogo (UC01) | F-22 | Kauê (@KaueAlves09) | #75 |
+| Filtros completos de pedidos/clientes e exportação CSV (UC06/UC11) | F-23 | Kauê (@KaueAlves09) | #75 |
 | Excluir a própria conta preservando histórico necessário (regra I14) | F-24 | Kauê (@KaueAlves09) | |
 | Facilidades explicitamente opcionais | F-25 | Kauê (@KaueAlves09) | |

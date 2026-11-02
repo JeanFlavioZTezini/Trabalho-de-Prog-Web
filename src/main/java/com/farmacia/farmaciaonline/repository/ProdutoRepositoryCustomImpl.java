@@ -17,6 +17,7 @@ import jakarta.persistence.EntityManager;
 import jakarta.persistence.TypedQuery;
 import jakarta.persistence.criteria.CriteriaBuilder;
 import jakarta.persistence.criteria.CriteriaQuery;
+import jakarta.persistence.criteria.Expression;
 import jakarta.persistence.criteria.Join;
 import jakarta.persistence.criteria.JoinType;
 import jakarta.persistence.criteria.Predicate;
@@ -33,13 +34,18 @@ public class ProdutoRepositoryCustomImpl implements ProdutoRepositoryCustom {
     @Override
     public Page<Produto> buscarCatalogo(String termo, List<Long> categoriaIds, BigDecimal precoMinimo,
             BigDecimal precoMaximo, boolean somenteDisponiveis, OrdenacaoCatalogo ordenacao, Pageable pageable) {
+        return buscarCatalogo(new FiltroCatalogo(termo, null, categoriaIds, precoMinimo, precoMaximo,
+                somenteDisponiveis, null, null, null, null, null), ordenacao, pageable);
+    }
+
+    @Override
+    public Page<Produto> buscarCatalogo(FiltroCatalogo filtro, OrdenacaoCatalogo ordenacao, Pageable pageable) {
         CriteriaBuilder builder = entityManager.getCriteriaBuilder();
 
         CriteriaQuery<Produto> consulta = builder.createQuery(Produto.class);
         Root<Produto> produto = consulta.from(Produto.class);
-        consulta.select(produto).where(predicados(builder, consulta, produto, termo, categoriaIds,
-                precoMinimo, precoMaximo, somenteDisponiveis).toArray(Predicate[]::new));
-        ordenar(builder, consulta, produto, ordenacao);
+        consulta.select(produto).where(predicados(builder, consulta, produto, filtro).toArray(Predicate[]::new));
+        ordenar(builder, consulta, produto, ordenacao, filtro.termo());
 
         TypedQuery<Produto> query = entityManager.createQuery(consulta);
         query.setFirstResult(Math.toIntExact(pageable.getOffset()));
@@ -49,64 +55,98 @@ public class ProdutoRepositoryCustomImpl implements ProdutoRepositoryCustom {
         CriteriaQuery<Long> consultaContagem = builder.createQuery(Long.class);
         Root<Produto> produtoContagem = consultaContagem.from(Produto.class);
         consultaContagem.select(builder.countDistinct(produtoContagem.get("id")))
-                .where(predicados(builder, consultaContagem, produtoContagem, termo, categoriaIds,
-                        precoMinimo, precoMaximo, somenteDisponiveis).toArray(Predicate[]::new));
+                .where(predicados(builder, consultaContagem, produtoContagem, filtro).toArray(Predicate[]::new));
         long total = entityManager.createQuery(consultaContagem).getSingleResult();
 
         return new PageImpl<>(produtos, pageable, total);
     }
 
+    /** lower + unaccent: "Paracetamól" e "paracetamol" ficam iguais. */
+    private Expression<String> normalizado(CriteriaBuilder builder, Expression<String> campo) {
+        return builder.function("unaccent", String.class, builder.lower(campo));
+    }
+
+    private Expression<String> semAcento(CriteriaBuilder builder, String texto) {
+        return builder.function("unaccent", String.class, builder.literal(texto));
+    }
+
+    private Expression<String> padraoContem(CriteriaBuilder builder, String termo) {
+        return semAcento(builder, "%" + escaparLike(termo.toLowerCase(java.util.Locale.ROOT)) + "%");
+    }
+
+    private Predicate igualSemAcento(CriteriaBuilder builder, Expression<String> campo, String valor) {
+        return builder.equal(normalizado(builder, campo),
+                semAcento(builder, valor.trim().toLowerCase(java.util.Locale.ROOT)));
+    }
+
+    private static boolean preenchido(String valor) {
+        return valor != null && !valor.isBlank();
+    }
+
     private List<Predicate> predicados(CriteriaBuilder builder, CriteriaQuery<?> consulta, Root<Produto> produto,
-            String termo, List<Long> categoriaIds, BigDecimal precoMinimo, BigDecimal precoMaximo,
-            boolean somenteDisponiveis) {
+            FiltroCatalogo filtro) {
         List<Predicate> predicados = new ArrayList<>();
         predicados.add(builder.isTrue(produto.get("ativo")));
 
-        if (termo != null && !termo.isBlank()) {
-            String termoEscapado = escaparLike(termo.toLowerCase(java.util.Locale.ROOT));
-            String padrao = "%" + termoEscapado + "%";
+        if (preenchido(filtro.termo())) {
+            Expression<String> padrao = padraoContem(builder, filtro.termo());
             Predicate texto = builder.or(
-                    builder.like(builder.lower(produto.get("nome")), padrao, '\\'),
-                    builder.like(builder.lower(produto.get("marca")), padrao, '\\'),
-                    builder.like(builder.lower(builder.coalesce(produto.<String>get("principioAtivo"), "")),
+                    builder.like(normalizado(builder, produto.get("nome")), padrao, '\\'),
+                    builder.like(normalizado(builder, produto.get("marca")), padrao, '\\'),
+                    builder.like(normalizado(builder, builder.coalesce(produto.<String>get("principioAtivo"), "")),
                             padrao, '\\'),
-                    builder.like(builder.lower(builder.coalesce(produto.<String>get("indicacao"), "")),
+                    builder.like(normalizado(builder, builder.coalesce(produto.<String>get("indicacao"), "")),
                             padrao, '\\'),
                     correspondeEan(builder, consulta, produto, padrao));
             predicados.add(texto);
         }
 
-        if (!categoriaIds.isEmpty()) {
+        if (!filtro.categoriaIds().isEmpty()) {
             Subquery<Long> categoriaEncontrada = consulta.subquery(Long.class);
             Root<Produto> produtoCorrelacionado = categoriaEncontrada.correlate(produto);
             Join<Produto, Categoria> categoria = produtoCorrelacionado.join("categorias", JoinType.INNER);
-            categoriaEncontrada.select(categoria.get("id")).where(categoria.get("id").in(categoriaIds));
+            categoriaEncontrada.select(categoria.get("id")).where(categoria.get("id").in(filtro.categoriaIds()));
             predicados.add(builder.exists(categoriaEncontrada));
         }
 
-        if (precoMinimo != null || precoMaximo != null) {
+        if (filtro.precoMinimo() != null || filtro.precoMaximo() != null) {
             Subquery<BigDecimal> precoReferencia = precoReferenciaAtivo(builder, consulta, produto);
-            if (precoMinimo != null) {
-                predicados.add(builder.greaterThanOrEqualTo(precoReferencia, precoMinimo));
+            if (filtro.precoMinimo() != null) {
+                predicados.add(builder.greaterThanOrEqualTo(precoReferencia, filtro.precoMinimo()));
             }
-            if (precoMaximo != null) {
-                predicados.add(builder.lessThanOrEqualTo(precoReferencia, precoMaximo));
+            if (filtro.precoMaximo() != null) {
+                predicados.add(builder.lessThanOrEqualTo(precoReferencia, filtro.precoMaximo()));
             }
         }
 
-        if (somenteDisponiveis) {
+        if (filtro.somenteDisponiveis()) {
             predicados.add(apresentacaoAtivaExiste(builder, consulta, produto));
+        }
+        if (preenchido(filtro.marca())) {
+            predicados.add(igualSemAcento(builder, produto.get("marca"), filtro.marca()));
+        }
+        if (preenchido(filtro.principioAtivo())) {
+            predicados.add(igualSemAcento(builder, produto.get("principioAtivo"), filtro.principioAtivo()));
+        }
+        if (preenchido(filtro.forma())) {
+            predicados.add(igualSemAcento(builder, produto.get("formaFarmaceutica"), filtro.forma()));
+        }
+        if (filtro.tipo() != null) {
+            predicados.add(builder.equal(produto.get("tipo"), filtro.tipo()));
+        }
+        if (filtro.exigeReceita() != null) {
+            predicados.add(builder.equal(produto.get("exigeReceita"), filtro.exigeReceita()));
         }
         return predicados;
     }
 
     private Predicate correspondeEan(CriteriaBuilder builder, CriteriaQuery<?> consulta, Root<Produto> produto,
-            String padrao) {
+            Expression<String> padrao) {
         Subquery<Long> ean = consulta.subquery(Long.class);
         Root<Apresentacao> apresentacao = ean.from(Apresentacao.class);
         ean.select(apresentacao.get("id")).where(
                 builder.equal(apresentacao.get("produto"), produto),
-                builder.like(builder.lower(apresentacao.get("ean")), padrao, '\\'));
+                builder.like(normalizado(builder, apresentacao.get("ean")), padrao, '\\'));
         return builder.exists(ean);
     }
 
@@ -123,10 +163,31 @@ public class ProdutoRepositoryCustomImpl implements ProdutoRepositoryCustom {
     }
 
     private void ordenar(CriteriaBuilder builder, CriteriaQuery<?> consulta, Root<Produto> produto,
-            OrdenacaoCatalogo ordenacao) {
-        if (ordenacao == OrdenacaoCatalogo.NOME || ordenacao == OrdenacaoCatalogo.NOME_DESC) {
+            OrdenacaoCatalogo ordenacao, String termo) {
+        if (ordenacao == OrdenacaoCatalogo.RELEVANCIA && preenchido(termo)) {
+            Expression<String> comeca = semAcento(builder, escaparLike(termo.toLowerCase(java.util.Locale.ROOT)) + "%");
+            Expression<String> contem = padraoContem(builder, termo);
+            Expression<String> nome = normalizado(builder, produto.get("nome"));
+            var peso = builder.<Integer>selectCase()
+                    .when(builder.like(nome, comeca, '\\'), 0)
+                    .when(builder.like(nome, contem, '\\'), 1)
+                    .when(builder.or(
+                            builder.like(normalizado(builder, produto.get("marca")), contem, '\\'),
+                            builder.like(normalizado(builder,
+                                    builder.coalesce(produto.<String>get("principioAtivo"), "")), contem, '\\')), 2)
+                    .otherwise(3);
+            consulta.orderBy(builder.asc(peso), builder.asc(builder.lower(produto.<String>get("nome"))),
+                    builder.asc(produto.get("id")));
+            return;
+        }
+        if (ordenacao == OrdenacaoCatalogo.MAIS_VENDIDOS) {
+            consulta.orderBy(builder.desc(produto.get("qtdVendida")), builder.asc(produto.get("id")));
+            return;
+        }
+        if (ordenacao == OrdenacaoCatalogo.NOME || ordenacao == OrdenacaoCatalogo.NOME_DESC
+                || ordenacao == OrdenacaoCatalogo.RELEVANCIA) {
             var nome = builder.lower(produto.<String>get("nome"));
-            consulta.orderBy(ordenacao == OrdenacaoCatalogo.NOME ? builder.asc(nome) : builder.desc(nome));
+            consulta.orderBy(ordenacao == OrdenacaoCatalogo.NOME_DESC ? builder.desc(nome) : builder.asc(nome));
             return;
         }
 

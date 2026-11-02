@@ -47,4 +47,34 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long>, Produto
             """)
     Page<Produto> buscarAdmin(@Param("termo") String termo, @Param("estados") List<Boolean> estados,
             Pageable pageable);
+
+    /** Opções dos filtros do catálogo: só produtos ativos, em ordem alfabética. */
+    @Query("select distinct p.marca from Produto p where p.ativo = true order by p.marca")
+    List<String> marcasAtivas();
+
+    @Query("select distinct p.principioAtivo from Produto p where p.ativo = true and p.principioAtivo is not null order by p.principioAtivo")
+    List<String> principiosAtivosAtivos();
+
+    @Query("select distinct p.formaFarmaceutica from Produto p where p.ativo = true and p.formaFarmaceutica is not null order by p.formaFarmaceutica")
+    List<String> formasAtivas();
+
+    /** Palavra do catálogo (nome, marca, princípio ativo; sem acento) mais parecida com o token. "Você quis dizer". */
+    @Query(value = """
+            select w.palavra as palavra,
+                   cast(similarity(w.palavra, unaccent(lower(:token))) as double precision) as similaridade
+            from (select distinct unnest(regexp_split_to_array(
+                         unaccent(lower(p.nome || ' ' || p.marca || ' ' || coalesce(p.principio_ativo, ''))),
+                         '[^a-z0-9]+')) as palavra
+                  from produto p where p.ativo) w
+            where length(w.palavra) >= 3
+            order by similarity(w.palavra, unaccent(lower(:token))) desc, w.palavra
+            limit 1
+            """, nativeQuery = true)
+    java.util.Optional<PalavraParecida> palavraMaisParecida(@Param("token") String token);
+
+    interface PalavraParecida {
+        String getPalavra();
+
+        Double getSimilaridade();
+    }
 }

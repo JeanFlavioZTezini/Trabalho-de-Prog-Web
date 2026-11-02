@@ -26,6 +26,7 @@ import com.farmacia.farmaciaonline.config.SecurityConfig;
 import com.farmacia.farmaciaonline.model.Categoria;
 import com.farmacia.farmaciaonline.model.Produto;
 import com.farmacia.farmaciaonline.repository.CategoriaRepository;
+import com.farmacia.farmaciaonline.repository.FiltroCatalogo;
 import com.farmacia.farmaciaonline.repository.OrdenacaoCatalogo;
 import com.farmacia.farmaciaonline.service.CatalogoService;
 
@@ -50,8 +51,8 @@ class CatalogoErroTest {
 
     @Test
     void falhaDeBancoExibeMensagemETentativaDeRecarregar() throws Exception {
-        when(catalogoService.buscar(any(), nullable(Long.class), nullable(BigDecimal.class),
-                nullable(BigDecimal.class), anyBoolean(), any(OrdenacaoCatalogo.class), any(Pageable.class)))
+        when(catalogoService.buscar(any(FiltroCatalogo.class), any(OrdenacaoCatalogo.class),
+                any(Pageable.class)))
                 .thenThrow(new DataAccessResourceFailureException("database indisponível"));
 
         String html = mvc.perform(get("/produtos").param("q", "dipirona"))

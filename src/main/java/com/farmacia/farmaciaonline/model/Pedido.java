@@ -129,6 +129,18 @@ public class Pedido {
     @Version
     private Long versao;
 
+    /** Conferência presencial da receita, registrada antes da entrega na loja. */
+    @Column(name = "receita_conferida_em")
+    private Instant receitaConferidaEm;
+
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "receita_conferida_por_id")
+    private Usuario receitaConferidaPor;
+
+    /** Indica que um pedido pago foi cancelado e ainda depende de estorno pelo gateway. */
+    @Column(name = "estorno_pendente", nullable = false)
+    private boolean estornoPendente;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant criadoEm;

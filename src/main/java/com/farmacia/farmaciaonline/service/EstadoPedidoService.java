@@ -3,6 +3,7 @@ package com.farmacia.farmaciaonline.service;
 import java.math.BigDecimal;
 import java.time.Instant;
 import java.util.Comparator;
+import java.util.Objects;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -23,6 +24,7 @@ import com.farmacia.farmaciaonline.model.Usuario;
 import com.farmacia.farmaciaonline.model.enums.MetodoPagamento;
 import com.farmacia.farmaciaonline.model.enums.StatusPagamento;
 import com.farmacia.farmaciaonline.model.enums.StatusPedido;
+import com.farmacia.farmaciaonline.model.enums.TipoEntrega;
 import com.farmacia.farmaciaonline.repository.ApresentacaoRepository;
 import com.farmacia.farmaciaonline.repository.HistoricoStatusPedidoRepository;
 import com.farmacia.farmaciaonline.repository.PagamentoRepository;
@@ -141,17 +143,101 @@ public class EstadoPedidoService {
      */
     public boolean cancelar(Long pedidoId, Usuario autor, String observacao) {
         Pedido pedido = travar(pedidoId);
-        boolean pago = pedido.getStatus() == StatusPedido.PAGAMENTO_APROVADO
-                || pedido.getStatus() == StatusPedido.EM_SEPARACAO;
-        if (pedido.getStatus() != StatusPedido.AGUARDANDO_PAGAMENTO && !pago) {
+        if (!cancelavel(pedido.getStatus())) {
             return false;
         }
+        cancelarTrancado(pedido, autor, observacao);
+        return true;
+    }
+
+    /** Aplica uma transição solicitada pelo painel admin com trava, versão e histórico na mesma transação. */
+    public void transicionarAdministrativamente(Long pedidoId, Long versaoEsperada, StatusPedido destino,
+            Usuario autor, String observacao) {
+        Pedido pedido = travarComVersao(pedidoId, versaoEsperada);
+        StatusPedido origem = pedido.getStatus();
+        if (!transicaoPermitida(pedido, destino)) {
+            throw new AcaoPedidoInvalidaException("Essa mudança de status não é permitida para o pedido atual.");
+        }
+        if (destino == StatusPedido.ENTREGUE && pedido.temItemQueExigeReceita()
+                && pedido.getReceitaConferidaEm() == null) {
+            throw new AcaoPedidoInvalidaException(
+                    "Registre a conferência presencial da receita antes de concluir a entrega.");
+        }
+        if (destino == StatusPedido.CANCELADO) {
+            cancelarTrancado(pedido, autor, observacao);
+            return;
+        }
+        pedido.setStatus(destino);
+        registrarHistorico(pedido, origem, autor, normalizarObservacao(observacao));
+    }
+
+    /** Registra, uma única vez, quem conferiu presencialmente a receita antes da retirada. */
+    public void registrarConferenciaReceita(Long pedidoId, Long versaoEsperada, Usuario autor) {
+        Pedido pedido = travarComVersao(pedidoId, versaoEsperada);
+        if (autor == null) {
+            throw new AcaoPedidoInvalidaException("Não foi possível identificar o administrador.");
+        }
+        if (!pedido.temItemQueExigeReceita() || pedido.getTipoEntrega() != TipoEntrega.RETIRADA
+                || pedido.getStatus() != StatusPedido.PRONTO_PARA_RETIRADA) {
+            throw new AcaoPedidoInvalidaException(
+                    "A conferência só pode ser registrada presencialmente para um pedido com receita pronto para retirada.");
+        }
+        if (pedido.getReceitaConferidaEm() != null) {
+            throw new AcaoPedidoInvalidaException("A conferência presencial já foi registrada para este pedido.");
+        }
+        pedido.setReceitaConferidaEm(Instant.now());
+        pedido.setReceitaConferidaPor(autor);
+    }
+
+    private void cancelarTrancado(Pedido pedido, Usuario autor, String observacao) {
+        boolean pago = pedido.getStatus() == StatusPedido.PAGAMENTO_APROVADO
+                || pedido.getStatus() == StatusPedido.EM_SEPARACAO;
+        String nota = normalizarObservacao(observacao);
         if (pago) {
+            pedido.setEstornoPendente(true);
+            String pendencia = "Pedido pago cancelado; estorno pendente de processamento pelo gateway (não confirmado).";
+            nota = StringUtils.hasText(nota) ? StringUtils.truncate(nota + " " + pendencia, 255) : pendencia;
             pedido.getItens().forEach(i -> produtoRepository.somarVendidos(
                     i.getApresentacao().getProduto().getId(), -i.getQuantidade()));
         }
-        encerrar(pedido, autor, observacao);
-        return true;
+        encerrar(pedido, autor, nota);
+    }
+
+    private static boolean cancelavel(StatusPedido status) {
+        return status == StatusPedido.AGUARDANDO_PAGAMENTO || status == StatusPedido.PAGAMENTO_APROVADO
+                || status == StatusPedido.EM_SEPARACAO;
+    }
+
+    private static boolean transicaoPermitida(Pedido pedido, StatusPedido destino) {
+        if (destino == null) {
+            return false;
+        }
+        return switch (pedido.getStatus()) {
+            case AGUARDANDO_PAGAMENTO -> destino == StatusPedido.CANCELADO;
+            case PAGAMENTO_APROVADO -> destino == StatusPedido.EM_SEPARACAO || destino == StatusPedido.CANCELADO;
+            case EM_SEPARACAO -> destino == StatusPedido.CANCELADO
+                    || (pedido.getTipoEntrega() == TipoEntrega.ENTREGA && destino == StatusPedido.ENVIADO)
+                    || (pedido.getTipoEntrega() == TipoEntrega.RETIRADA
+                            && destino == StatusPedido.PRONTO_PARA_RETIRADA);
+            case ENVIADO, PRONTO_PARA_RETIRADA -> destino == StatusPedido.ENTREGUE;
+            case ENTREGUE, CANCELADO -> false;
+        };
+    }
+
+    private Pedido travarComVersao(Long pedidoId, Long versaoEsperada) {
+        pedidoRepository.travarLinha(pedidoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        Pedido pedido = pedidoRepository.findById(pedidoId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        em.refresh(pedido);
+        if (versaoEsperada == null || !Objects.equals(pedido.getVersao(), versaoEsperada)) {
+            throw new ConflitoPedidoException("O pedido foi atualizado por outra pessoa. Recarregue a página.");
+        }
+        return pedido;
+    }
+
+    private static String normalizarObservacao(String observacao) {
+        return StringUtils.hasText(observacao) ? StringUtils.truncate(observacao.trim(), 255) : null;
     }
 
     private void aprovar(Pedido pedido, Pagamento pagamento, RespostaPagamento retorno) {

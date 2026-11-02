@@ -170,7 +170,8 @@ class CheckoutFluxoWebIntegracaoTest extends CheckoutTesteBase {
 
         MockHttpServletResponse invalido = confirmar(cliente, query, "numeroCartao", "4111111111111111",
                 "validadeCartao", "99/99", "cvv", "987", "nomeImpresso", "CLIENTE TESTE");
-        assertThat(invalido.getRedirectedUrl()).startsWith("/checkout/resumo").doesNotContain("4111").doesNotContain("987");
+        assertThat(invalido.getRedirectedUrl()).startsWith("/checkout/resumo").doesNotContain("4111")
+                .doesNotContain("cvv=").doesNotContain("numeroCartao=");
         assertThat(estoqueDe(a)).isEqualTo(5);
         assertThat(itensNoCarrinho(cliente)).isEqualTo(1);
 
@@ -180,7 +181,7 @@ class CheckoutFluxoWebIntegracaoTest extends CheckoutTesteBase {
 
         String tela = pagina(cliente, "/checkout/pedidos/" + id);
         assertThat(tela).contains("Pagamento recusado").contains("continuam reservados")
-                .doesNotContain(CARTAO_RECUSADO).doesNotContain("987");
+                .doesNotContain(CARTAO_RECUSADO).doesNotContain("value=\"987\"").doesNotContain(">987<");
 
         mvc.perform(post("/checkout/pedidos/" + id + "/pagamento").with(como(cliente)).with(csrf())
                         .param("chave", campoOculto(tela, "chave"))

@@ -41,7 +41,7 @@ public class LoginController {
             case LoginFailureHandler.MOTIVO_PENDENTE ->
                     "Sua conta ainda não foi confirmada. Confirme seu e-mail ou celular para poder entrar.";
             case LoginFailureHandler.MOTIVO_BLOQUEADA ->
-                    "Sua conta está temporariamente bloqueada. Tente novamente mais tarde.";
+                    "Sua conta foi temporariamente bloqueada por segurança após várias tentativas. Aguarde 15 minutos antes de tentar novamente.";
             case LoginFailureHandler.MOTIVO_INDISPONIVEL ->
                     "Não foi possível entrar agora. Tente novamente em instantes.";
             default -> "E-mail, CPF ou senha incorretos. Confira os dados e tente de novo.";

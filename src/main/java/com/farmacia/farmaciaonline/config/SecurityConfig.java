@@ -13,6 +13,7 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 import com.farmacia.farmaciaonline.security.LoginFailureHandler;
 import com.farmacia.farmaciaonline.security.LoginSuccessHandler;
+import com.farmacia.farmaciaonline.security.LoginTentativasService;
 
 @Configuration
 @EnableWebSecurity
@@ -36,7 +37,8 @@ public class SecurityConfig {
     };
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, SessionRegistry sessionRegistry) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, SessionRegistry sessionRegistry,
+            LoginTentativasService loginTentativasService) throws Exception {
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(ROTAS_PUBLICAS).permitAll()
@@ -47,8 +49,8 @@ public class SecurityConfig {
                 .loginProcessingUrl("/login")
                 .usernameParameter("identificador") // e-mail ou CPF
                 .passwordParameter("senha")
-                .successHandler(new LoginSuccessHandler())
-                .failureHandler(new LoginFailureHandler())
+                .successHandler(new LoginSuccessHandler(loginTentativasService))
+                .failureHandler(new LoginFailureHandler(loginTentativasService))
                 .permitAll())
             .logout(logout -> logout
                 .logoutUrl("/logout") // com CSRF ligado, só aceita POST

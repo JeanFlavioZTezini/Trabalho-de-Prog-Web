@@ -3,10 +3,14 @@ package com.farmacia.farmaciaonline.security;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
+import static org.assertj.core.api.Assertions.assertThat;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
@@ -18,6 +22,9 @@ import org.springframework.context.annotation.Import;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.FormLoginRequestBuilder;
 import org.springframework.test.web.servlet.MockMvc;
+
+import com.farmacia.farmaciaonline.model.Usuario;
+import com.farmacia.farmaciaonline.repository.UsuarioRepository;
 
 import com.farmacia.farmaciaonline.TestcontainersConfiguration;
 
@@ -36,6 +43,17 @@ class LoginIntegracaoTest {
 
     @Autowired
     private MockMvc mvc;
+
+    @Autowired
+    private UsuarioRepository usuarioRepository;
+
+    @BeforeEach
+    void limparBloqueioDoClienteDeTeste() {
+        Usuario cliente = usuarioRepository.findByEmailIgnoreCase("cliente@farma.com").orElseThrow();
+        cliente.setTentativasLoginFalhas(0);
+        cliente.setBloqueadoAte(null);
+        usuarioRepository.saveAndFlush(cliente);
+    }
 
     private static FormLoginRequestBuilder login(String identificador, String senha) {
         // os nomes dos campos do nosso formulário: "identificador" (e-mail ou CPF) e "senha"
@@ -122,5 +140,54 @@ class LoginIntegracaoTest {
                 .andReturn().getRequest().getSession(false);
 
         mvc.perform(get("/admin").session(sessao)).andExpect(status().isOk());
+    }
+
+    @Test
+    @DisplayName("cinco senhas incorretas bloqueiam a conta por quinze minutos")
+    void cincoFalhasBloqueiamConta() throws Exception {
+        for (int i = 0; i < 5; i++) {
+            mvc.perform(login("cliente@farma.com", "senha-errada"))
+                    .andExpect(redirectedUrl("/login?erro=credenciais"));
+        }
+
+        Usuario cliente = usuarioRepository.findByEmailIgnoreCase("cliente@farma.com").orElseThrow();
+        assertThat(cliente.getTentativasLoginFalhas()).isEqualTo(5);
+        assertThat(cliente.getBloqueadoAte()).isAfter(java.time.Instant.now().plusSeconds(14 * 60));
+
+        mvc.perform(login("cliente@farma.com", SENHA_DO_SEED))
+                .andExpect(redirectedUrl("/login?erro=bloqueada"))
+                .andExpect(unauthenticated());
+    }
+
+    @Test
+    @DisplayName("login bem-sucedido zera as falhas e remove bloqueio vencido")
+    void loginBemSucedidoZeraFalhas() throws Exception {
+        for (int i = 0; i < 3; i++) {
+            mvc.perform(login("cliente@farma.com", "senha-errada"))
+                    .andExpect(redirectedUrl("/login?erro=credenciais"));
+        }
+
+        mvc.perform(login("cliente@farma.com", SENHA_DO_SEED))
+                .andExpect(redirectedUrl("/"))
+                .andExpect(authenticated());
+
+        cliente = usuarioRepository.findByEmailIgnoreCase("cliente@farma.com").orElseThrow();
+        assertThat(cliente.getTentativasLoginFalhas()).isZero();
+        assertThat(cliente.getBloqueadoAte()).isNull();
+    }
+
+    @Test
+    @DisplayName("logout exige CSRF e invalida a sessão")
+    void logoutProtegidoPorCsrfInvalidaSessao() throws Exception {
+        MockHttpSession sessao = (MockHttpSession) mvc.perform(login("cliente@farma.com", SENHA_DO_SEED))
+                .andReturn().getRequest().getSession(false);
+
+        mvc.perform(post("/logout").session(sessao))
+                .andExpect(status().isForbidden());
+
+        mvc.perform(post("/logout").with(csrf()).session(sessao))
+                .andExpect(redirectedUrl("/login?logout"));
+
+        assertThat(sessao.isInvalid()).isTrue();
     }
 }

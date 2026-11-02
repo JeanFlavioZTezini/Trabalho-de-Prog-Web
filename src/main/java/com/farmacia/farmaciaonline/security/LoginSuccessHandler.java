@@ -24,8 +24,14 @@ public class LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessH
     static final String PAINEL_ADMIN = "/admin";
 
     private final RequestCache requestCache = new HttpSessionRequestCache();
+    private final LoginTentativasService tentativasService;
 
     public LoginSuccessHandler() {
+        this(null);
+    }
+
+    public LoginSuccessHandler(LoginTentativasService tentativasService) {
+        this.tentativasService = tentativasService;
         setRequestCache(requestCache);
         setDefaultTargetUrl("/");
     }
@@ -33,6 +39,9 @@ public class LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessH
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request, HttpServletResponse response,
             Authentication authentication) throws IOException, ServletException {
+        if (tentativasService != null && authentication.getPrincipal() instanceof UsuarioAutenticado usuario) {
+            tentativasService.limparFalhas(usuario.getId());
+        }
         if (ehAdmin(authentication)) {
             // Descarta a página que ele tentara abrir: o admin sempre começa pelo painel.
             requestCache.removeRequest(request, response);

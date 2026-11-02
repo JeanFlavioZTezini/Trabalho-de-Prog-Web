@@ -6,9 +6,12 @@ import java.util.Optional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
+
+import jakarta.persistence.LockModeType;
 
 import com.farmacia.farmaciaonline.model.Usuario;
 import com.farmacia.farmaciaonline.model.enums.StatusUsuario;
@@ -23,6 +26,11 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
     boolean existsByEmailIgnoreCase(String email);
 
     boolean existsByCpf(String cpf);
+
+    /** Busca a conta sob bloqueio pessimista para não perder incrementos concorrentes de falha de login. */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from Usuario u where lower(u.email) = lower(:email) or (:cpf <> '' and u.cpf = :cpf)")
+    Optional<Usuario> buscarParaAtualizarTentativasLogin(@Param("email") String email, @Param("cpf") String cpf);
 
     /**
      * Consulta administrativa de clientes (UC11): só perfil CLIENTE. {@code padraoTexto} é um LIKE em minúsculas

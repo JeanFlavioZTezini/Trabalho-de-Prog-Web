@@ -473,7 +473,8 @@ cabeçalho só para o perfil `CLIENTE`. Código: `PedidosClienteController`, `Pe
   propósito. O histórico de um cliente na tela do administrador continua sendo uma consulta própria, atrás de `/admin/**`.
   Reaproveite os métodos `findByUsuarioIdOrderByCriadoEmDescIdDesc` e `findByPedidoIdOrderByCriadoEmAscIdAsc`, que desempatam
   por id.
-- **Fica para a F-23:** filtros por período e por status (UC06-A2). "Comprar novamente" (UC06-A3) é opcional (F-25).
+- **Filtros por situação e período (UC06-A2):** vieram na F-23 (seção "Filtros por período e exportação CSV"). "Comprar
+  novamente" (UC06-A3) é opcional (F-25).
 
 ## Carrinho (F-10 / UC05)
 
@@ -743,13 +744,37 @@ tem `GET`, e não existe edição administrativa de conta.
 
   Todos gravam autor, IP (`getRemoteAddr()`; `X-Forwarded-For` não é confiável) e data. O texto buscado **nunca** vai para o
   log (pode ser CPF ou e-mail). Detalhe de cliente inexistente ou de administrador responde 404 e não grava log.
-- **Fora do escopo:** exportação CSV e filtro por período (F-23, que pode reaproveitar `ClienteAdminService` e gravar
-  `CLIENTE_EXPORTAR`).
+- **Período e CSV:** vieram na F-23 (seção abaixo).
 - **Sem migration:** a tabela `log_auditoria` já existe desde a V1.
 - **Testes:** `ContatoMascaradoTest` (unitário), `AdminClienteSegurancaTest` (visitante, cliente, sem rota de escrita),
   `AdminClienteTelaTest` (HTML: um único h1, CPF mascarado, tabela em região rolável, detalhe sem formulário) e
   `ClienteAdminServiceIntegracaoTest` (PostgreSQL real: busca por nome, e-mail e CPF, status, só cliente, paginação,
   curingas como texto, auditoria sem o termo buscado, 404 sem log, pedidos recentes, log que falha derruba a consulta).
+
+## Filtros por período e exportação CSV (F-23 / UC06-A2, UC11-A2, UC17)
+
+- **Período:** `de` e `ate` (datas `AAAA-MM-DD`, as duas inclusivas, no horário de São Paulo) em três listas. Data inicial
+  depois da final mostra erro ligado aos campos e não consulta. `PeriodoFiltro` vira um intervalo `[início, fim)` com
+  limites largos quando a data falta (o PostgreSQL não aceita parâmetro nulo sem tipo).
+  - **Meus pedidos** (`/pedidos`): situação (`status`) e período de criação. O dono continua vindo só da sessão.
+  - **Pedidos do admin** (`/admin/pedidos`): número, status, cliente (nome, e-mail ou CPF) e período. Status desconhecido
+    vira "todos" em vez de erro 400.
+  - **Clientes do admin** (`/admin/clientes`): período de cadastro somado à busca e ao status. O log `CLIENTE_LISTAR` ganha
+    `periodo=sim` quando há período.
+- **Paginação:** os links de "Anterior" e "Próxima" levam todos os filtros.
+- **CSV de clientes:** `GET /admin/clientes/exportar.csv` (só ADMIN, regra `/admin/**`), com os mesmos filtros da tela,
+  até 5.000 linhas.
+  - UTF-8 com BOM, separador `;` (abre direto no Excel em português) e anexo `clientes-AAAAMMDD.csv`, sem cache.
+  - Colunas: id, nome, CPF, e-mail e celular **mascarados** (`ContatoMascarado`), status e cadastro. Nada de senha, hash,
+    termos ou tentativas de login.
+  - Toda célula vai entre aspas (aspas internas dobradas). Valor que começa com `=`, `+`, `-`, `@`, tab ou CR ganha um `'`
+    na frente para a planilha não executar como fórmula.
+  - Cada exportação grava `CLIENTE_EXPORTAR` na auditoria com os filtros e o número de linhas, sem o texto buscado.
+- **Sem migration.**
+- **Testes:** `FiltrosEExportacaoIntegracaoTest` (limites do período, status combinado, pedido de outro cliente, cliente
+  por nome/CPF, paginação com filtros, período inválido, CSV mascarado e auditado, fórmula, rota só para admin). Os mocks
+  de `AdminClienteTelaTest`, `AdminClienteSegurancaTest`, `AdminPedidoSegurancaTest` e `PedidosClienteControllerTest`
+  seguem as assinaturas novas.
 
 ## Busca tolerante e refinamentos do catálogo (F-22 / UC01-A2)
 

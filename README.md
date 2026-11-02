@@ -991,7 +991,7 @@ Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: a
 | Administração de pedidos: transições, receita e histórico (UC17) | F-17 | Pessoa F: _preencher_ | |
 | Proteção do login e logout validado nos novos fluxos (UC10/UC15) | F-18 | Jean (@JeanFlavioZTezini), correções por Kauê (@KaueAlves09) | #68 |
 | Integração, teste do percurso completo e entrega reproduzível | F-19 | Todos | |
-| Login social demonstrável com vínculo seguro de CPF (UC10) | F-20 | Kauê (@KaueAlves09) | |
+| Login social demonstrável com vínculo seguro de CPF (UC10) | F-20 | Kauê (@KaueAlves09) | #77 |
 | Alteração de e-mail/celular com confirmação do novo contato (UC07) | F-21 | Kauê (@KaueAlves09) | #67 |
 | Correção de busca e refinamentos do catálogo (UC01) | F-22 | Kauê (@KaueAlves09) | #75 |
 | Filtros completos de pedidos/clientes e exportação CSV (UC06/UC11) | F-23 | Kauê (@KaueAlves09) | #75 |

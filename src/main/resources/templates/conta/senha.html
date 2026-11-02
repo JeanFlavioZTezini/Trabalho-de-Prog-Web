@@ -48,8 +48,10 @@
             <p class="campo__erro" role="alert" id="confirmarNovaSenha-erro" th:if="${#fields.hasErrors('confirmarNovaSenha')}" th:errors="*{confirmarNovaSenha}"></p>
         </div>
 
-        <button type="submit" class="btn-primario">Alterar senha</button>
-        <a th:href="@{/conta}">Cancelar</a>
+        <div class="acoes">
+            <button type="submit" class="btn-primario">Alterar senha</button>
+            <a class="btn-secundario" th:href="@{/conta}">Cancelar</a>
+        </div>
     </form>
 
 </div>

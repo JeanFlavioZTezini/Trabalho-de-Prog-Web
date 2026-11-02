@@ -11,10 +11,12 @@
 
     <h1>Caixa de mensagens de teste</h1>
 
-    <p class="alerta">Página de demonstração: nenhum e-mail ou SMS sai de verdade. As mensagens ficam só na memória
+    <p class="alerta" role="note">Página de demonstração: nenhum e-mail ou SMS sai de verdade. As mensagens ficam só na memória
         (as últimas 50) e somem quando a aplicação reinicia.</p>
 
-    <p th:if="${#lists.isEmpty(mensagens)}">Nenhuma mensagem ainda.</p>
+    <div class="estado-vazio" th:if="${#lists.isEmpty(mensagens)}">
+        <p>Nenhuma mensagem ainda.</p>
+    </div>
 
     <ol class="caixa-demo" th:unless="${#lists.isEmpty(mensagens)}">
         <li th:each="m : ${mensagens}">
@@ -26,7 +28,14 @@
         </li>
     </ol>
 
-    <p><a th:href="@{/confirmar-conta}">Voltar para a confirmação da conta</a></p>
+    <!--/* A caixa serve a três fluxos; cada link volta para onde o código é digitado. */-->
+    <nav class="pagina-texto__rodape-form" aria-label="Voltar para onde digitar o código">
+        <a th:href="@{/confirmar-conta}">Confirmar a conta</a>
+        <span aria-hidden="true"> · </span>
+        <a th:href="@{/recuperar-senha/codigo}">Recuperar a senha</a>
+        <span aria-hidden="true"> · </span>
+        <a th:href="@{/conta}">Trocar e-mail ou celular (Minha conta)</a>
+    </nav>
 
 </div>
 </body>

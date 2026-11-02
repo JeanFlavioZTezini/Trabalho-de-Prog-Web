@@ -12,7 +12,7 @@
     <p class="alerta alerta--erro" role="alert" th:if="${erroSocial != null}" th:text="${erroSocial}">Erro ao vincular</p>
     <p class="alerta" role="status" th:if="${avisoSocial != null}" th:text="${avisoSocial}">Aviso</p>
 
-    <section aria-labelledby="titulo-dados">
+    <section class="conta__secao secao-cartao" aria-labelledby="titulo-dados">
         <h2 id="titulo-dados">Dados pessoais</h2>
         <dl class="conta__dados">
             <dt>Nome</dt>
@@ -27,7 +27,7 @@
         <p><a class="btn-primario" th:href="@{/conta/editar}">Editar dados</a></p>
     </section>
 
-    <section class="conta__secao" aria-labelledby="titulo-contatos">
+    <section class="conta__secao secao-cartao" aria-labelledby="titulo-contatos">
         <h2 id="titulo-contatos">Contatos</h2>
         <dl class="conta__dados">
             <dt>E-mail</dt>
@@ -50,7 +50,7 @@
         <p class="campo__ajuda">A troca só vale depois de confirmar o novo contato com um código.</p>
     </section>
 
-    <section class="conta__secao" aria-labelledby="titulo-seguranca">
+    <section class="conta__secao secao-cartao" aria-labelledby="titulo-seguranca">
         <h2 id="titulo-seguranca">Segurança</h2>
         <p><a th:href="@{/conta/senha}">Alterar senha</a></p>
         <p class="campo__ajuda">Entrou só pelo Google ou Facebook e não tem senha? Defina uma em
@@ -64,16 +64,20 @@
         </p>
     </section>
 
-    <section class="conta__secao" aria-labelledby="titulo-pedidos" sec:authorize="hasRole('CLIENTE')">
-        <h2 id="titulo-pedidos">Pedidos</h2>
-        <p><a th:href="@{/pedidos}">Meus pedidos</a></p>
+    <section class="conta__secao secao-cartao" aria-labelledby="titulo-enderecos" sec:authorize="hasRole('CLIENTE')">
+        <h2 id="titulo-enderecos">Endereços e cartões</h2>
         <p><a th:href="@{/enderecos}">Meus endereços</a> <span aria-hidden="true"> · </span>
             <a th:href="@{/conta/cartoes}">Meus cartões</a></p>
     </section>
 
-    <section class="conta__secao" aria-labelledby="titulo-excluir" sec:authorize="hasRole('CLIENTE')">
+    <section class="conta__secao secao-cartao" aria-labelledby="titulo-pedidos" sec:authorize="hasRole('CLIENTE')">
+        <h2 id="titulo-pedidos">Pedidos</h2>
+        <p><a th:href="@{/pedidos}">Meus pedidos</a></p>
+    </section>
+
+    <section class="conta__secao secao-cartao" aria-labelledby="titulo-excluir" sec:authorize="hasRole('CLIENTE')">
         <h2 id="titulo-excluir">Excluir conta</h2>
-        <p><a th:href="@{/conta/excluir}">Excluir minha conta</a></p>
+        <p><a class="link-perigo" th:href="@{/conta/excluir}">Excluir minha conta</a></p>
     </section>
 
 </div>

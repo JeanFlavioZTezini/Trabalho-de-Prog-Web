@@ -19,8 +19,10 @@
 
     <form th:action="@{/enderecos/{id}/excluir(id=${endereco.id})}" method="post">
         <input type="hidden" name="retorno" value="checkout" th:if="${checkout}">
-        <button type="submit" class="btn-primario">Excluir endereço</button>
-        <a th:href="${checkout} ? @{/enderecos(retorno='checkout')} : @{/enderecos}">Cancelar</a>
+        <div class="acoes">
+            <button type="submit" class="btn-perigo">Excluir endereço</button>
+            <a class="btn-secundario" th:href="${checkout} ? @{/enderecos(retorno='checkout')} : @{/enderecos}">Cancelar</a>
+        </div>
     </form>
 
 </div>

@@ -64,8 +64,10 @@
                 <p class="campo__erro" role="alert" id="confirmacao-erro" th:if="${#fields.hasErrors('confirmacao')}" th:errors="*{confirmacao}"></p>
             </div>
 
-            <button type="submit" class="btn-primario">Excluir minha conta</button>
-            <a th:href="@{/conta}">Cancelar</a>
+            <div class="acoes">
+                <button type="submit" class="btn-perigo">Excluir minha conta</button>
+                <a class="btn-secundario" th:href="@{/conta}">Cancelar</a>
+            </div>
         </form>
     </section>
 

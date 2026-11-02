@@ -30,6 +30,13 @@ public class ContaCartaoController {
         return "conta/cartoes";
     }
 
+    @GetMapping("/{id}/remover")
+    public String confirmarRemocao(@AuthenticationPrincipal UsuarioAutenticado usuario, @PathVariable Long id,
+            Model model) {
+        model.addAttribute("cartao", service.doUsuario(idDe(usuario), id));
+        return "conta/cartao-remover";
+    }
+
     @PostMapping("/{id}/remover")
     public String remover(@AuthenticationPrincipal UsuarioAutenticado usuario, @PathVariable Long id,
             RedirectAttributes ra) {

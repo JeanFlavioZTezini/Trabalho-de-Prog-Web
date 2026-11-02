@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Remover cartão | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1>Remover o cartão?</h1>
+
+    <p>
+        Você vai remover o cartão <strong th:text="|${cartao.bandeira} final ${cartao.ultimos4}|">VISA final 1111</strong>
+        dos seus cartões salvos. Pagamentos já feitos com ele não mudam.
+    </p>
+
+    <form class="acoes" th:action="@{/conta/cartoes/{id}/remover(id=${cartao.id})}" method="post">
+        <button type="submit" class="btn-perigo">Sim, remover</button>
+        <a class="btn-secundario" th:href="@{/conta/cartoes}">Não, voltar para Meus cartões</a>
+    </form>
+
+</div>
+</body>
+</html>

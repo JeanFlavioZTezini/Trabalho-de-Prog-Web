@@ -585,7 +585,6 @@ summary:focus-visible,
 .selo--status-ENTREGUE { border-color: var(--cor-sucesso); background-color: var(--cor-sucesso-fundo); color: var(--cor-sucesso); }
 .selo--status-CANCELADO { border-color: var(--cor-erro); background-color: var(--cor-erro-fundo); color: var(--cor-erro); }
 
-.form-inline { display: inline; }
 
 /* ---------- Categorias (seção da home) ---------- */
 .categorias {
@@ -852,6 +851,23 @@ a.btn-perigo { background-color: var(--cor-erro); color: var(--cor-branco); }
 }
 .acoes form { margin: 0; }
 
+/* Ações de uma linha de tabela (Editar, Excluir…): lado a lado, sem a margem do .acoes. */
+.acoes-linha { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2) var(--esp-4); }
+.acoes-linha form { margin: 0; }
+
+/* Meus cartões: um cartão por bloco, em grade que vira coluna no celular. */
+.lista-cartoes {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
+  gap: var(--esp-4);
+  margin: var(--esp-5) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.lista-cartoes > li.secao-cartao { margin: 0; }
+.lista-cartoes p { margin: 0 0 var(--esp-2); }
+.lista-cartoes__titulo { font-weight: 700; }
+
 /* ---------- Tabelas ---------- */
 .tabela-admin,
 .carrinho__tabela {
@@ -924,6 +940,7 @@ a.btn-perigo { background-color: var(--cor-erro); color: var(--cor-branco); }
 /* ---------- Estado vazio ---------- */
 /* Lista sem itens ou página de erro: o que aconteceu e qual o próximo passo. */
 .estado-vazio {
+  margin-top: var(--esp-4);
   padding: var(--esp-6) var(--esp-4);
   border: 1px dashed var(--cor-borda-controle);
   border-radius: var(--raio);

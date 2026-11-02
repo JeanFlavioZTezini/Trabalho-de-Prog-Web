@@ -13,13 +13,15 @@
 
     <p th:if="${checkout}">Escolha o endereço de entrega do pedido ou cadastre um novo.</p>
 
-    <p>
+    <div class="acoes">
         <a class="btn-primario"
            th:href="${checkout} ? @{/enderecos/novo(retorno='checkout')} : @{/enderecos/novo}">Novo endereço</a>
-        <a th:if="${checkout}" th:href="@{/checkout}">Voltar ao checkout</a>
-    </p>
+        <a class="btn-secundario" th:if="${checkout}" th:href="@{/checkout}">Voltar para o checkout</a>
+    </div>
 
-    <p th:if="${#lists.isEmpty(enderecos)}">Você ainda não cadastrou nenhum endereço.</p>
+    <div class="estado-vazio" th:if="${#lists.isEmpty(enderecos)}">
+        <p>Você ainda não cadastrou nenhum endereço.</p>
+    </div>
 
     <div class="tabela-rolavel" role="region" aria-label="Endereços cadastrados" tabindex="0"
          th:unless="${#lists.isEmpty(enderecos)}">
@@ -46,28 +48,32 @@
                 </td>
                 <td th:text="|${#strings.substring(e.cep, 0, 5)}-${#strings.substring(e.cep, 5, 8)}|">00000-000</td>
                 <td>
+                    <div class="acoes-linha">
                     <form th:if="${checkout}" th:action="@{/enderecos/{id}/selecionar(id=${e.id},retorno='checkout')}"
                           method="post">
                         <button type="submit" class="btn-primario">
                             Usar este endereço<span class="visually-hidden" th:text="| (${e.destinatario}, ${e.logradouro})|"></span>
                         </button>
                     </form>
-                    <form th:unless="${e.principal}" class="form-inline"
+                    <form th:unless="${e.principal}"
                           th:action="${checkout} ? @{/enderecos/{id}/principal(id=${e.id},retorno='checkout')} : @{/enderecos/{id}/principal(id=${e.id})}"
                           method="post">
                         <button type="submit" class="btn-link">
                             Tornar principal<span class="visually-hidden" th:text="| (${e.destinatario}, ${e.logradouro})|"></span>
                         </button>
                     </form>
-                    <a th:href="${checkout} ? @{/enderecos/{id}/editar(id=${e.id},retorno='checkout')} : @{/enderecos/{id}/editar(id=${e.id})}">
-                        Editar<span class="visually-hidden" th:text="| ${e.destinatario}|"></span></a>
-                    <a th:href="${checkout} ? @{/enderecos/{id}/excluir(id=${e.id},retorno='checkout')} : @{/enderecos/{id}/excluir(id=${e.id})}">
-                        Excluir<span class="visually-hidden" th:text="| ${e.destinatario}|"></span></a>
+                    <a class="btn-link" th:href="${checkout} ? @{/enderecos/{id}/editar(id=${e.id},retorno='checkout')} : @{/enderecos/{id}/editar(id=${e.id})}">
+                        Editar<span class="visually-hidden" th:text="| (${e.destinatario}, ${e.logradouro})|"></span></a>
+                    <a class="link-perigo" th:href="${checkout} ? @{/enderecos/{id}/excluir(id=${e.id},retorno='checkout')} : @{/enderecos/{id}/excluir(id=${e.id})}">
+                        Excluir<span class="visually-hidden" th:text="| (${e.destinatario}, ${e.logradouro})|"></span></a>
+                    </div>
                 </td>
             </tr>
         </tbody>
     </table>
     </div>
+
+    <p class="pagina-texto__rodape-form" th:unless="${checkout}"><a th:href="@{/conta}">Voltar para Minha conta</a></p>
 
 </div>
 </body>

@@ -47,6 +47,12 @@ componentes de interface e anel de foco. Razões calculadas com a fórmula de lu
 | `--cor-erro` (`#B91C1C`) | `--cor-branco` (`#FFFFFF`) | Borda do campo inválido | 6.47:1 | 3,0:1 | sim |
 | `--cor-erro` (`#B91C1C`) | `--cor-fundo` (`#F5F6F8`) | Faixa lateral do aviso de erro | 5.98:1 | 3,0:1 | sim |
 | `--cor-sucesso` (`#15803D`) | `--cor-fundo` (`#F5F6F8`) | Faixa lateral do aviso de sucesso | 4.64:1 | 3,0:1 | sim |
+| `--cor-branco` (`#FFFFFF`) | `--cor-erro` (`#B91C1C`) | Botão de perigo (`.btn-perigo`) | 6.47:1 | 4,5:1 | sim |
+| `--cor-branco` (`#FFFFFF`) | `--cor-erro-hover` (`#991B1B`) | Botão de perigo em hover | 8.31:1 | 4,5:1 | sim |
+| `--cor-erro` (`#B91C1C`) | `--cor-erro-fundo` (`#FEF2F2`) | Selo "Cancelado" | 5.91:1 | 4,5:1 | sim |
+| `--cor-sucesso` (`#15803D`) | `--cor-sucesso-fundo` (`#F0FDF4`) | Selo "Entregue" | 4.79:1 | 4,5:1 | sim |
+| `--cor-aviso` (`#92400E`) | `--cor-aviso-fundo` (`#FFFBEB`) | Selo "Aguardando pagamento" | 6.84:1 | 4,5:1 | sim |
+| `--cor-azul` (`#0F4C81`) | `--cor-azul-suave` (`#DBE4EC`) | Selos de pedido em andamento (aprovado, separação, enviado, pronto) | 6.88:1 | 4,5:1 | sim |
 
 **Tokens corrigidos nesta auditoria** (antes reprovavam em algum fundo):
 
@@ -66,7 +72,7 @@ componentes de interface e anel de foco. Razões calculadas com a fórmula de lu
 
 ### Foco visível
 
-`style.css` já define `:focus-visible` para `a`, `button`, `input`, `select` e `textarea` (contorno de 3px azul; branco sobre fundo azul). Elemento novo que receba foco deve herdar isso; se o fundo for escuro, troque só a `outline-color`.
+`style.css` já define `:focus-visible` para `a`, `button`, `input`, `select`, `textarea`, `summary` e qualquer elemento com `tabindex` (exceto `-1`), como a `.tabela-rolavel` (contorno de 3px azul; branco sobre fundo azul). Elemento novo que receba foco deve herdar isso; se o fundo for escuro, troque só a `outline-color`.
 
 Nunca escreva `outline: none` (ou `outline: 0`) sem colocar outro indicador de foco no lugar.
 A única exceção é `#conteudo:focus`: o `<main>` só recebe foco por código, quando se usa o link "Pular para o conteúdo", e não é um controle.
@@ -107,6 +113,91 @@ Passe todos os parâmetros; use `null` quando não houver ajuda, erro ou autocom
 - `autocomplete` (`username`, `current-password`, `email`, `tel`...) deixa o navegador e os leitores preencherem dados pessoais (WCAG 1.3.5).
 - As classes (`campo`, `campo__ajuda`, `campo__erro`) estão no `style.css`.
 - Por enquanto o fragment cobre `<input>`. Se precisar de `<select>` ou `<textarea>`, siga o mesmo padrão de ids e atributos.
+
+## Guia de componentes
+
+Classes prontas no `style.css` (seção "Componentes"). Reaproveite antes de criar outra. Cor, espaçamento, raio, fonte,
+sombra e camada vêm de `tokens.css` (`--cor-*`, `--esp-1` a `--esp-6`, `--raio*`, `--fonte-*`, `--sombra-*`, `--z-*`).
+O `EstiloSemCorSoltaTest` falha se o `style.css` tiver cor em hexadecimal, `rgb()` ou `z-index` com número.
+
+### Botões
+
+| Classe | Quando usar | Exemplo |
+|---|---|---|
+| `.btn-primario` | A ação da tela. Um por formulário, e o **primeiro** no DOM (o Enter aciona ele). | Salvar, Entrar, Confirmar pedido |
+| `.btn-secundario` | Alternativa ou saída. | Cancelar, Voltar para a lista, Limpar filtros, Exportar CSV |
+| `.btn-perigo` | Apaga ou desfaz algo. Só depois de uma tela de confirmação. | Excluir, Remover, Esvaziar carrinho |
+| `.btn-link` | Ação discreta com cara de link (em geral um `<button>` de POST numa linha de tabela). | Tornar principal |
+| `a.link-perigo` | Link que **leva** à confirmação de uma ação destrutiva. | Excluir minha conta |
+
+- As quatro variantes de botão têm a mesma altura mínima (2.75rem, alvo de toque) e os mesmos estados de `:hover`,
+  `:active`, `:disabled` e foco. Servem para `<button>` e para `<a>`.
+- `.btn-primario--bloco` ocupa a largura toda (telas estreitas como login).
+- "Cancelar" nunca é um link solto: é `.btn-secundario`.
+
+### Grupo de ações
+
+```html
+<div class="acoes">
+    <button type="submit" class="btn-primario">Salvar</button>
+    <a class="btn-secundario" th:href="@{/conta}">Cancelar</a>
+</div>
+```
+
+Principal primeiro, depois o secundário. O grupo quebra de linha no celular.
+
+### Confirmação de ação destrutiva
+
+Padrão do projeto: uma **página de confirmação** (GET) que diz o que vai acontecer, com `.btn-perigo` para confirmar
+(POST com CSRF) e `.btn-secundario` para voltar. O recurso de outra pessoa responde 404. Exemplos: remover item do
+carrinho, excluir endereço, excluir categoria. Exceção: a exclusão de produto no admin usa `confirm()` do navegador.
+
+### Selos
+
+`<span class="selo selo--...">texto</span>`. O texto sempre diz a situação; a cor só reforça.
+
+- Tons: `selo--neutro`, `selo--destaque`, `selo--info`, `selo--aviso`, `selo--sucesso`, `selo--erro`.
+- Situação do pedido: `th:classappend="'selo--status-' + ${pedido.status.name()}"`. O tom de cada `StatusPedido` está no
+  CSS (aguardando = aviso; aprovado, em separação, enviado e pronto = info; entregue = sucesso; cancelado = erro).
+
+### Tabelas
+
+`.tabela-admin` (listas) ou `.carrinho__tabela`, sempre dentro de
+`<div class="tabela-rolavel" role="region" aria-label="..." tabindex="0">`. Valores e quantidades com `class="num"`
+(alinhados à direita). Ação por linha com o nome do item em `.visually-hidden` ("Editar <span class="visually-hidden">Analgésicos</span>").
+
+### Filtros, paginação e estado vazio
+
+- Filtros de lista: `<form class="filtros">` (grade que quebra sozinha) com os botões em `.filtros__acoes`.
+- Paginação: `<nav class="paginacao" aria-label="Paginação">`.
+- Lista sem itens: `<div class="estado-vazio">` com o que aconteceu e a próxima ação (`.acoes`).
+
+### Navegação
+
+- Migalhas (breadcrumb):
+  `<nav class="migalhas" aria-label="Você está em"><ol><li><a>Início</a></li>…<li aria-current="page">Produto</li></ol></nav>`.
+- Etapas (checkout): `<ol class="etapas">` com `<span class="etapas__numero">` e `<span class="etapas__rotulo">` em cada
+  `<li>`; a atual leva `aria-current="step"` e as anteriores `class="etapas__feita"`. No celular só o rótulo da atual
+  aparece.
+
+### Blocos
+
+- `.secao-cartao`: seção com borda e título (`h2`), para agrupar (Minha conta, detalhe do pedido).
+- `.cartoes-painel`: grade de atalhos em cartão (painel do admin), com `.cartoes-painel__titulo` e
+  `.cartoes-painel__descricao`.
+- `.nivel-1` a `.nivel-4`: recuo da árvore de categorias (no lugar de `style` inline).
+
+### Rótulos
+
+| Situação | Use | Evite |
+|---|---|---|
+| Gravar um formulário | Salvar | Gravar, Enviar |
+| Sair sem gravar | Cancelar | Voltar (num formulário) |
+| Apagar de vez | Excluir | Deletar, Apagar |
+| Tirar de uma lista (carrinho, cartões) | Remover | Excluir |
+| Status do pedido | Situação | Status |
+| Abrir o detalhe | Ver | Detalhe, Detalhes |
+| Voltar a uma página | Voltar para &lt;lugar&gt; | Voltar ao, Voltar à |
 
 ## Como testar
 

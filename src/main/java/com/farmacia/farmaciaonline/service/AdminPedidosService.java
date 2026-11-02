@@ -45,7 +45,21 @@ public class AdminPedidosService {
     private final EstadoPedidoService estadoPedidoService;
 
     public Page<Resumo> listar(Long numero, StatusPedido status, Pageable pageable) {
-        return pedidoRepository.buscarParaAdministracao(numero, status, pageable).map(AdminPedidosService::resumo);
+        return listar(new FiltroPedidos(numero, status, null, PeriodoFiltro.VAZIO), pageable);
+    }
+
+    /** F-23: número, status, cliente (nome, e-mail ou CPF) e período de criação, todos opcionais e combináveis. */
+    public Page<Resumo> listar(FiltroPedidos filtro, Pageable pageable) {
+        String cliente = filtro.cliente() == null ? "" : filtro.cliente().trim();
+        PeriodoFiltro periodo = filtro.periodo() == null ? PeriodoFiltro.VAZIO : filtro.periodo();
+        List<StatusPedido> statuses = filtro.status() == null ? List.of(StatusPedido.values()) : List.of(filtro.status());
+        return pedidoRepository.buscarParaAdministracao(filtro.numero(), statuses, periodo.inicio(), periodo.fim(),
+                ClienteAdminService.padraoDeTexto(cliente),
+                ClienteAdminService.padraoDeCpf(cliente.replaceAll("\\D", "")), pageable)
+                .map(AdminPedidosService::resumo);
+    }
+
+    public record FiltroPedidos(Long numero, StatusPedido status, String cliente, PeriodoFiltro periodo) {
     }
 
     public Detalhe detalhar(Long id) {

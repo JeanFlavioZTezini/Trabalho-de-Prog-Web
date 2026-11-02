@@ -65,11 +65,18 @@ public class PedidosClienteService {
 
     /** Página de pedidos do cliente, do mais recente para o mais antigo. Página fora do intervalo cai na última. */
     public PaginaDePedidos listar(Long usuarioId, int pagina) {
+        return listar(usuarioId, FiltroMeusPedidos.VAZIO, pagina);
+    }
+
+    /** F-23: status e período de criação (opcionais); o dono continua vindo só da sessão. */
+    public PaginaDePedidos listar(Long usuarioId, FiltroMeusPedidos filtro, int pagina) {
         checkout.exigirClienteAtivo(usuarioId);
-        Page<Pedido> resultado = pedidoRepository.findByUsuarioIdOrderByCriadoEmDescIdDesc(usuarioId,
+        List<StatusPedido> statuses = filtro.status() == null ? List.of(StatusPedido.values()) : List.of(filtro.status());
+        PeriodoFiltro periodo = filtro.periodo() == null ? PeriodoFiltro.VAZIO : filtro.periodo();
+        Page<Pedido> resultado = pedidoRepository.buscarDoCliente(usuarioId, statuses, periodo.inicio(), periodo.fim(),
                 PageRequest.of(Math.max(pagina, 0), TAMANHO_PAGINA));
         if (resultado.isEmpty() && resultado.getTotalPages() > 0) {
-            resultado = pedidoRepository.findByUsuarioIdOrderByCriadoEmDescIdDesc(usuarioId,
+            resultado = pedidoRepository.buscarDoCliente(usuarioId, statuses, periodo.inicio(), periodo.fim(),
                     PageRequest.of(resultado.getTotalPages() - 1, TAMANHO_PAGINA));
         }
 
@@ -138,6 +145,14 @@ public class PedidosClienteService {
 
     private static String formatar(Instant instante) {
         return instante == null ? "" : DATA_HORA.format(instante);
+    }
+
+    public record FiltroMeusPedidos(StatusPedido status, PeriodoFiltro periodo) {
+        public static final FiltroMeusPedidos VAZIO = new FiltroMeusPedidos(null, PeriodoFiltro.VAZIO);
+
+        public boolean informado() {
+            return status != null || (periodo != null && periodo.informado());
+        }
     }
 
     @Value

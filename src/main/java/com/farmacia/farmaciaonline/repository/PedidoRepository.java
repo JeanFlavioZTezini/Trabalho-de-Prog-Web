@@ -1,6 +1,7 @@
 package com.farmacia.farmaciaonline.repository;
 
 import java.time.Instant;
+import java.util.Collection;
 import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
@@ -26,19 +27,45 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
     /** Igual ao anterior, com desempate pelo número: dois pedidos no mesmo instante não trocam de lugar entre páginas. */
     Page<Pedido> findByUsuarioIdOrderByCriadoEmDescIdDesc(Long usuarioId, Pageable pageable);
 
-    /** Lista administrativa: número exato e status são filtros opcionais; a relação é to-one, segura para paginação. */
+    /**
+     * Lista administrativa (UC17 + F-23): número exato opcional; status, período (fim exclusivo) e cliente (LIKE em
+     * minúsculas com escape "!" sobre nome e e-mail, ou só dígitos sobre o CPF) sempre informados, com valores
+     * "todos" quando a tela não filtra. A relação é to-one, segura para paginação.
+     */
     @Query(value = """
-            select p from Pedido p join fetch p.usuario
+            select p from Pedido p join fetch p.usuario u
             where (:numero is null or p.id = :numero)
-              and (:status is null or p.status = :status)
+              and p.status in :statuses
+              and p.criadoEm >= :inicio and p.criadoEm < :fim
+              and (lower(u.nome) like :padraoTexto escape '!'
+                   or lower(u.email) like :padraoTexto escape '!'
+                   or u.cpf like :padraoCpf)
             """,
             countQuery = """
-            select count(p) from Pedido p
+            select count(p) from Pedido p join p.usuario u
             where (:numero is null or p.id = :numero)
-              and (:status is null or p.status = :status)
+              and p.status in :statuses
+              and p.criadoEm >= :inicio and p.criadoEm < :fim
+              and (lower(u.nome) like :padraoTexto escape '!'
+                   or lower(u.email) like :padraoTexto escape '!'
+                   or u.cpf like :padraoCpf)
             """)
-    Page<Pedido> buscarParaAdministracao(@Param("numero") Long numero, @Param("status") StatusPedido status,
+    Page<Pedido> buscarParaAdministracao(@Param("numero") Long numero,
+            @Param("statuses") Collection<StatusPedido> statuses, @Param("inicio") Instant inicio,
+            @Param("fim") Instant fim, @Param("padraoTexto") String padraoTexto, @Param("padraoCpf") String padraoCpf,
             Pageable pageable);
+
+    /** "Meus pedidos" com status e período (F-23): do mais recente para o mais antigo, desempate pelo número. */
+    @Query("""
+            select p from Pedido p
+            where p.usuario.id = :usuarioId
+              and p.status in :statuses
+              and p.criadoEm >= :inicio and p.criadoEm < :fim
+            order by p.criadoEm desc, p.id desc
+            """)
+    Page<Pedido> buscarDoCliente(@Param("usuarioId") Long usuarioId,
+            @Param("statuses") Collection<StatusPedido> statuses, @Param("inicio") Instant inicio,
+            @Param("fim") Instant fim, Pageable pageable);
 
     /** Garante que o usuário só enxerga os próprios pedidos (UC06): de outro usuário, vem vazio. */
     Optional<Pedido> findByIdAndUsuarioId(Long id, Long usuarioId);

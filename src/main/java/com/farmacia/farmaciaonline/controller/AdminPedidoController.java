@@ -1,6 +1,11 @@
 package com.farmacia.farmaciaonline.controller;
 
+import java.time.LocalDate;
+import java.util.Arrays;
+
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -16,6 +21,8 @@ import com.farmacia.farmaciaonline.model.enums.StatusPedido;
 import com.farmacia.farmaciaonline.security.UsuarioAutenticado;
 import com.farmacia.farmaciaonline.service.AcaoPedidoInvalidaException;
 import com.farmacia.farmaciaonline.service.AdminPedidosService;
+import com.farmacia.farmaciaonline.service.AdminPedidosService.FiltroPedidos;
+import com.farmacia.farmaciaonline.service.PeriodoFiltro;
 import com.farmacia.farmaciaonline.service.ConflitoPedidoException;
 
 import lombok.RequiredArgsConstructor;
@@ -33,12 +40,22 @@ public class AdminPedidoController {
 
     @GetMapping
     public String listar(@RequestParam(required = false) Long numero,
-            @RequestParam(required = false) StatusPedido status,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) String cliente,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate de,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ate,
             @RequestParam(defaultValue = "0") int pagina, Model model) {
-        model.addAttribute("pagina", service.listar(numero, status,
-                PageRequest.of(Math.max(0, pagina), TAMANHO_PAGINA, Sort.by(Sort.Direction.DESC, "id"))));
+        StatusPedido filtroStatus = statusDe(status);
+        PeriodoFiltro periodo = new PeriodoFiltro(de, ate);
+        PageRequest pageable = PageRequest.of(Math.max(0, pagina), TAMANHO_PAGINA, Sort.by(Sort.Direction.DESC, "id"));
+        model.addAttribute("pagina", periodo.erro() != null ? Page.empty(pageable)
+                : service.listar(new FiltroPedidos(numero, filtroStatus, cliente, periodo), pageable));
         model.addAttribute("numero", numero);
-        model.addAttribute("status", status);
+        model.addAttribute("status", filtroStatus);
+        model.addAttribute("cliente", cliente);
+        model.addAttribute("de", de);
+        model.addAttribute("ate", ate);
+        model.addAttribute("erroFiltro", periodo.erro());
         model.addAttribute("statuses", StatusPedido.values());
         return "admin/pedidos";
     }
@@ -78,6 +95,11 @@ public class AdminPedidoController {
             redirect.addFlashAttribute("erro", e.getMessage());
         }
         return REDIRECT_DETALHE;
+    }
+
+    /** Status desconhecido vira "todos" (antes respondia 400). */
+    private static StatusPedido statusDe(String texto) {
+        return Arrays.stream(StatusPedido.values()).filter(s -> s.name().equals(texto)).findFirst().orElse(null);
     }
 
     private static Long administradorId(Authentication authentication) {

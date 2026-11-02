@@ -1298,3 +1298,8 @@ label.remover-foto {
 }
 .acao-icone:hover { background-color: var(--cor-azul-suave); }
 .acao-icone--perigo { color: var(--cor-erro); }
+
+/* F-20: login social simulado. */
+.login-social { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--cor-borda); }
+.login-social h2 { font-size: 1rem; }
+.login-social__botoes { display: flex; flex-wrap: wrap; gap: 0.75rem; }

@@ -14,6 +14,8 @@
         Mensagem de erro
     </p>
     <p th:if="${contaPendente}"><a th:href="@{/confirmar-conta/retomar}">Confirmar minha conta</a></p>
+    <p class="alerta alerta--erro" role="alert" th:if="${erroSocial != null}" th:text="${erroSocial}">Erro do login social</p>
+    <p class="alerta" role="status" th:if="${avisoSocial != null}" th:text="${avisoSocial}">Aviso do login social</p>
 
     <!--/* Avisos de logout e de conta confirmada: não são erro, então role="status" (anunciado sem interromper). */-->
     <p class="alerta alerta--sucesso" role="status" th:if="${saiu}">Você saiu da sua conta.</p>
@@ -33,6 +35,16 @@
 
         <button type="submit" class="btn-primario btn-primario--bloco">Entrar</button>
     </form>
+
+    <!--/* F-20: provedores simulados (só no perfil demo). Não entram numa conta pronta: abrem a tela do provedor. */-->
+    <section class="login-social" th:if="${ambienteDemo}" aria-labelledby="titulo-login-social">
+        <h2 id="titulo-login-social">Ou entre com</h2>
+        <p class="campo__ajuda">Provedores simulados para a demonstração: nenhum dado sai do sistema.</p>
+        <p class="login-social__botoes">
+            <a class="btn-secundario" th:href="@{/login/social/google}">Google (simulado)</a>
+            <a class="btn-secundario" th:href="@{/login/social/facebook}">Facebook (simulado)</a>
+        </p>
+    </section>
 
     <p class="pagina-texto__rodape-form">
         <a th:href="@{/recuperar-senha}">Esqueci minha senha</a>

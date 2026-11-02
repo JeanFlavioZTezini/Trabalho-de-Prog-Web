@@ -25,6 +25,7 @@ public class SecurityConfig {
             "/produtos/**",
             "/carrinho/**",
             "/login",
+            "/login/social/**", // F-20: login social; sem provedor (fora do perfil demo) as rotas dão 404
             "/cadastro/**",
             "/confirmar-conta/**",
             "/recuperar-senha/**",

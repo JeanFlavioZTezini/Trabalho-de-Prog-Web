@@ -185,6 +185,68 @@ class CarrinhoControllerTest {
     }
 
     @Test
+    @DisplayName("esvaziar pede confirmação numa página própria: um h1, o POST com CSRF e o botão de perigo")
+    void paginaDeConfirmacaoDeEsvaziar() throws Exception {
+        when(carrinhoService.resumo(any())).thenReturn(resumoCom(linha(5L, null)));
+
+        String html = mvc.perform(get("/carrinho/esvaziar"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+
+        assertThat(html.split("<h1", -1)).hasSize(2);
+        assertThat(html).contains("<h1>Esvaziar o carrinho?</h1>");
+        assertThat(html).containsPattern("(?s)<form class=\"acoes\" action=\"/carrinho/esvaziar\" method=\"post\">"
+                + ".*?name=\"_csrf\".*?<button type=\"submit\" class=\"btn-perigo\">Sim, esvaziar</button>");
+        verify(carrinhoService, never()).esvaziar(any());
+    }
+
+    @Test
+    @DisplayName("confirmar esvaziar com o carrinho já vazio volta ao carrinho")
+    void confirmarEsvaziarCarrinhoVazio() throws Exception {
+        when(carrinhoService.resumo(any())).thenReturn(ResumoCarrinho.vazio());
+
+        mvc.perform(get("/carrinho/esvaziar")).andExpect(redirectedUrl("/carrinho"));
+    }
+
+    @Test
+    @DisplayName("o POST de esvaziar continua igual: esvazia e volta ao carrinho com a mensagem")
+    void esvaziarContinuaPorPost() throws Exception {
+        mvc.perform(post("/carrinho/esvaziar").with(csrf()))
+                .andExpect(redirectedUrl("/carrinho"))
+                .andExpect(flash().attribute("sucesso", "Carrinho esvaziado."));
+        verify(carrinhoService).esvaziar(any());
+    }
+
+    @Test
+    @DisplayName("carrinho com itens: etapa 1 marcada, tabela rolável acessível e esvaziar como link de perigo para a confirmação")
+    void carrinhoComEtapasETabela() throws Exception {
+        when(carrinhoService.resumo(any())).thenReturn(resumoCom(linha(5L, null)));
+
+        String html = mvc.perform(get("/carrinho"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+
+        assertThat(html).containsPattern("(?s)<li aria-current=\"step\">\\s*<span class=\"etapas__numero\" aria-hidden=\"true\">1</span>"
+                + "\\s*<span class=\"etapas__rotulo\">Carrinho</span>");
+        assertThat(html).contains("<div class=\"tabela-rolavel\" role=\"region\" aria-label=\"Itens do carrinho\" tabindex=\"0\">");
+        assertThat(html).contains("<a class=\"link-perigo\" href=\"/carrinho/esvaziar\">Esvaziar carrinho</a>");
+        assertThat(html).contains("<a class=\"btn-secundario\" href=\"/produtos\">Continuar comprando</a>");
+    }
+
+    @Test
+    @DisplayName("carrinho vazio não mostra as etapas e leva ao catálogo")
+    void carrinhoVazioSemEtapas() throws Exception {
+        when(carrinhoService.resumo(any())).thenReturn(ResumoCarrinho.vazio());
+
+        String html = mvc.perform(get("/carrinho"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+
+        assertThat(html).doesNotContain("class=\"etapas\"");
+        assertThat(html).contains("<a class=\"btn-primario\" href=\"/produtos\">Continuar comprando</a>");
+    }
+
+    @Test
     @DisplayName("confirmar remoção de item que não é do carrinho da pessoa volta ao carrinho com erro")
     void confirmacaoDeItemAlheio() throws Exception {
         when(carrinhoService.resumo(any())).thenReturn(ResumoCarrinho.vazio());

@@ -183,6 +183,19 @@ class PedidosClienteControllerTest {
     }
 
     @Test
+    @DisplayName("a coluna Situação mostra cada status em selo, com o texto do status")
+    void listaComSeloDeSituacao() throws Exception {
+        when(service.listar(CLIENTE, FiltroMeusPedidos.VAZIO, 0)).thenReturn(new PaginaDePedidos(
+                List.of(resumo(7, "61.98", 2, StatusPedido.PRONTO_PARA_RETIRADA),
+                        resumo(3, "10.00", 1, StatusPedido.CANCELADO)), 0, 1, 2));
+
+        String html = html(get("/pedidos").with(cliente()));
+
+        assertThat(html).contains("<td><span class=\"selo selo--status-PRONTO_PARA_RETIRADA\">Pronto para retirada</span></td>")
+                .contains("<td><span class=\"selo selo--status-CANCELADO\">Cancelado</span></td>");
+    }
+
+    @Test
     @DisplayName("sem pedidos: mensagem e link para o catálogo")
     void listaVazia() throws Exception {
         when(service.listar(CLIENTE, FiltroMeusPedidos.VAZIO, 0)).thenReturn(new PaginaDePedidos(List.of(), 0, 0, 0));
@@ -253,6 +266,23 @@ class PedidosClienteControllerTest {
     }
 
     @Test
+    @DisplayName("detalhe: situação e cada passo da linha do tempo em selo; Comprar novamente é secundário")
+    void detalheComSelos() throws Exception {
+        when(service.detalhar(CLIENTE, 7L)).thenReturn(detalheDeRetirada(StatusPedido.EM_SEPARACAO, false, List.of(
+                new PassoDoHistorico(StatusPedido.AGUARDANDO_PAGAMENTO, "29/10/2026 às 10:30", false),
+                new PassoDoHistorico(StatusPedido.EM_SEPARACAO, "29/10/2026 às 11:00", true))));
+
+        String html = html(get("/pedidos/7").with(cliente()));
+
+        assertThat(html).containsPattern("Situação: <span class=\"selo selo--status-EM_SEPARACAO\">Em separação</span>");
+        assertThat(html).containsPattern("(?s)<ol class=\"linha-do-tempo\">\\s*<li>\\s*"
+                + "<span class=\"selo selo--status-AGUARDANDO_PAGAMENTO\">Aguardando pagamento</span>.*?"
+                + "<li class=\"linha-do-tempo__atual\">\\s*<span class=\"selo selo--status-EM_SEPARACAO\">Em separação</span>");
+        assertThat(html).contains("<button type=\"submit\" class=\"btn-secundario\" aria-describedby=\"comprar-novamente-ajuda\">"
+                + "Comprar novamente</button>");
+    }
+
+    @Test
     @DisplayName("pedido com item controlado lembra de levar a receita")
     void avisoDeReceita() throws Exception {
         when(service.detalhar(CLIENTE, 7L)).thenReturn(detalheDeRetirada(StatusPedido.PAGAMENTO_APROVADO, true,
@@ -317,7 +347,10 @@ class PedidosClienteControllerTest {
                 List.of(new PassoDoHistorico(StatusPedido.CANCELADO, "29/10/2026 às 10:40", true))));
         when(service.detalhar(CLIENTE, 99L)).thenThrow(new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        assertThat(html(get("/pedidos/7").with(cliente()))).contains("Este pedido foi cancelado");
+        String cancelado = html(get("/pedidos/7").with(cliente()));
+        // Cancelar não é erro da pessoa: aviso neutro e o selo diz a situação.
+        assertThat(cancelado).containsPattern("<p class=\"alerta\" role=\"status\">\\s*Este pedido foi cancelado")
+                .contains("<span class=\"selo selo--status-CANCELADO\">Cancelado</span>");
         mvc.perform(get("/pedidos/99").with(cliente())).andExpect(status().isNotFound());
     }
 

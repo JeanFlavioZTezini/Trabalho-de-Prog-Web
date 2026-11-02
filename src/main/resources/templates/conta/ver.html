@@ -71,6 +71,11 @@
             <a th:href="@{/conta/cartoes}">Meus cartões</a></p>
     </section>
 
+    <section class="conta__secao" aria-labelledby="titulo-excluir" sec:authorize="hasRole('CLIENTE')">
+        <h2 id="titulo-excluir">Excluir conta</h2>
+        <p><a th:href="@{/conta/excluir}">Excluir minha conta</a></p>
+    </section>
+
 </div>
 </body>
 </html>

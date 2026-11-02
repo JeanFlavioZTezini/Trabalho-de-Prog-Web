@@ -725,6 +725,38 @@ Fecha o UC07: o cliente logado troca o e-mail ou o celular confirmando o **novo*
     e-mail, vincular logado, retorno ao carrinho, sessão registrada.
   - `LoginSocialSemDemoTest`: sem perfil demo, as rotas dão 404 e os botões somem.
 
+## Excluir minha conta (F-24 / I14)
+
+O cliente logado exclui a própria conta em `GET/POST /conta/excluir` (link em "Minha conta"). Regras em
+`service/ExclusaoContaService`, tela em `ContaExclusaoController` + `templates/conta/excluir.html`. Sem migration: a V1 já
+tinha o status `EXCLUIDA` e a coluna `excluido_em`.
+
+- **Quem pode:** só conta CLIENTE `ATIVA`, sempre a da sessão (nenhuma rota recebe id; o binder só aceita `senhaAtual` e
+  `confirmacao`). Visitante vai para o login; administrador recebe 403. CSRF ligado.
+- **Confirmação:** senha atual (identidade) e a palavra `EXCLUIR` digitada (intenção). Senha errada conta como falha de
+  login (F-18) e fica gravada mesmo com a recusa; conta bloqueada por tentativas não é excluída.
+- **Conta sem senha** (entrou só pelo login social): a tela orienta a definir uma senha em "Esqueci minha senha" antes. Não
+  há código por e-mail aqui porque o CHECK da V1 não tem a finalidade `EXCLUIR_CONTA` e uma finalidade não vale para outra.
+- **Pedido em andamento bloqueia:** com algum pedido em `AGUARDANDO_PAGAMENTO`, `PAGAMENTO_APROVADO`, `EM_SEPARACAO`,
+  `ENVIADO` ou `PRONTO_PARA_RETIRADA`, a exclusão é recusada com link para "Meus pedidos". Pedido `ENTREGUE` ou `CANCELADO`
+  não impede.
+- **Política de retenção da demonstração** (decisão funcional, não é avaliação jurídica):
+  - **Apagado:** endereços, cartões salvos (o pagamento mantém bandeira e últimos 4; `cartao_salvo_id` vira NULL), carrinho e
+    itens, vínculos sociais e códigos de verificação.
+  - **Anonimizado na linha do usuário:** nome vira "Conta excluída", e-mail vira `excluida-<id>@excluida.invalid`; CPF,
+    celular, gênero, senha e as datas de confirmação ficam vazios. O e-mail e o CPF originais ficam livres para um cadastro
+    novo. A data de nascimento fica (é `NOT NULL` na V1).
+  - **Mantido:** a linha do usuário (status `EXCLUIDA` + `excluido_em`), pedidos, itens, pagamentos e histórico de status,
+    com as cópias de endereço e loja gravadas no pedido. É o registro de vendas.
+  - **Auditoria:** `log_auditoria` recebe `CONTA_EXCLUIR` com o próprio usuário como autor e alvo, sem dado pessoal.
+- **Depois do commit:** a sessão atual sai, as outras sessões da conta são encerradas (`RevogacaoDeSessoes`) e o login mostra
+  "Sua conta foi excluída.". Entrar de novo dá a mensagem genérica (conta `EXCLUIDA` é tratada como inexistente), e o login
+  social também não entra, porque o vínculo foi apagado.
+- **Testes:** `ContaExclusaoIntegracaoTest` (PostgreSQL real): anonimização conferida por SQL, dados acessórios apagados,
+  pedido/pagamento/histórico intactos, auditoria, login negado (e-mail e CPF), outras sessões encerradas, e-mail e CPF
+  reutilizáveis, campos forjados ignorados, bloqueio por cada status em andamento, senha errada (tentativa gravada), sem
+  `EXCLUIR`, conta sem senha, conta bloqueada, CSRF, visitante, administrador e HTML (um h1, rótulos, erro ligado ao campo).
+
 ## Proteção do login (F-18 / UC10, UC15)
 
 Completa o login da F1-09 sem trocar o que já existia (CPF ou e-mail, conta pendente, redirecionamentos). Regras em

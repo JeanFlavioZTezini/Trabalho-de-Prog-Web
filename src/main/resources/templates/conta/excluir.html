@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Excluir minha conta | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1>Excluir minha conta</h1>
+
+    <p class="alerta alerta--erro" role="alert" th:if="${erroExclusao != null}" th:text="${erroExclusao}">Recusa</p>
+    <p class="alerta alerta--erro" role="alert" th:if="${temErros}">
+        Corrija os campos indicados e tente de novo.
+    </p>
+
+    <section aria-labelledby="titulo-o-que-acontece">
+        <h2 id="titulo-o-que-acontece">O que acontece</h2>
+        <ul>
+            <li>Você não consegue mais entrar com esta conta, e todas as sessões abertas são encerradas.</li>
+            <li>Apagamos endereços, cartões salvos, carrinho, vínculos com Google ou Facebook e códigos de verificação.</li>
+            <li>Nome, e-mail, CPF, celular e gênero são removidos da conta. O e-mail e o CPF podem ser usados num cadastro novo.</li>
+            <li>Pedidos já feitos ficam guardados, sem os seus dados de contato, porque fazem parte do registro de vendas.</li>
+            <li>Não dá para desfazer.</li>
+        </ul>
+    </section>
+
+    <section aria-labelledby="titulo-confirmar">
+        <h2 id="titulo-confirmar">Confirmar</h2>
+
+        <div th:if="${situacao.temPedidoEmAndamento}">
+            <p>Você tem pedido em andamento. A conta só pode ser excluída depois que todos os pedidos forem entregues ou
+                cancelados.</p>
+            <p><a th:href="@{/pedidos}">Ver meus pedidos</a></p>
+        </div>
+
+        <div th:if="${!situacao.temPedidoEmAndamento and !situacao.temSenha}">
+            <p>Sua conta ainda não tem senha. Para confirmar que é você, defina uma senha em
+                <a th:href="@{/recuperar-senha}">Esqueci minha senha</a> e volte aqui.</p>
+        </div>
+
+        <form th:if="${!situacao.temPedidoEmAndamento and situacao.temSenha}"
+              th:action="@{/conta/excluir}" th:object="${exclusaoContaForm}" method="post">
+            <div class="campo">
+                <label for="senhaAtual">Senha atual</label>
+                <input type="password"
+                       id="senhaAtual"
+                       th:field="*{senhaAtual}"
+                       autocomplete="current-password"
+                       required
+                       th:aria-invalid="${#fields.hasErrors('senhaAtual')} ? 'true'"
+                       th:aria-describedby="${#fields.hasErrors('senhaAtual')} ? 'senhaAtual-erro'">
+                <p class="campo__erro" role="alert" id="senhaAtual-erro" th:if="${#fields.hasErrors('senhaAtual')}" th:errors="*{senhaAtual}"></p>
+            </div>
+            <div class="campo">
+                <label for="confirmacao">Digite EXCLUIR para confirmar</label>
+                <p class="campo__ajuda" id="confirmacao-ajuda">Em letras maiúsculas.</p>
+                <input type="text"
+                       id="confirmacao"
+                       th:field="*{confirmacao}"
+                       autocomplete="off"
+                       required
+                       th:aria-invalid="${#fields.hasErrors('confirmacao')} ? 'true'"
+                       th:aria-describedby="${#fields.hasErrors('confirmacao')} ? 'confirmacao-ajuda confirmacao-erro' : 'confirmacao-ajuda'">
+                <p class="campo__erro" role="alert" id="confirmacao-erro" th:if="${#fields.hasErrors('confirmacao')}" th:errors="*{confirmacao}"></p>
+            </div>
+
+            <button type="submit" class="btn-primario">Excluir minha conta</button>
+            <a th:href="@{/conta}">Cancelar</a>
+        </form>
+    </section>
+
+</div>
+</body>
+</html>

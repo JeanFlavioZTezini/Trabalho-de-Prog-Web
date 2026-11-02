@@ -3,6 +3,7 @@ package com.farmacia.farmaciaonline.controller;
 import java.time.LocalDate;
 import java.util.Map;
 
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -39,6 +40,9 @@ public class CadastroController {
     private static final Map<String, String> DESTINOS = Map.of("carrinho", "/carrinho", "checkout", "/checkout");
 
     private final CadastroService service;
+
+    @Value("${app.termos.versao:1.0}")
+    private String termosVersao;
 
     public CadastroController(CadastroService service) {
         this.service = service;
@@ -93,6 +97,7 @@ public class CadastroController {
         model.addAttribute("hoje", LocalDate.now());
         model.addAttribute("retorno", destinoDoRetorno(retorno) == null ? null : retorno);
         model.addAttribute("duplicidade", duplicidade);
+        model.addAttribute("termosVersao", termosVersao);
         return "cadastro/form";
     }
 }

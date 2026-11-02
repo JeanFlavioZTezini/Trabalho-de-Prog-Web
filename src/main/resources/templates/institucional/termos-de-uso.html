@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Termos de Uso | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+    <h1>Termos de Uso</h1>
+    <p class="pagina-texto__intro">
+        Versão <strong th:text="${termosVersao}">1.0</strong>.
+        Este é um texto demonstrativo de um projeto acadêmico, não é um contrato comercial nem substitui orientação jurídica.
+    </p>
+
+    <section aria-labelledby="titulo-projeto">
+        <h2 id="titulo-projeto">Sobre o Farma++</h2>
+        <p>
+            O Farma++ é uma aplicação fictícia criada para fins acadêmicos. O catálogo, os preços, o estoque,
+            as lojas e os pedidos são dados de demonstração. Não há venda ou entrega real de medicamentos.
+        </p>
+    </section>
+
+    <section aria-labelledby="titulo-acesso">
+        <h2 id="titulo-acesso">Uso da aplicação</h2>
+        <p>
+            A pessoa usuária pode navegar pelo catálogo, criar uma conta de teste e experimentar as telas disponíveis.
+            Não use dados pessoais reais, dados de pagamento verdadeiros ou informações de saúde identificáveis.
+        </p>
+        <p>
+            Credenciais de demonstração, quando fornecidas pela equipe do trabalho, devem ser usadas apenas no ambiente
+            acadêmico. A conta e os dados de teste podem ser removidos durante a manutenção ou reinicialização do ambiente.
+        </p>
+    </section>
+
+    <section aria-labelledby="titulo-produtos">
+        <h2 id="titulo-produtos">Produtos e informações de saúde</h2>
+        <p>
+            Descrições, indicações, disponibilidade e preços são exemplos para demonstrar funcionalidades. Não constituem
+            aconselhamento médico ou farmacêutico, não servem para diagnóstico e não substituem a bula nem a orientação
+            de um profissional de saúde.
+        </p>
+    </section>
+
+    <section aria-labelledby="titulo-pedidos">
+        <h2 id="titulo-pedidos">Carrinho, pedidos e pagamentos</h2>
+        <p>
+            O carrinho e os pedidos servem para demonstrar o percurso da aplicação. Nenhum pedido feito aqui resulta
+            em compra, cobrança, reserva ou entrega real.
+        </p>
+    </section>
+
+    <section aria-labelledby="titulo-versao">
+        <h2 id="titulo-versao">Versão aceita no cadastro</h2>
+        <p>
+            Ao criar uma conta, a aplicação registra a versão destes Termos de Uso e da Política de Privacidade exibida
+            no formulário. A versão atual é <strong th:text="${termosVersao}">1.0</strong>.
+        </p>
+        <p><a th:href="@{/institucional/privacidade}">Ler a Política de Privacidade</a></p>
+    </section>
+
+    <p><a th:href="@{/cadastro}">Voltar ao cadastro</a></p>
+</div>
+</body>
+</html>

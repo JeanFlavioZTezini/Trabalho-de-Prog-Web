@@ -74,7 +74,7 @@ class AdminPedidoSegurancaTest {
 
     @Test
     void adminRenderizaListaEDetalhe() throws Exception {
-        when(service.listar(isNull(), isNull(), any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
+        when(service.listar(any(AdminPedidosService.FiltroPedidos.class), any(Pageable.class))).thenReturn(new PageImpl<>(List.of()));
         when(service.detalhar(7L)).thenReturn(new AdminPedidosService.Detalhe(7L, 1L, Instant.parse("2026-01-01T12:00:00Z"),
                 "01/01/2026 às 09:00", StatusPedido.AGUARDANDO_PAGAMENTO, TipoEntrega.ENTREGA, "Cliente Teste",
                 "cliente@exemplo.com", List.of(), List.of(), List.of(), BigDecimal.ZERO, BigDecimal.ZERO,

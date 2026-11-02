@@ -45,6 +45,7 @@ import com.farmacia.farmaciaonline.model.enums.TipoEntrega;
 import com.farmacia.farmaciaonline.repository.CategoriaRepository;
 import com.farmacia.farmaciaonline.security.UsuarioAutenticado;
 import com.farmacia.farmaciaonline.service.PedidosClienteService;
+import com.farmacia.farmaciaonline.service.PedidosClienteService.FiltroMeusPedidos;
 import com.farmacia.farmaciaonline.service.PedidosClienteService.DetalhePedido;
 import com.farmacia.farmaciaonline.service.PedidosClienteService.LinhaItem;
 import com.farmacia.farmaciaonline.service.PedidosClienteService.LinhaPagamento;
@@ -152,13 +153,13 @@ class PedidosClienteControllerTest {
     @Test
     @DisplayName("o id usado na consulta é o da sessão, nunca um vindo da URL ou do formulário")
     void usaOIdDaSessao() throws Exception {
-        when(service.listar(CLIENTE, 0)).thenReturn(new PaginaDePedidos(List.of(), 0, 0, 0));
+        when(service.listar(CLIENTE, FiltroMeusPedidos.VAZIO, 0)).thenReturn(new PaginaDePedidos(List.of(), 0, 0, 0));
 
         // Quem tenta passar outro dono por parâmetro é ignorado: o serviço só é chamado com o id da sessão.
         html(get("/pedidos").param("usuarioId", "99").param("usuario", "99").with(cliente()));
 
-        org.mockito.Mockito.verify(service).listar(CLIENTE, 0);
-        org.mockito.Mockito.verify(service, org.mockito.Mockito.never()).listar(org.mockito.ArgumentMatchers.eq(99L), anyInt());
+        org.mockito.Mockito.verify(service).listar(CLIENTE, FiltroMeusPedidos.VAZIO, 0);
+        org.mockito.Mockito.verify(service, org.mockito.Mockito.never()).listar(org.mockito.ArgumentMatchers.eq(99L), org.mockito.ArgumentMatchers.any(), anyInt());
     }
 
     // ---------- Lista ----------
@@ -166,7 +167,7 @@ class PedidosClienteControllerTest {
     @Test
     @DisplayName("lista mostra número, data, itens, total e situação, com link para o detalhe")
     void listaMostraOsPedidos() throws Exception {
-        when(service.listar(CLIENTE, 0)).thenReturn(new PaginaDePedidos(
+        when(service.listar(CLIENTE, FiltroMeusPedidos.VAZIO, 0)).thenReturn(new PaginaDePedidos(
                 List.of(resumo(7, "61.98", 2, StatusPedido.PRONTO_PARA_RETIRADA),
                         resumo(3, "10.00", 1, StatusPedido.CANCELADO)), 0, 1, 2));
 
@@ -184,7 +185,7 @@ class PedidosClienteControllerTest {
     @Test
     @DisplayName("sem pedidos: mensagem e link para o catálogo")
     void listaVazia() throws Exception {
-        when(service.listar(CLIENTE, 0)).thenReturn(new PaginaDePedidos(List.of(), 0, 0, 0));
+        when(service.listar(CLIENTE, FiltroMeusPedidos.VAZIO, 0)).thenReturn(new PaginaDePedidos(List.of(), 0, 0, 0));
 
         String html = html(get("/pedidos").with(cliente()));
 
@@ -195,7 +196,7 @@ class PedidosClienteControllerTest {
     @Test
     @DisplayName("mais de uma página: navegação com anterior e próxima")
     void paginacao() throws Exception {
-        when(service.listar(CLIENTE, 1)).thenReturn(new PaginaDePedidos(
+        when(service.listar(CLIENTE, FiltroMeusPedidos.VAZIO, 1)).thenReturn(new PaginaDePedidos(
                 List.of(resumo(2, "10.00", 1, StatusPedido.ENTREGUE)), 1, 3, 21));
 
         String html = html(get("/pedidos").param("pagina", "1").with(cliente()));
@@ -207,7 +208,7 @@ class PedidosClienteControllerTest {
     @Test
     @DisplayName("falha ao carregar a lista: aviso, opção de tentar de novo e status 503")
     void falhaNaLista() throws Exception {
-        when(service.listar(CLIENTE, 0)).thenThrow(new DataAccessResourceFailureException("banco fora"));
+        when(service.listar(CLIENTE, FiltroMeusPedidos.VAZIO, 0)).thenThrow(new DataAccessResourceFailureException("banco fora"));
 
         String html = mvc.perform(get("/pedidos").with(cliente())).andExpect(status().isServiceUnavailable())
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
@@ -343,8 +344,8 @@ class PedidosClienteControllerTest {
     @Test
     @DisplayName("o cabeçalho do cliente tem o link Meus pedidos; o do administrador não")
     void linkNoCabecalho() throws Exception {
-        when(service.listar(CLIENTE, 0)).thenReturn(new PaginaDePedidos(List.of(), 0, 0, 0));
-        when(service.listar(1L, 0)).thenReturn(new PaginaDePedidos(List.of(), 0, 0, 0));
+        when(service.listar(CLIENTE, FiltroMeusPedidos.VAZIO, 0)).thenReturn(new PaginaDePedidos(List.of(), 0, 0, 0));
+        when(service.listar(1L, FiltroMeusPedidos.VAZIO, 0)).thenReturn(new PaginaDePedidos(List.of(), 0, 0, 0));
 
         assertThat(html(get("/pedidos").with(cliente()))).contains(">Meus pedidos</a>").doesNotContain("Painel admin");
         assertThat(html(get("/pedidos").with(como(1L, Perfil.ADMIN)))).doesNotContain("href=\"/pedidos\">Meus pedidos");

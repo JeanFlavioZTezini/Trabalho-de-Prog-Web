@@ -105,7 +105,7 @@ class AdminClienteSegurancaTest {
 
     @Test
     void adminAbreListaEDetalhe() throws Exception {
-        when(service.listar(any(), any(), any(), any(), any())).thenReturn(new PageImpl<>(List.of()));
+        when(service.listar(any(), any(), any(), any(), any(), any())).thenReturn(new PageImpl<>(List.of()));
         when(service.detalhar(eq(1L), any(), eq(7L))).thenReturn(detalhe());
 
         mvc.perform(get("/admin/clientes").with(admin())).andExpect(status().isOk());
@@ -124,11 +124,11 @@ class AdminClienteSegurancaTest {
     @Test
     @DisplayName("status desconhecido no filtro vira 'todos'")
     void statusInvalidoViraTodos() throws Exception {
-        when(service.listar(any(), any(), any(), any(), any())).thenReturn(new PageImpl<>(List.of()));
+        when(service.listar(any(), any(), any(), any(), any(), any())).thenReturn(new PageImpl<>(List.of()));
 
         mvc.perform(get("/admin/clientes").param("status", "QUALQUER").with(admin())).andExpect(status().isOk());
 
-        verify(service).listar(eq(1L), any(), any(), eq(null), any());
+        verify(service).listar(eq(1L), any(), any(), eq(null), any(), any());
         verify(service, never()).detalhar(any(), any(), any());
     }
 }

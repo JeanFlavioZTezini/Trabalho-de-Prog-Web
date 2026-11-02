@@ -86,7 +86,7 @@ class AdminClienteTelaTest {
     @Test
     @DisplayName("lista: um único h1, CPF mascarado, tabela em região rolável e links de detalhe")
     void listaComClientes() throws Exception {
-        when(service.listar(any(), any(), any(), any(), any()))
+        when(service.listar(any(), any(), any(), any(), any(), any()))
                 .thenReturn(new PageImpl<>(List.of(resumo(7, "Maria da Silva")), PageRequest.of(0, 20), 1));
 
         String html = html("/admin/clientes");
@@ -104,7 +104,7 @@ class AdminClienteTelaTest {
     @Test
     @DisplayName("lista vazia mostra 'Nenhum cliente encontrado.' e nenhuma tabela")
     void listaVazia() throws Exception {
-        when(service.listar(any(), any(), any(), any(), any())).thenReturn(new PageImpl<>(List.of()));
+        when(service.listar(any(), any(), any(), any(), any(), any())).thenReturn(new PageImpl<>(List.of()));
 
         String html = html("/admin/clientes");
 
@@ -115,7 +115,7 @@ class AdminClienteTelaTest {
     @Test
     @DisplayName("lista: paginação com Anterior, página X de Y e Próxima, mantendo busca e status")
     void paginacaoMantemFiltros() throws Exception {
-        when(service.listar(any(), any(), any(), any(), any())).thenReturn(
+        when(service.listar(any(), any(), any(), any(), any(), any())).thenReturn(
                 new PageImpl<>(List.of(resumo(7, "Maria")), PageRequest.of(1, 20), 61));
 
         String html = mvc.perform(get("/admin/clientes").param("q", "maria").param("status", "ATIVA").with(admin()))
@@ -163,7 +163,7 @@ class AdminClienteTelaTest {
     @Test
     @DisplayName("cabeçalho do administrador logado tem o link Painel admin")
     void cabecalhoTemLinkDoPainel() throws Exception {
-        when(service.listar(any(), any(), any(), any(), any())).thenReturn(new PageImpl<>(List.of()));
+        when(service.listar(any(), any(), any(), any(), any(), any())).thenReturn(new PageImpl<>(List.of()));
 
         assertThat(html("/admin/clientes")).contains("<a href=\"/admin\">Painel admin</a>");
     }

@@ -75,8 +75,11 @@ Essas contas existem só para desenvolvimento e demonstração.
 
 - **Recomeçar do zero:** ver [Como zerar o banco para a demonstração](#como-zerar-o-banco-para-a-demonstração).
   Quem aplicou uma versão antiga do `V2` localmente precisa disso.
+- **Atualizar um banco que já existe:** basta subir a aplicação. O Flyway aplica só as migrações novas e mantém os
+  dados (`MigracaoUpgradeIntegracaoTest` prova isso partindo de um banco na `V2`). Apagar o banco não é a solução para
+  uma migração em conflito: renumere a migração da branch antes do merge.
 - **Não edite uma migração que já está na `main`:** o Flyway guarda o checksum e a aplicação deixa de
-  subir em quem já a aplicou. Para mudar dados, crie uma migração nova com o próximo número livre (hoje, `V8`).
+  subir em quem já a aplicou. Para mudar dados, crie uma migração nova com o próximo número livre (hoje, `V10`).
 - **Numeração das migrações:** duas branches com o mesmo número quebram o Flyway no merge. Antes de abrir PR com
   migração, confira a `main` e as branches abertas e avise o grupo do número escolhido.
 
@@ -88,7 +91,9 @@ Essas contas existem só para desenvolvimento e demonstração.
   | `V4` | checkout: `pedido.versao`, chave de idempotência, cópia da loja (`retirada_*`), índices de pagamento | F-14 |
   | `V5` | `historico_status_pedido.status_anterior` | F-15 |
   | `V6` | conferência da receita e estorno pendente no pedido | F-17 |
-  | `V7` | fotos dos produtos do seed, no lugar do placeholder | |
+  | `V7` | fotos dos produtos do seed, no lugar do placeholder | F-08 |
+  | `V8` | extensões `unaccent` e `pg_trgm` da busca tolerante | F-22 |
+  | `V9` | `endereco.principal` (endereço principal) | F-25 |
 - **Textos com várias linhas no seed:** use `E'linha 1\nlinha 2'`. Quebrar a linha dentro das aspas
   grava um fim de linha diferente no Windows e no Linux.
 - **Imagens de produto:** ficam em `src/main/resources/static/images/produtos/`, em WebP de até 800 px,
@@ -110,6 +115,65 @@ Depois, suba a aplicação: o Flyway recria as tabelas (`V1`) e os dados de demo
 
 O `-v` apaga o volume: cadastros, carrinhos e pedidos feitos nos testes somem. Sem o `-v`, o banco só é desligado
 e os dados continuam lá.
+
+## Entrega e percurso completo (F-19)
+
+**Versão estável para a apresentação:** a tag `v1.0-entrega` (a `main` com todas as issues, F-01 a F-25). A branch
+`apresentacao-sem-opcionais` guarda a versão anterior às opcionais (F-20 a F-25), caso o grupo prefira apresentar sem elas.
+
+**Reproduzir do zero** (Docker ligado):
+```bash
+docker compose up -d
+.\mvnw.cmd -B verify            # Windows; no Linux/Mac: ./mvnw -B verify
+.\mvnw.cmd spring-boot:run      # http://localhost:8080
+```
+O `verify` sobe um PostgreSQL próprio (Testcontainers) e não toca no banco do `docker compose`. Resultado esperado: **925
+testes, 0 falhas**. O CI roda o mesmo comando em todo PR e em todo push na `main`.
+
+**Perfil `demo`** (ligado no `application.properties`): libera `/caixa-demo` (e-mails e SMS enviados), os botões
+"Simular pagamento aprovado/expiração" do pedido, o provedor de login social simulado e o aviso de projeto acadêmico no
+rodapé. Sem ele, essas telas respondem 404 e os botões somem.
+
+**Nada aqui é integração real.** Cada serviço externo é uma interface com um adaptador de demonstração:
+
+| Serviço | Adaptador | Como se comporta |
+|---|---|---|
+| E-mail e SMS (códigos, resumo do pedido) | `mensagem/demo/DemoEnvioAdapter` | guarda as últimas 50 mensagens na memória; ver em `/caixa-demo` |
+| CEP | `cep/demo/DemoCepAdapter` | endereços fixos; `99999-999` simula o serviço fora do ar |
+| Pagamento (cartão, Pix, boleto) | `gateway/demo/DemoGatewayAdapter` | `4111 1111 1111 1111` aprova, `4111 1111 1111 1210` recusa; Pix e boleto ficam pendentes até o botão demo |
+| Login com Google/Facebook | `social/demo/DemoProvedorIdentidade` | tela "Provedor simulado"; sem OAuth real |
+| Frete | tabela demo | entrega só para MS (CEP e UF precisam combinar) |
+
+**Cenários de aceite da entrega e onde são testados** (PostgreSQL real):
+
+| Cenário | Testes |
+|---|---|
+| 1. Visitante busca, escolhe apresentação e quantidade, adiciona; o login mescla o carrinho | `PercursoCompletoIntegracaoTest.visitanteAteEntrega`, `MesclagemCarrinhoNoLoginIntegracaoTest`, `DetalheProdutoIntegracaoTest`, `CatalogoIntegracaoTest` |
+| 2. Cadastro, código no canal demo, confirmação, login e compra | `PercursoCompletoIntegracaoTest.cadastroAteCompra`, `ConfirmacaoContaIntegracaoTest` |
+| 3. Entrega com endereço próprio, frete, pagamento aprovado, pedido e estoque | `PercursoCompletoIntegracaoTest.visitanteAteEntrega`, `CheckoutFluxoWebIntegracaoTest.percursoPix`, `CheckoutServiceIntegracaoTest` |
+| 4. Controlado: retirada obrigatória; admin separa, sinaliza pronto e só entrega após a conferência | `PercursoCompletoIntegracaoTest.controladoAteEntregue`, `AdminPedidosServiceTest`, `EstadoPedidoAdministrativoTest` |
+| 5. Pix/boleto expira e libera o estoque uma vez; recusa permite retomar | `PagamentoPedidoIntegracaoTest`, `CheckoutFluxoWebIntegracaoTest.expiracaoDemo` (boleto) e `.dadosDoCartaoNaoVazam` (recusa e nova tentativa) |
+| 6. Duas compras da última unidade; duplo clique não duplica | `CheckoutServiceIntegracaoTest` ("duas compras da última unidade", "duplo clique de verdade"), `PagamentoPedidoIntegracaoTest` |
+| 7. Admin mexe em produto/categoria, consulta cliente com auditoria e move o pedido; o cliente vê o mesmo status | `PercursoCompletoIntegracaoTest.controladoAteEntregue`, `ProdutoServiceIntegracaoTest`, `CategoriaServiceIntegracaoTest`, `ClienteAdminServiceIntegracaoTest` |
+| 8. Cliente A no endereço/pedido de B (404); cliente em POST administrativo (403) | `AcessoEntreContasIntegracaoTest`, `PedidosClienteIntegracaoTest`, `EnderecoServiceIntegracaoTest`, `CheckoutFluxoWebIntegracaoTest.pedidoAlheio` |
+| 9. Recuperação invalida código e sessões; logout mantém dados e fecha a área protegida | `RecuperacaoSenhaIntegracaoTest`, `AcessoEntreContasIntegracaoTest.logoutPreservaDadosDaConta`, `LoginProtecaoIntegracaoTest` |
+
+Upgrade do banco: `MigracaoUpgradeIntegracaoTest` parte de um banco na `V2` (seed + endereço e pedido) e aplica todas as
+migrações sem perder dados.
+
+**O que não foi verificado** (fica declarado, não implícito):
+- Lighthouse e axe não foram rodados como parte do CI; a acessibilidade está coberta por testes de HTML (um `h1`,
+  rótulos, erro ligado ao campo) e pelo `ContrasteTokensTest`.
+- Os serviços externos são simulados (tabela acima); não há publicação externa do site.
+
+**Roteiro curto da demonstração (5 a 8 min)**, com o seed (senha `Farma@123`):
+1. Visitante busca `dipirona`, abre o produto, escolhe a apresentação e adiciona ao carrinho.
+2. "Criar conta" com um CPF fora do seed; pega o código em `/caixa-demo`; confirma e entra: o carrinho veio junto.
+3. Checkout com entrega (CEP `79002-000`), cartão `4111 1111 1111 1111`: pedido aprovado e resumo em `/caixa-demo`.
+4. Como `admin@farma.com`: abre o pedido, passa para "Em separação" e depois "Enviado"; o cliente vê o mesmo status
+   em "Meus pedidos".
+5. Admin: edita o estoque de um produto e consulta um cliente (CPF mascarado, auditoria gravada).
+6. Cliente tenta abrir `/admin`: 403. Sai da conta e mostra que "Meus pedidos" pede login de novo.
 
 ## Segurança e papéis
 
@@ -150,8 +214,8 @@ Rota de administração: coloque sob `/admin/**`.
 sistema é uma loja virtual: o papel `CLIENTE` também mexe no **próprio** carrinho e nos **próprios** pedidos
 (sem isso não existiria compra). O que é exclusivo do `ADMIN` é todo CRUD de catálogo e a moderação.
 
-Na Fase 2 vieram a recuperação de senha (F-06), o bloqueio automático após várias senhas erradas (F-18) e o login social
-simulado (F-20).
+Depois da fundação vieram a recuperação de senha (F-06), o bloqueio automático após várias senhas erradas (F-18), o login
+social simulado (F-20) e a exclusão da própria conta (F-24).
 
 ## Home e menu de categorias
 
@@ -184,7 +248,7 @@ descartável, aplica as migrações do Flyway e roda o `validate` do Hibernate. 
 rodam contra um Postgres de verdade, **sem depender do banco do `docker compose`** (pode estar
 desligado) e sem tocar nos seus dados. Na primeira vez o Docker baixa a imagem `postgres:16`.
 
-- `FarmaciaOnlineApplicationTests.contextLoads` é o teste mais importante da Fase 1: falha se uma
+- `FarmaciaOnlineApplicationTests.contextLoads` é a primeira barreira: falha se uma
   entidade JPA não bater com as tabelas criadas pelas migrações.
 - Segurança (F1-09): `SegurancaTest`, `LoginPageTest`, `UsuarioDetailsServiceTest` e `LoginHandlersTest` não
   precisam de Docker. `LoginIntegracaoTest` faz o login de verdade contra o seed e precisa.
@@ -329,9 +393,10 @@ com os acréscimos da `V4` (checkout) e da `V5` (`status_anterior`).
 - `HistoricoStatusPedido.statusAnterior` é o status de onde o pedido saiu (UC17). É nulo no registro de criação do pedido e
   nos eventos gravados antes da `V5`, que não guardaram a origem: a migration não a reconstitui. Quem muda o status lê o
   anterior **antes** de chamar `setStatus` e o passa ao registrar o histórico (`EstadoPedidoService#registrarHistorico`);
-  a F-17 deve seguir o mesmo caminho.
+  a administração de pedidos (F-17) segue o mesmo caminho.
 - `PedidoRepository#findByIdAndUsuarioId` é o jeito de buscar um pedido para o cliente: de outro usuário, volta vazio (UC06).
-- `PRONTO_PARA_RETIRADA` é o status do pedido de retirada em loja. Quem decide as transições entre status é o service (Fase 2).
+- `PRONTO_PARA_RETIRADA` é o status do pedido de retirada em loja. Quem decide as transições entre status é o service
+  (`EstadoPedidoService` e `AdminPedidosService`, F-14 e F-17).
 
 ## Endereços do cliente (F-11 / UC16)
 
@@ -689,7 +754,7 @@ Fecha o UC07: o cliente logado troca o e-mail ou o celular confirmando o **novo*
   finalidade errada, tentativas, expirado, reenvio, disputa de e-mail, conta pendente), `ContaContatoControllerTest`
   (camada web: login, CSRF, 404, HTML, campos forjados ignorados, erro por campo, efeitos na sessão) e
   `ContaContatoIntegracaoTest` (fluxo completo com login no e-mail novo). `ContaControllerTest` e `ContaIntegracaoTest` foram
-  ajustados: a tela da conta agora mostra os links de troca em vez do aviso de "ainda não disponível".
+  ajustados: a tela da conta mostra os links de troca.
 
 
 ## Login social simulado (F-20 / UC10-A1/A2)
@@ -1012,18 +1077,18 @@ Uma linha por módulo; **atualize esta tabela no seu PR** (o template lembra). E
 
 | Módulo | Issue | Integrante | PR |
 |---|---|---|---|
-| Banco: schema (`V1`), Docker e Flyway | F1-01 | _preencher_ | |
-| Usuários: entidades e repositories | F1-02 (#2) | _preencher_ | |
-| Catálogo: entidades e repositories | F1-03 (#7) | _preencher_ | |
-| Compra: carrinho, endereço, cartão e loja | F1-04 (#13) | Kauê (@KaueAlves09) | |
-| Pedido, pagamento, histórico e auditoria | F1-05 (#16) | Kauê (@KaueAlves09) | |
-| Seed de demonstração (`V2`) | F1-06 (#8) | Kauê (@KaueAlves09) e _preencher_ (autor do `V2` original) | |
-| Layout-base, cabeçalho, rodapé e acessibilidade da interface | F1-07 | Kauê (@KaueAlves09) | |
-| Documento de acessibilidade | F1-08 | _preencher_ | |
-| Login e papéis (Spring Security) | F1-09 | _preencher_ | |
-| Docs e fluxo: template de PR, README e proteção da `main` | F1-10 (#4) | Kauê (@KaueAlves09) | |
-| Testes com Testcontainers e CI | F1-11 (#9) | Kauê (@KaueAlves09) | |
-| Home e menu de categorias pelo banco | F1-12 | _preencher_ | |
+| Banco: schema (`V1`), Docker e Flyway | F1-01 | Cássio (@cassioqm) | #11 |
+| Usuários: entidades e repositories | F1-02 (#2) | João (@Joaomarceloap) | #12 |
+| Catálogo: entidades e repositories | F1-03 (#7) | Jean (@JeanFlavioZTezini) | #17 |
+| Compra: carrinho, endereço, cartão e loja | F1-04 (#13) | Kauê (@KaueAlves09) | #18, #44 |
+| Pedido, pagamento, histórico e auditoria | F1-05 (#16) | Kauê (@KaueAlves09) | #19, #44 |
+| Seed de demonstração (`V2`) | F1-06 (#8) | Kauê (@KaueAlves09) e _preencher_ (autor do `V2` original) | #15 |
+| Layout-base, cabeçalho, rodapé e acessibilidade da interface | F1-07 | Kauê (@KaueAlves09) | #5 |
+| Documento de acessibilidade | F1-08 | Nakao (@FernandoNakao) | #10 |
+| Login e papéis (Spring Security) | F1-09 | Jean (@JeanFlavioZTezini) | #20 |
+| Docs e fluxo: template de PR, README e proteção da `main` | F1-10 (#4) | Kauê (@KaueAlves09) | #23 |
+| Testes com Testcontainers e CI | F1-11 (#9) | Kauê (@KaueAlves09) | #14 |
+| Home e menu de categorias pelo banco | F1-12 | Cássio (@cassioqm), ajustes por Kauê (@KaueAlves09) | #22, #43 |
 
 ### Onda final: entrega e estabilização
 
@@ -1032,28 +1097,28 @@ Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: a
 
 | Módulo | Issue | Integrante | PR |
 |---|---|---|---|
-| Catálogo público: busca, categoria, filtros e paginação (UC01) | F-01 | Cássio (@cassioqm) | |
-| Detalhes do produto e apresentação comprável (UC02) | F-02 | Cássio (@cassioqm) | |
-| Navegação integrada, páginas de termos e revisão de interface (UC03/UC15) | F-03 (#42) | Cássio (@cassioqm) | |
-| Cadastro com validação e conta pendente (UC03) | F-04 | Kauê (@KaueAlves09) | |
-| Serviço de códigos e confirmação de conta com envio simulado (UC04) | F-05 | Kauê (@KaueAlves09) | |
-| Recuperação de senha sem login e revogação de sessões (UC14, UC10-A4) | F-06 | Kauê (@KaueAlves09) | |
-| CRUD de categorias hierárquicas (UC13) | F-07 | Pessoa C: _preencher_ | |
-| CRUD de produtos, apresentações, estoque e imagens (UC12) | F-08 (#31) | Nakao (@FernandoNakao) | |
-| Consulta administrativa de clientes com auditoria (UC11) | F-09 (#32) | Kauê (@KaueAlves09), repassada da trilha C | |
-| Carrinho de visitante e cliente, com mesclagem no login (UC05) | F-10 | Pessoa D: _preencher_ | |
-| CRUD de endereços e seleção no checkout (UC16) | F-11 | Pessoa D: _preencher_ | |
-| Edição de dados pessoais e senha autenticada (UC07) | F-12 (#35) | Aieser (pessoa D), integração por Kauê (@KaueAlves09) | |
-| Gateway de pagamento simulado e retorno idempotente (UC08/UC09) | F-13 | Pessoa E: _preencher_ | |
-| Checkout transacional, entrega ou retirada, estoque e expiração (UC08/UC09) | F-14 (#37) | @Joaomarceloap | |
-| Contratos e modelos de pedidos e migrations de compatibilidade (UC06/UC08/UC14/UC17) | F-15 | Pessoa F: _preencher_, com Kauê (contatos confirmados) e a pessoa E | |
-| Histórico e detalhe de pedidos do cliente (UC06) | F-16 | Pessoa F: _preencher_ | |
-| Administração de pedidos: transições, receita e histórico (UC17) | F-17 | Pessoa F: _preencher_ | |
+| Catálogo público: busca, categoria, filtros e paginação (UC01) | F-01 | Cássio (@cassioqm) | #55 |
+| Detalhes do produto e apresentação comprável (UC02) | F-02 | Cássio (@cassioqm) | #58 |
+| Navegação integrada, páginas de termos e revisão de interface (UC03/UC15) | F-03 (#42) | Cássio (@cassioqm) | #66 |
+| Cadastro com validação e conta pendente (UC03) | F-04 | Kauê (@KaueAlves09) | #50 |
+| Serviço de códigos e confirmação de conta com envio simulado (UC04) | F-05 | Kauê (@KaueAlves09) | #51 |
+| Recuperação de senha sem login e revogação de sessões (UC14, UC10-A4) | F-06 | Kauê (@KaueAlves09) | #53 |
+| CRUD de categorias hierárquicas (UC13) | F-07 | Nakao (@FernandoNakao) | #45 |
+| CRUD de produtos, apresentações, estoque e imagens (UC12) | F-08 (#31) | Nakao (@FernandoNakao), testes e revisão visual por Kauê (@KaueAlves09) | #47, #62, #63 |
+| Consulta administrativa de clientes com auditoria (UC11) | F-09 (#32) | Kauê (@KaueAlves09), repassada da trilha C | #60, #65 |
+| Carrinho de visitante e cliente, com mesclagem no login (UC05) | F-10 | Aieser, integração por Kauê (@KaueAlves09) | #56 |
+| CRUD de endereços e seleção no checkout (UC16) | F-11 | Aieser, integração por Kauê (@KaueAlves09) | #49 |
+| Edição de dados pessoais e senha autenticada (UC07) | F-12 (#35) | Aieser (pessoa D), integração por Kauê (@KaueAlves09) | #57 |
+| Gateway de pagamento simulado e retorno idempotente (UC08/UC09) | F-13 | João (@Joaomarceloap) | #46 |
+| Checkout transacional, entrega ou retirada, estoque e expiração (UC08/UC09) | F-14 (#37) | João (@Joaomarceloap) | #52 |
+| Contratos e modelos de pedidos e migrations de compatibilidade (UC06/UC08/UC14/UC17) | F-15 | Jean (@JeanFlavioZTezini), com Kauê (contatos confirmados) e João | #59 |
+| Histórico e detalhe de pedidos do cliente (UC06) | F-16 | Jean (@JeanFlavioZTezini) | #61 |
+| Administração de pedidos: transições, receita e histórico (UC17) | F-17 | Jean (@JeanFlavioZTezini) | #64 |
 | Proteção do login e logout validado nos novos fluxos (UC10/UC15) | F-18 | Jean (@JeanFlavioZTezini), correções por Kauê (@KaueAlves09) | #68 |
-| Integração, teste do percurso completo e entrega reproduzível | F-19 | Todos | |
+| Integração, teste do percurso completo e entrega reproduzível | F-19 (#26) | Todos; integração por Kauê (@KaueAlves09) | |
 | Login social demonstrável com vínculo seguro de CPF (UC10) | F-20 | Kauê (@KaueAlves09) | #77 |
 | Alteração de e-mail/celular com confirmação do novo contato (UC07) | F-21 | Kauê (@KaueAlves09) | #67 |
 | Correção de busca e refinamentos do catálogo (UC01) | F-22 | Kauê (@KaueAlves09) | #75 |
 | Filtros completos de pedidos/clientes e exportação CSV (UC06/UC11) | F-23 | Kauê (@KaueAlves09) | #75 |
-| Excluir a própria conta preservando histórico necessário (regra I14) | F-24 | Kauê (@KaueAlves09) | |
+| Excluir a própria conta preservando histórico necessário (regra I14) | F-24 | Kauê (@KaueAlves09) | #78 |
 | Facilidades explicitamente opcionais | F-25 | Kauê (@KaueAlves09) | #76 |

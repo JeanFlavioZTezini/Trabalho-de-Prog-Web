@@ -35,7 +35,10 @@
         </thead>
         <tbody>
             <tr th:each="e : ${enderecos}">
-                <td th:text="${e.destinatario}">Destinatário</td>
+                <td>
+                    <span th:text="${e.destinatario}">Destinatário</span>
+                    <span class="selo selo--principal" th:if="${e.principal}">Principal</span>
+                </td>
                 <td>
                     <span th:text="|${e.logradouro}, ${e.numero}${e.complemento != null ? ' - ' + e.complemento : ''}|">Rua, 1</span><br>
                     <span th:text="|${e.bairro} - ${e.cidade}/${e.uf}|">Bairro - Cidade/UF</span>
@@ -47,6 +50,13 @@
                           method="post">
                         <button type="submit" class="btn-primario">
                             Usar este endereço<span class="visually-hidden" th:text="| (${e.destinatario}, ${e.logradouro})|"></span>
+                        </button>
+                    </form>
+                    <form th:unless="${e.principal}" class="form-inline"
+                          th:action="${checkout} ? @{/enderecos/{id}/principal(id=${e.id},retorno='checkout')} : @{/enderecos/{id}/principal(id=${e.id})}"
+                          method="post">
+                        <button type="submit" class="btn-link">
+                            Tornar principal<span class="visually-hidden" th:text="| (${e.destinatario}, ${e.logradouro})|"></span>
                         </button>
                     </form>
                     <a th:href="${checkout} ? @{/enderecos/{id}/editar(id=${e.id},retorno='checkout')} : @{/enderecos/{id}/editar(id=${e.id})}">

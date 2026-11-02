@@ -28,7 +28,20 @@ public class EnderecoService {
     @Transactional(readOnly = true)
     public List<Endereco> listar(Long usuarioId) {
         exigirContaAtiva(usuarioId);
-        return repository.findByUsuarioIdOrderByCriadoEmDesc(usuarioId);
+        return repository.findByUsuarioIdOrderByPrincipalDescCriadoEmDescIdDesc(usuarioId);
+    }
+
+    /** F-25: marca o endereço como principal (e só ele). Endereço de outra pessoa: 404. */
+    public void definirPrincipal(Long usuarioId, Long id) {
+        Endereco endereco = buscar(usuarioId, id);
+        if (endereco.isPrincipal()) {
+            return;
+        }
+        repository.desmarcarPrincipal(usuarioId);
+        Endereco atual = repository.findByIdAndUsuarioId(id, usuarioId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
+        atual.setPrincipal(true);
+        repository.saveAndFlush(atual);
     }
 
     @Transactional(readOnly = true)
@@ -60,6 +73,7 @@ public class EnderecoService {
         if (id == null) {
             endereco = new Endereco();
             endereco.setUsuario(usuario);
+            endereco.setPrincipal(!repository.existsByUsuarioId(usuarioId));   // o primeiro endereço já nasce principal
         } else {
             endereco = repository.findByIdAndUsuarioId(id, usuarioId)
                     .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
@@ -83,8 +97,16 @@ public class EnderecoService {
 
     public void excluir(Long usuarioId, Long id) {
         Endereco endereco = buscar(usuarioId, id);
+        boolean eraPrincipal = endereco.isPrincipal();
         repository.delete(endereco);
         repository.flush();
+        if (eraPrincipal) {
+            // Sem principal ninguém fica: o mais recente que sobrou assume.
+            repository.findFirstByUsuarioIdOrderByCriadoEmDescIdDesc(usuarioId).ifPresent(outro -> {
+                outro.setPrincipal(true);
+                repository.saveAndFlush(outro);
+            });
+        }
     }
 
     @Transactional(readOnly = true)

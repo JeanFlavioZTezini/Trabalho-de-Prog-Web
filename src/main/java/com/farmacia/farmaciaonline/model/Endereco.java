@@ -68,6 +68,10 @@ public class Endereco {
     @Column(length = 200)
     private String referencia;
 
+    /** F-25: no máximo um por cliente (índice único parcial na V9); o checkout já abre com ele marcado. */
+    @Column(nullable = false)
+    private boolean principal;
+
     @CreationTimestamp
     @Column(nullable = false, updatable = false)
     private Instant criadoEm;

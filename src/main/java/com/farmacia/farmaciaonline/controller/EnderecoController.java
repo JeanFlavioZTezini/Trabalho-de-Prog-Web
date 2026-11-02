@@ -101,6 +101,14 @@ public class EnderecoController {
         return noCheckout(retorno) ? LISTA_NO_CHECKOUT : LISTA;
     }
 
+    @PostMapping("/{id}/principal")
+    public String definirPrincipal(@AuthenticationPrincipal UsuarioAutenticado usuario, @PathVariable Long id,
+            @RequestParam(required = false) String retorno, RedirectAttributes ra) {
+        service.definirPrincipal(idDe(usuario), id);
+        ra.addFlashAttribute("sucesso", "Endereço principal atualizado. Ele vem marcado no checkout.");
+        return noCheckout(retorno) ? LISTA_NO_CHECKOUT : LISTA;
+    }
+
     @PostMapping("/{id}/selecionar")
     public String selecionar(@AuthenticationPrincipal UsuarioAutenticado usuario, @PathVariable Long id,
             @RequestParam(required = false) String retorno) {

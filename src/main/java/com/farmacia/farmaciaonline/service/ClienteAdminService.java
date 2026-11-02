@@ -70,7 +70,8 @@ public class ClienteAdminService {
                 .filter(u -> u.getPerfil() == Perfil.CLIENTE)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
 
-        var recentes = pedidos.findByUsuarioIdOrderByCriadoEmDesc(cliente.getId(), PageRequest.of(0, PEDIDOS_RECENTES))
+        var recentes = pedidos
+                .findByUsuarioIdOrderByCriadoEmDescIdDesc(cliente.getId(), PageRequest.of(0, PEDIDOS_RECENTES))
                 .getContent();
 
         registrar(adminId, ip, ACAO_VISUALIZAR, cliente.getId(), null);

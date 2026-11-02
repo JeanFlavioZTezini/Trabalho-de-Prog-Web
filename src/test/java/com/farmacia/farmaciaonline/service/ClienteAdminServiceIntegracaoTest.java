@@ -11,11 +11,13 @@ import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Arrays;
 import java.util.List;
+import jakarta.persistence.EntityManager;
 
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.data.domain.Page;
@@ -70,6 +72,12 @@ class ClienteAdminServiceIntegracaoTest {
 
     @Autowired
     private LojaRepository lojas;
+
+    @Autowired
+    private JdbcTemplate jdbc;
+
+    @Autowired
+    private EntityManager em;
 
     private Long adminId;
     private int sequencia;
@@ -369,6 +377,23 @@ class ClienteAdminServiceIntegracaoTest {
                 (a, b) -> Long.compare(b, a));
         assertThat(recentes.get(0).getStatusRotulo()).isEqualTo("Aguardando pagamento");
         assertThat(recentes.get(0).getTotal()).isPositive();
+    }
+
+    @Test
+    @DisplayName("pedidos no mesmo instante: desempata pelo número, do maior para o menor (igual ao Meus pedidos)")
+    void pedidosNoMesmoInstanteDesempatamPeloNumero() {
+        Usuario dono = cliente("Dono Empate", "dono.empate@teste.com", "90000000063");
+        Pedido a = pedido(dono);
+        Pedido b = pedido(dono);
+        Pedido c = pedido(dono);
+        jdbc.update("UPDATE pedido SET criado_em = TIMESTAMP '2026-01-01 10:00:00+00' WHERE usuario_id = ?",
+                dono.getId());
+        em.clear();
+
+        List<ClienteDetalhe.PedidoResumo> recentes = service.detalhar(adminId, IP, dono.getId()).getPedidosRecentes();
+
+        assertThat(recentes).extracting(ClienteDetalhe.PedidoResumo::getId)
+                .containsExactly(c.getId(), b.getId(), a.getId());
     }
 
     @Test

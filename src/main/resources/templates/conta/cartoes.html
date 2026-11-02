@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Meus cartões | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1>Meus cartões</h1>
+
+    <p class="alerta alerta--sucesso" role="status" th:if="${sucesso != null}" th:text="${sucesso}"></p>
+
+    <p>Para salvar um cartão, marque "Salvar este cartão" ao pagar um pedido. Guardamos só um código do gateway de
+        pagamento, a bandeira, os 4 últimos números e a validade; nunca o número completo nem o código de segurança.</p>
+
+    <p th:if="${#lists.isEmpty(cartoes)}">Você não tem cartões salvos.</p>
+
+    <ul th:unless="${#lists.isEmpty(cartoes)}">
+        <li th:each="c : ${cartoes}">
+            <span th:text="|${c.bandeira} final ${c.ultimos4}, validade ${#numbers.formatInteger(c.validadeMes, 2)}/${c.validadeAno}, ${c.nomeImpresso}|">VISA final 1111</span>
+            <form class="form-inline" th:action="@{/conta/cartoes/{id}/remover(id=${c.id})}" method="post">
+                <button type="submit" class="btn-link">Remover<span class="visually-hidden"
+                        th:text="| o cartão ${c.bandeira} final ${c.ultimos4}|"></span></button>
+            </form>
+        </li>
+    </ul>
+
+    <p class="pagina-texto__rodape-form"><a th:href="@{/conta}">Voltar para Minha conta</a></p>
+</div>
+</body>
+</html>

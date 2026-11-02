@@ -27,6 +27,7 @@ import com.farmacia.farmaciaonline.service.CheckoutException;
 import com.farmacia.farmaciaonline.service.CheckoutService;
 import com.farmacia.farmaciaonline.service.EnderecoService;
 import com.farmacia.farmaciaonline.service.PagamentoPedidoService;
+import com.farmacia.farmaciaonline.service.CartaoSalvoService;
 import com.farmacia.farmaciaonline.service.ResumoCheckout;
 import com.farmacia.farmaciaonline.service.ResumoPedidoService;
 
@@ -41,6 +42,7 @@ public class CheckoutController {
     private final EnderecoService enderecos;
     private final PagamentoPedidoService pagamentos;
     private final ResumoPedidoService resumos;
+    private final CartaoSalvoService cartoesSalvos;
     private final Environment ambiente;
 
     @GetMapping
@@ -65,6 +67,7 @@ public class CheckoutController {
             return "redirect:/checkout";
         }
         model.addAttribute("resumo", resumo.get());
+        model.addAttribute("cartoesSalvos", cartoesSalvos.listar(idDe(usuario)));
         model.addAttribute("chave", UUID.randomUUID());
         model.addAttribute("demo", modoDemo());
         return "checkout/resumo";
@@ -98,6 +101,7 @@ public class CheckoutController {
     @GetMapping("/pedidos/{id}")
     public String pedido(@AuthenticationPrincipal UsuarioAutenticado usuario, @PathVariable Long id, Model model) {
         model.addAttribute("tela", pagamentos.telaPedido(idDe(usuario), id));
+        model.addAttribute("cartoesSalvos", cartoesSalvos.listar(idDe(usuario)));
         model.addAttribute("demo", modoDemo());
         return "checkout/pedido";
     }

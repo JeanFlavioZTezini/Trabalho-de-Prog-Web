@@ -543,6 +543,15 @@ textarea:focus-visible {
   color: var(--cor-branco);
 }
 
+/* F-25: endereço principal (mesmas cores do selo de receita, que já passam em AA). */
+.selo--principal {
+  margin-left: 0.25rem;
+  background-color: var(--cor-azul);
+  color: var(--cor-branco);
+}
+
+.form-inline { display: inline; }
+
 .btn-carrinho {
   background-color: var(--cor-azul);
   color: var(--cor-branco);

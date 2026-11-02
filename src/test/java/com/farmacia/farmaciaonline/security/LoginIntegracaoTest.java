@@ -10,6 +10,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -47,7 +48,9 @@ class LoginIntegracaoTest {
     @Autowired
     private UsuarioRepository usuarioRepository;
 
+    // O banco é compartilhado entre as classes de teste e o cliente do seed é usado em todas: não deixar falha nem bloqueio para trás.
     @BeforeEach
+    @AfterEach
     void limparBloqueioDoClienteDeTeste() {
         Usuario cliente = usuarioRepository.findByEmailIgnoreCase("cliente@farma.com").orElseThrow();
         cliente.setTentativasLoginFalhas(0);
@@ -171,7 +174,7 @@ class LoginIntegracaoTest {
                 .andExpect(redirectedUrl("/"))
                 .andExpect(authenticated());
 
-        cliente = usuarioRepository.findByEmailIgnoreCase("cliente@farma.com").orElseThrow();
+        Usuario cliente = usuarioRepository.findByEmailIgnoreCase("cliente@farma.com").orElseThrow();
         assertThat(cliente.getTentativasLoginFalhas()).isZero();
         assertThat(cliente.getBloqueadoAte()).isNull();
     }

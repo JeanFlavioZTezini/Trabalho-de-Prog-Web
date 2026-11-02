@@ -113,7 +113,7 @@ class ContaControllerTest {
     }
 
     @Test
-    @DisplayName("a conta mostra os dados do próprio usuário e avisa que a troca de contatos ainda não existe")
+    @DisplayName("a conta mostra os dados do próprio usuário e oferece a troca de e-mail e de celular")
     void verConta() throws Exception {
         when(service.dados(CLIENTE)).thenReturn(DadosDaConta.de(usuario()));
 
@@ -121,7 +121,7 @@ class ContaControllerTest {
 
         assertThat(pagina).contains("Maria da Silva", "529.982.247-25", "cliente@farma.com", "(67) 99999-8888", "20/05/1995");
         assertThat(pagina).contains("(confirmado)").contains("(não confirmado)");
-        assertThat(pagina).contains("ainda não está disponível");
+        assertThat(pagina).contains("href=\"/conta/contato/email\"", "href=\"/conta/contato/celular\"");
     }
 
     @Test

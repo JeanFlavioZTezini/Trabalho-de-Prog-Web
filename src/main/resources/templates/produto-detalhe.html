@@ -13,6 +13,25 @@
         <span th:if="${produto.principioAtivo != null}" th:text="| · ${produto.principioAtivo}|"></span>
     </p>
 
+    <!--/* Avisos antes da foto, no mesmo padrão dos avisos de página (.alerta): quem vai comprar lê antes de decidir. */-->
+    <aside class="alerta produto-detalhe__aviso" aria-label="Avisos do produto">
+        <p th:if="${produto.exigeReceita}">
+            Este produto exige receita. Consulte as condições de venda antes de comprar.
+        </p>
+        <p th:if="${produto.bulaUrl != null}">
+            <a th:href="${produto.bulaUrl}" target="_blank" rel="noopener noreferrer">
+                Consultar bula (abre em nova aba)
+            </a>
+        </p>
+        <p th:if="${produto.bulaUrlInvalida}">
+            O link da bula cadastrado não é válido e não pode ser aberto. Consulte a farmácia.
+        </p>
+        <p th:if="${produto.bulaUrl == null and !produto.bulaUrlInvalida}">
+            Bula não disponível para este produto.
+        </p>
+        <p>As informações são descritivas e não substituem a orientação de um profissional de saúde.</p>
+    </aside>
+
     <div class="produto-detalhe__grade">
         <section class="produto-detalhe__galeria" aria-label="Imagens do produto">
             <img th:each="imagem : ${produto.imagens}"
@@ -78,24 +97,6 @@
                     Adicionar ao carrinho
                 </button>
             </form>
-
-            <aside class="produto-detalhe__aviso" aria-label="Avisos do produto">
-                <p th:if="${produto.exigeReceita}">
-                    Este produto exige receita. Consulte as condições de venda antes de comprar.
-                </p>
-                <p th:if="${produto.bulaUrl != null}">
-                    <a th:href="${produto.bulaUrl}" target="_blank" rel="noopener noreferrer">
-                        Consultar bula (abre em nova aba)
-                    </a>
-                </p>
-                <p th:if="${produto.bulaUrlInvalida}">
-                    O link da bula cadastrado não é válido e não pode ser aberto. Consulte a farmácia.
-                </p>
-                <p th:if="${produto.bulaUrl == null and !produto.bulaUrlInvalida}">
-                    Bula não disponível para este produto.
-                </p>
-                <p>As informações são descritivas e não substituem a orientação de um profissional de saúde.</p>
-            </aside>
         </div>
     </div>
 

@@ -1224,13 +1224,9 @@ input[type="date"]:focus-within {
   color: var(--cor-texto);
 }
 
-.produto-detalhe__aviso {
-  padding: 0.75rem;
-  border-left: 0.25rem solid var(--cor-azul);
-  background-color: var(--cor-azul-suave);
-}
-
-.produto-detalhe__aviso p { margin: 0.25rem 0; }
+/* Avisos do produto (bula, receita): um .alerta informativo logo abaixo da marca, antes da foto. */
+.produto-detalhe__aviso { margin: var(--esp-4) 0 0; border-left-color: var(--cor-azul); background-color: var(--cor-branco); }
+.produto-detalhe__aviso p { margin: 0 0 var(--esp-1); }
 
 .produto-detalhe__secao { margin: 2rem 0; }
 

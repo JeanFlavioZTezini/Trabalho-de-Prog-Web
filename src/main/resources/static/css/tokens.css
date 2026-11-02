@@ -17,7 +17,7 @@
   --cor-sucesso-fundo: #F0FDF4;   /* fundo do selo "Entregue" */
   --cor-aviso: #92400E;           /* texto do selo "Aguardando pagamento" */
   --cor-aviso-fundo: #FFFBEB;
-  --cor-fundo-imagem: #E9EBEE;    /* fundo atrás das fotos de produto e categoria */
+  --cor-fundo-imagem: #FFFFFF;    /* fundo atrás das fotos de produto e categoria (branco: as fotos têm fundo branco) */
 
   /* Espaçamento (rem: acompanha o zoom). */
   --esp-1: 0.25rem;

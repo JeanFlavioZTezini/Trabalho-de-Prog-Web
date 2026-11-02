@@ -160,6 +160,20 @@ class SeedDemonstracaoTest {
     }
 
     @Test
+    void v10DaFotoParaNeoDipironaELoratadinaETrocaAMarcaDaLoratadina() {
+        assertThat(jdbc.queryForList("SELECT i.arquivo FROM imagem_produto i JOIN produto p ON p.id = i.produto_id "
+                + "WHERE p.nome IN ('Neo Dipirona 500mg', 'Loratadina 10mg') ORDER BY p.nome", String.class))
+                .containsExactly("/images/produtos/loratadina-10mg-cimed-12-comprimidos.webp",
+                        "/images/produtos/neo-dipirona-500mg-neo-quimica.webp");
+        assertThat(jdbc.queryForObject("SELECT marca FROM produto WHERE nome = 'Loratadina 10mg'", String.class))
+                .isEqualTo("Cimed");
+        // Sobram no placeholder só Omeprazol e os dois sob prescrição.
+        assertThat(jdbc.queryForList("SELECT p.nome FROM imagem_produto i JOIN produto p ON p.id = i.produto_id "
+                + "WHERE i.arquivo = '/images/produtos/placeholder.svg' ORDER BY p.nome", String.class))
+                .containsExactly("Amoxicilina 500mg", "Clonazepam 2mg", "Omeprazol 20mg");
+    }
+
+    @Test
     void categoriasTemRaizesComSubcategoriasEControladosEAntibioticosExigemReceita() {
         assertThat(contar("SELECT count(*) FROM categoria WHERE categoria_pai_id IS NULL")).isGreaterThanOrEqualTo(5);
         assertThat(contar("SELECT count(*) FROM categoria c WHERE c.categoria_pai_id IS NULL AND NOT EXISTS "

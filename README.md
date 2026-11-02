@@ -631,12 +631,49 @@ carrinho; o dono é o usuário **ou** o token, nunca os dois). Regras em `servic
 - **Sessões na troca de senha:** `RevogacaoDeSessoes.encerrarOutrasSessoesDe(usuarioId, idDaSessaoAtual)` encerra as
   **outras** sessões da conta (outro navegador ou aparelho; vão para `/login?expirada`). A sessão em que a senha foi trocada
   continua logada, com o id da sessão renovado (`changeSessionId`).
-- **Contatos:** e-mail e celular são só exibidos. A troca com confirmação por código é a F-21 e **continua sendo lacuna**:
-  esta entrega não completa o UC07.
+- **Contatos:** e-mail e celular são exibidos aqui; a troca com confirmação por código é a F-21 (seção abaixo).
 - **Testes:** `ContaFormsTest` e `DadosDaContaTest` (unitários), `ContaControllerTest` (camada web),
   `ContaServiceIntegracaoTest`, `ContaIntegracaoTest` e `ContaSessoesServidorRealTest` (Tomcat de verdade, dois
   "navegadores" com cookies separados, para provar a revogação das outras sessões) (PostgreSQL real; incluem campos forjados ignorados, senha atual
   errada, nova igual à atual, senha acima de 72 bytes, cancelar sem gravar, nome novo no cabeçalho e sessões revogadas).
+
+
+
+## Troca de e-mail e de celular (F-21 / UC07)
+
+Fecha o UC07: o cliente logado troca o e-mail ou o celular confirmando o **novo** contato por código. Regras em
+`service/ContatoService`, telas em `ContaContatoController` + `templates/conta/contato.html`. Reaproveita o
+`CodigoVerificacaoService` da F-05 (finalidades `ALTERAR_EMAIL` e `ALTERAR_CELULAR`); não há migration.
+
+| Rota | O que faz |
+|---|---|
+| `GET /conta/contato/{tipo}` | tela com os dois passos: pedir o código e digitar o código (`tipo` = `email` ou `celular`; outro valor dá 404) |
+| `POST /conta/contato/{tipo}/enviar` | confere a senha atual e o novo contato e envia o código ao **destino novo** |
+| `POST /conta/contato/{tipo}/confirmar` | confere o código e só então troca o contato |
+
+- **O contato atual só muda depois do código certo.** O novo contato fica no registro do código (`destino`), e é dele, nunca
+  de um campo do formulário, que o contato novo é gravado. Cancelar é voltar a `/conta`: nada foi alterado.
+- **Senha atual obrigatória** para pedir a troca (quem sequestra uma sessão aberta não consegue trocar o contato).
+- **Mesmas regras do cadastro:** e-mail no formato `nome@dominio.com`, até 254 caracteres, único (sem diferenciar maiúsculas);
+  celular com DDD e 9 dígitos, gravado só com dígitos (o cadastro não exige celular único, então aqui também não). Contato
+  igual ao atual é recusado.
+- **Confirmar um não confirma o outro:** a troca do e-mail grava só `email_confirmado_em`; a do celular, só
+  `celular_confirmado_em`. Um código de outra finalidade (cadastro, recuperação de senha, ou o do outro contato) nunca vale.
+- **Disputa de e-mail:** se outra conta ficar com o e-mail entre o pedido e a confirmação, a troca é recusada, o e-mail antigo
+  continua e a mensagem é genérica ("Não foi possível usar este e-mail").
+- **Limites** (os da F-05): 6 números, 10 min, 5 tentativas, reenvio a cada 60 s, 5 envios por hora. Tentativa errada fica
+  gravada. O código nunca aparece em log nem na resposta; na demonstração ele está em `/caixa-demo`.
+- **Sessões:** trocar o **e-mail** (identificador de login) encerra as outras sessões da conta
+  (`RevogacaoDeSessoes.encerrarOutrasSessoesDe`) e renova o id da sessão atual; o cabeçalho já mostra o dado novo. Trocar o
+  celular só atualiza a sessão atual.
+- **O formulário não consegue** mandar id, perfil, status nem contato confirmado: o binder só aceita `novoContato` e
+  `senhaAtual`, e a conta é sempre a da sessão.
+- **Testes:** `ContatoServiceIntegracaoTest` (PostgreSQL real: destino novo, conta intacta antes do código, flags separados,
+  finalidade errada, tentativas, expirado, reenvio, disputa de e-mail, conta pendente), `ContaContatoControllerTest`
+  (camada web: login, CSRF, 404, HTML, campos forjados ignorados, erro por campo, efeitos na sessão) e
+  `ContaContatoIntegracaoTest` (fluxo completo com login no e-mail novo). `ContaControllerTest` e `ContaIntegracaoTest` foram
+  ajustados: a tela da conta agora mostra os links de troca em vez do aviso de "ainda não disponível".
+
 
 ## Consulta de clientes (F-09 / UC11)
 

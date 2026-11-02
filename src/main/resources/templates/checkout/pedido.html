@@ -8,12 +8,14 @@
 
     <h1>Pedido nº <span th:text="${pedido.id}">1</span></h1>
 
+    <ol th:replace="~{fragments/componentes :: etapas(4)}"></ol>
+
     <p class="alerta alerta--sucesso" role="status" th:if="${sucesso != null}" th:text="${sucesso}"></p>
     <div class="alerta alerta--erro" role="alert" th:if="${erros != null}">
         <ul><li th:each="e : ${erros}" th:text="${e}">Erro</li></ul>
     </div>
 
-    <p>Situação: <strong th:text="${pedido.status.rotulo}">Aguardando pagamento</strong></p>
+    <p>Situação: <span th:replace="~{fragments/componentes :: situacao(${pedido.status})}"></span></p>
 
     <!--/* Aprovado. */-->
     <p class="alerta alerta--sucesso" role="status"
@@ -22,7 +24,7 @@
     </p>
 
     <!--/* Encerrado. */-->
-    <p class="alerta alerta--erro" role="status" th:if="${pedido.status.name() == 'CANCELADO'}">
+    <p class="alerta" role="status" th:if="${pedido.status.name() == 'CANCELADO'}">
         Este pedido foi cancelado e os itens voltaram ao estoque. Se ainda quiser os produtos, faça uma nova compra.
     </p>
 
@@ -37,15 +39,18 @@
         <form th:action="@{/checkout/pedidos/{id}/atualizar(id=${pedido.id})}" method="post">
             <button type="submit" class="btn-primario">Já paguei: atualizar situação</button>
         </form>
-        <div class="checkout-demo" th:if="${demo}">
-            <p>Controles de demonstração (só no perfil demo):</p>
-            <form th:action="@{/checkout/pedidos/{id}/demo/aprovar(id=${pedido.id})}" method="post">
-                <button type="submit">Simular pagamento aprovado</button>
-            </form>
-            <form th:action="@{/checkout/pedidos/{id}/demo/expirar(id=${pedido.id})}" method="post">
-                <button type="submit">Simular expiração</button>
-            </form>
-        </div>
+        <section class="secao-cartao checkout-demo" th:if="${demo}" aria-labelledby="titulo-demo">
+            <h3 id="titulo-demo">Ambiente de demonstração</h3>
+            <p>Estes botões só existem no perfil demo: fazem o papel do banco que confirmaria o pagamento.</p>
+            <div class="acoes">
+                <form th:action="@{/checkout/pedidos/{id}/demo/aprovar(id=${pedido.id})}" method="post">
+                    <button type="submit" class="btn-secundario">Simular pagamento aprovado</button>
+                </form>
+                <form th:action="@{/checkout/pedidos/{id}/demo/expirar(id=${pedido.id})}" method="post">
+                    <button type="submit" class="btn-secundario">Simular expiração</button>
+                </form>
+            </div>
+        </section>
     </section>
 
     <!--/* Recusado ou sem resposta: nova tentativa no mesmo pedido. */-->
@@ -137,7 +142,7 @@
         </p>
     </section>
 
-    <p class="alerta" th:if="${pedido.temItemQueExigeReceita()}">
+    <p class="alerta" role="note" th:if="${pedido.temItemQueExigeReceita()}">
         Este pedido tem medicamento que exige receita: <strong>apresente a receita na loja</strong> para retirá-lo.
     </p>
 

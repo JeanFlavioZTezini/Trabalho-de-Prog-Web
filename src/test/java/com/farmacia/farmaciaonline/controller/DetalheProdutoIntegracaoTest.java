@@ -56,6 +56,33 @@ class DetalheProdutoIntegracaoTest {
     private EntityManager entityManager;
 
     @Test
+    @DisplayName("migalhas levam do início à categoria mais específica do produto, com a página atual marcada")
+    void migalhasComCategoria() throws Exception {
+        String html = pagina("/produtos/4");
+
+        assertThat(html).containsPattern("(?s)<nav class=\"migalhas\" aria-label=\"Você está em\">\\s*<ol>"
+                + "\\s*<li><a href=\"/\">Início</a></li>"
+                + "\\s*<li>\\s*<a href=\"/produtos\\?categoria=1\">Medicamentos</a>\\s*</li>"
+                + "\\s*<li>\\s*<a href=\"/produtos\\?categoria=11\">Dor e febre</a>\\s*</li>"
+                + "\\s*<li aria-current=\"page\">[^<]+</li>");
+        assertThat(html).doesNotContain("Gripe e resfriado</a></li>");
+    }
+
+    @Test
+    @DisplayName("sem categoria ativa, as migalhas vão de Início para Produtos")
+    void migalhasSemCategoriaAtiva() throws Exception {
+        entityManager.flush();
+        entityManager.createNativeQuery("update categoria set ativa = false where id = 11").executeUpdate();
+        entityManager.clear();
+
+        String html = pagina("/produtos/1");
+
+        assertThat(html).containsPattern("(?s)<li><a href=\"/\">Início</a></li>\\s*<li><a href=\"/produtos\">Produtos</a></li>"
+                + "\\s*<li aria-current=\"page\">Novalgina Dipirona 1g</li>");
+        assertThat(html).doesNotContain(">Dor e febre</a>");
+    }
+
+    @Test
     @DisplayName("detalhe público exibe descrição, preço, avisos e compra da apresentação ativa")
     void detalheExibeDadosEIncrementaVisualizacoes() throws Exception {
         long visualizacoesAntes = produtoRepository.findById(1L).orElseThrow().getVisualizacoes();
@@ -63,7 +90,6 @@ class DetalheProdutoIntegracaoTest {
         String html = pagina("/produtos/1");
 
         assertThat(html).contains("Novalgina Dipirona 1g");
-        assertThat(html).contains("href=\"/\">Voltar à página inicial</a>");
         assertThat(html).contains("Alívio da dor");
         assertThat(html).contains("Redução da febre");
         assertThat(html).contains("R$ 30,99");

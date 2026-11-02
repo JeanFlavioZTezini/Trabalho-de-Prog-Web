@@ -22,7 +22,8 @@ public record DetalheProduto(
         OpcaoApresentacao apresentacaoSelecionada,
         List<ImagemDetalhe> imagens,
         boolean disponivel,
-        int quantidadeMaxima) {
+        int quantidadeMaxima,
+        List<CategoriaMigalha> categorias) {
 
     public record OpcaoApresentacao(
             Long id,
@@ -35,5 +36,9 @@ public record DetalheProduto(
     }
 
     public record ImagemDetalhe(String arquivo, String alt) {
+    }
+
+    /** Uma categoria das migalhas, da raiz até a mais específica do produto. */
+    public record CategoriaMigalha(Long id, String nome) {
     }
 }

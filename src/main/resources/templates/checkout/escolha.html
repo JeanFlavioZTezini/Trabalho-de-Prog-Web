@@ -8,13 +8,17 @@
 
     <h1>Finalizar compra</h1>
 
+    <th:block th:unless="${tela.carrinhoVazio}"><ol th:replace="~{fragments/componentes :: etapas(2)}"></ol></th:block>
+
     <p class="alerta" role="note" th:if="${demo}">
         Ambiente de demonstração: nenhuma compra ou cobrança é real.
     </p>
 
-    <div th:if="${tela.carrinhoVazio}">
-        <p class="alerta" role="status">Seu carrinho está vazio. Adicione produtos para finalizar uma compra.</p>
-        <p><a class="btn-primario" th:href="@{/}">Ver produtos</a></p>
+    <div class="estado-vazio" th:if="${tela.carrinhoVazio}">
+        <p role="status">Seu carrinho está vazio. Adicione produtos para finalizar uma compra.</p>
+        <div class="acoes">
+            <a class="btn-primario" th:href="@{/produtos}">Ver produtos</a>
+        </div>
     </div>
 
     <form th:unless="${tela.carrinhoVazio}" th:action="@{/checkout/resumo}" method="get">

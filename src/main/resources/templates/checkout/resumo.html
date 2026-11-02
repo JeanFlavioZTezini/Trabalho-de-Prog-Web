@@ -8,6 +8,8 @@
 
     <h1>Resumo do pedido</h1>
 
+    <ol th:replace="~{fragments/componentes :: etapas(3)}"></ol>
+
     <div class="alerta alerta--erro" role="alert" th:if="${erros != null}">
         <ul><li th:each="e : ${erros}" th:text="${e}">Erro</li></ul>
     </div>
@@ -80,7 +82,7 @@
         </p>
     </section>
 
-    <p class="alerta" th:if="${resumo.exigeReceita}">
+    <p class="alerta" role="note" th:if="${resumo.exigeReceita}">
         Este pedido tem medicamento que exige receita: <strong>apresente a receita na loja</strong> para retirá-lo.
     </p>
 

@@ -314,6 +314,39 @@ class CheckoutFluxoWebIntegracaoTest extends CheckoutTesteBase {
     }
 
     @Test
+    @DisplayName("escolha, resumo e pedido marcam a própria etapa e a situação aparece em selo")
+    void etapasESeloNaTela() throws Exception {
+        Usuario cliente = novoCliente();
+        Apresentacao a = novaApresentacao("10.00", 5);
+        noCarrinho(cliente, a, 1);
+        String query = "tipoEntrega=RETIRADA&metodo=PIX&lojaId=1";
+
+        etapaAtual(pagina(cliente, "/checkout"), "Entrega e pagamento");
+        etapaAtual(pagina(cliente, "/checkout/resumo?" + query), "Resumo");
+
+        Long id = idDoRedirecionamento(confirmar(cliente, query));
+        String tela = pagina(cliente, "/checkout/pedidos/" + id);
+        etapaAtual(tela, "Pedido");
+        assertThat(tela).contains("<span class=\"selo selo--status-AGUARDANDO_PAGAMENTO\">Aguardando pagamento</span>");
+        assertThat(tela).containsPattern("(?s)<section class=\"secao-cartao checkout-demo\" aria-labelledby=\"titulo-demo\">"
+                + "\\s*<h3 id=\"titulo-demo\">Ambiente de demonstração</h3>.*?"
+                + "<button type=\"submit\" class=\"btn-secundario\">Simular pagamento aprovado</button>");
+
+        mvc.perform(post("/checkout/pedidos/" + id + "/demo/expirar").with(como(cliente)).with(csrf()));
+        String cancelado = pagina(cliente, "/checkout/pedidos/" + id);
+        assertThat(cancelado).contains("<span class=\"selo selo--status-CANCELADO\">Cancelado</span>");
+        assertThat(cancelado).containsPattern("<p class=\"alerta\" role=\"status\">\\s*Este pedido foi cancelado");
+    }
+
+    /** Uma única etapa com aria-current="step", e é a do rótulo pedido; as anteriores ficam marcadas como feitas. */
+    private static void etapaAtual(String html, String rotulo) {
+        assertThat(StringUtils.countOccurrencesOf(html, "aria-current=\"step\"")).isEqualTo(1);
+        assertThat(html).containsPattern("(?s)<ol class=\"etapas\" aria-label=\"Etapas da compra\">.*?"
+                + "<li aria-current=\"step\">\\s*<span class=\"etapas__numero\" aria-hidden=\"true\">\\d</span>"
+                + "\\s*<span class=\"etapas__rotulo\">" + rotulo + "</span>");
+    }
+
+    @Test
     @DisplayName("o endpoint administrativo de forçar status também atualiza o pedido")
     void forcarStatusDoAdmin() throws Exception {
         Usuario cliente = novoCliente();

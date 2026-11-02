@@ -1,0 +1,16 @@
+<!--/* Componentes de tela reaproveitados (guia em docs/acessibilidade.md). */-->
+
+<!--/* Etapas da compra: atual = 1 (Carrinho) a 4 (Pedido). As anteriores ficam marcadas como feitas. */-->
+<ol class="etapas" aria-label="Etapas da compra" th:fragment="etapas(atual)" xmlns:th="http://www.thymeleaf.org">
+    <li th:each="rotulo, estado : ${ {'Carrinho', 'Entrega e pagamento', 'Resumo', 'Pedido'} }"
+        th:classappend="${estado.count < atual} ? 'etapas__feita'"
+        th:attr="aria-current=${estado.count == atual ? 'step' : null}">
+        <span class="etapas__numero" aria-hidden="true" th:text="${estado.count}">1</span>
+        <span class="etapas__rotulo" th:text="${rotulo}">Carrinho</span>
+        <span class="visually-hidden" th:if="${estado.count < atual}">(concluída)</span>
+    </li>
+</ol>
+
+<!--/* Situação do pedido em selo; o tom vem de .selo--status-<STATUS> no style.css. */-->
+<span class="selo" th:fragment="situacao(status)" xmlns:th="http://www.thymeleaf.org"
+      th:classappend="|selo--status-${status.name()}|" th:text="${status.rotulo}">Aguardando pagamento</span>

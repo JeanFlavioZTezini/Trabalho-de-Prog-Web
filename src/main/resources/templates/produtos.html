@@ -124,7 +124,7 @@
            th:if="${erroFiltro != null}" th:text="${erroFiltro}"></p>
         <div class="filtros-catalogo__acoes">
             <button type="submit" class="btn-primario">Buscar produtos</button>
-            <a th:href="@{/produtos}">Limpar filtros</a>
+            <a class="btn-secundario" th:href="@{/produtos}">Limpar filtros</a>
         </div>
     </form>
 
@@ -140,12 +140,14 @@
             <a th:href="@{/}">Voltar para a página inicial</a>
         </div>
 
-        <div th:if="${erroCarregamento == null and erroFiltro == null and pagina.empty}">
+        <div class="estado-vazio" th:if="${erroCarregamento == null and erroFiltro == null and pagina.empty}">
             <p role="status">Nenhum produto encontrado com esses filtros.</p>
             <p role="status" th:if="${sugestao != null}">Você quis dizer:
                 <a th:href="@{/produtos(q=${sugestao})}" th:text="${sugestao}">dipirona</a>?</p>
-            <a class="btn-primario" th:href="@{/produtos}">Limpar filtros</a>
-            <a th:href="@{/}">Voltar para a página inicial</a>
+            <div class="acoes">
+                <a class="btn-primario" th:href="@{/produtos}">Limpar filtros</a>
+                <a class="btn-link" th:href="@{/}">Voltar para a página inicial</a>
+            </div>
         </div>
 
         <div class="grade" th:if="${erroCarregamento == null and erroFiltro == null and !pagina.empty}">

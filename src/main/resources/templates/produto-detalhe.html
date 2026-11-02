@@ -5,7 +5,16 @@
 </head>
 <body>
 <div id="pagina" class="produto-detalhe">
-    <p><a th:href="@{/}">Voltar à página inicial</a></p>
+    <nav class="migalhas" aria-label="Você está em">
+        <ol>
+            <li><a th:href="@{/}">Início</a></li>
+            <li th:if="${#lists.isEmpty(produto.categorias)}"><a th:href="@{/produtos}">Produtos</a></li>
+            <li th:each="categoria : ${produto.categorias}">
+                <a th:href="@{/produtos(categoria=${categoria.id})}" th:text="${categoria.nome}">Analgésicos</a>
+            </li>
+            <li aria-current="page" th:text="${produto.nome}">Nome do produto</li>
+        </ol>
+    </nav>
 
     <h1 th:text="${produto.nome}">Nome do produto</h1>
     <p class="produto-detalhe__marca">

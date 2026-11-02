@@ -945,7 +945,8 @@ a.btn-perigo { background-color: var(--cor-erro); color: var(--cor-branco); }
 }
 /* Dentro de .pagina-texto, a regra de "section" (divisória no topo) não vale para o cartão. */
 .pagina-texto .secao-cartao { margin-top: var(--esp-5); padding: var(--esp-4) var(--esp-5); border-top: 1px solid var(--cor-borda); }
-.secao-cartao > h2 { margin-top: 0; font-size: var(--fonte-base); }
+.secao-cartao > h2,
+.secao-cartao > h3 { margin-top: 0; font-size: var(--fonte-base); }
 .secao-cartao > :last-child { margin-bottom: 0; }
 
 /* Grade de atalhos (painel do admin): cada cartão é um link com título e uma linha de descrição. */
@@ -1119,8 +1120,6 @@ input[type="date"]:focus-within {
 /* O código do Pix/boleto é uma linha longa e sem espaços: quebra para não fazer a página rolar para o lado. */
 .checkout-codigo { overflow-wrap: anywhere; font-family: monospace; }
 
-.checkout-demo { margin: 1rem 0; }
-.checkout-demo form { display: inline-block; margin-right: 0.5rem; }
 
 /* Aviso "exige receita" dentro da linha de item do checkout (não é o .selo--receita do card). */
 .selo-receita { display: block; font-size: 0.75rem; font-weight: 700; }
@@ -1275,8 +1274,6 @@ input[type="date"]:focus-within {
 .carrinho__resumo { margin-top: 1.5rem; }
 .carrinho__total { font-size: 1.125rem; }
 .carrinho__ajuda { color: var(--cor-texto-hint); font-size: 0.875rem; }
-.carrinho__acoes { display: flex; flex-wrap: wrap; gap: 1rem; align-items: center; }
-.carrinho__acoes form { margin: 0; }
 
 /* Número ao lado de "Carrinho" no cabeçalho (vazio quando não há itens) */
 .topo__carrinho-contagem:not(:empty) { margin-left: 0.25rem; font-weight: 600; }
@@ -1356,7 +1353,7 @@ input[type="date"]:focus-within {
 }
 .linha-do-tempo li:last-child { border-left-color: transparent; padding-bottom: 0; }
 .linha-do-tempo__atual::before { background-color: var(--cor-azul); }
-.linha-do-tempo li > span:not(.visually-hidden) { display: block; font-size: 0.875rem; }
+.linha-do-tempo li > span:not(.visually-hidden, .selo) { display: block; font-size: 0.875rem; }
 
 /* ---------- F-08: revisão das telas de produto ---------- */
 /* Rótulo de checkbox: anula o `.campo input { width: 100% }` só nele, para a caixa ficar pequena e alinhada ao texto. */

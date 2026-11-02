@@ -13,7 +13,7 @@
 
 <!--/* Dados do cartão: nunca vêm preenchidos, o servidor não os guarda. */-->
 <th:block th:fragment="cartao(demo)">
-    <p class="alerta" th:if="${demo}">
+    <p class="alerta" role="note" th:if="${demo}">
         Pagamento de demonstração: nenhum valor é cobrado. Use um número fictício:
         <strong>4111 1111 1111 1111</strong> aprova e <strong>4111 1111 1111 1210</strong> é recusado
         (validade futura e qualquer código de segurança).

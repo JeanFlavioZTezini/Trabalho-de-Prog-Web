@@ -2,6 +2,7 @@ package com.farmacia.farmaciaonline.service;
 
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Objects;
@@ -11,6 +12,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.farmacia.farmaciaonline.model.Apresentacao;
+import com.farmacia.farmaciaonline.model.Categoria;
 import com.farmacia.farmaciaonline.model.ImagemProduto;
 import com.farmacia.farmaciaonline.model.Produto;
 import com.farmacia.farmaciaonline.model.enums.Tarja;
@@ -95,7 +97,36 @@ public class DetalheProdutoService {
                 opcaoSelecionada,
                 imagens(produto, selecionada),
                 selecionada != null && selecionada.isDisponivel(),
-                quantidadeMaxima);
+                quantidadeMaxima,
+                migalhas(produto));
+    }
+
+    /**
+     * Caminho da raiz até a categoria ativa mais funda do produto (empate: menor ordem, depois menor id).
+     * Categoria com algum ancestral inativo fica de fora; sem nenhuma, as migalhas vão direto para Produtos.
+     */
+    private static List<DetalheProduto.CategoriaMigalha> migalhas(Produto produto) {
+        return produto.getCategorias().stream()
+                .map(DetalheProdutoService::caminhoAtivo)
+                .filter(caminho -> !caminho.isEmpty())
+                .max(Comparator.<List<Categoria>>comparingInt(List::size)
+                        .thenComparing(caminho -> caminho.get(caminho.size() - 1).getOrdem(), Comparator.reverseOrder())
+                        .thenComparing(caminho -> caminho.get(caminho.size() - 1).getId(), Comparator.reverseOrder()))
+                .map(caminho -> caminho.stream()
+                        .map(categoria -> new DetalheProduto.CategoriaMigalha(categoria.getId(), categoria.getNome()))
+                        .toList())
+                .orElse(List.of());
+    }
+
+    private static List<Categoria> caminhoAtivo(Categoria categoria) {
+        List<Categoria> caminho = new ArrayList<>();
+        for (Categoria atual = categoria; atual != null; atual = atual.getCategoriaPai()) {
+            if (!atual.isAtiva() || caminho.contains(atual)) {
+                return List.of();
+            }
+            caminho.add(0, atual);
+        }
+        return caminho;
     }
 
     private static DetalheProduto.OpcaoApresentacao mapearApresentacao(Apresentacao apresentacao) {

@@ -8,6 +8,8 @@
 
     <h1>Meu carrinho</h1>
 
+    <th:block th:unless="${resumo.vazio}"><ol th:replace="~{fragments/componentes :: etapas(1)}"></ol></th:block>
+
     <p class="alerta alerta--erro" role="alert" th:if="${erro != null}" th:text="${erro}">Mensagem de erro</p>
     <p class="alerta alerta--sucesso" role="status" th:if="${sucesso != null}" th:text="${sucesso}">Mensagem de sucesso</p>
 
@@ -29,13 +31,15 @@
         O preço de algum item mudou desde que você o adicionou. O total abaixo já usa o preço atual.
     </p>
 
-    <div th:if="${resumo.vazio}">
+    <div class="estado-vazio" th:if="${resumo.vazio}">
         <p>Seu carrinho está vazio.</p>
-        <p><a class="btn-primario" th:href="@{/}">Continuar comprando</a></p>
+        <div class="acoes">
+            <a class="btn-primario" th:href="@{/produtos}">Continuar comprando</a>
+        </div>
     </div>
 
     <div th:unless="${resumo.vazio}">
-        <div class="tabela-rolavel">
+        <div class="tabela-rolavel" role="region" aria-label="Itens do carrinho" tabindex="0">
             <table class="carrinho__tabela">
                 <caption class="visually-hidden">Itens do carrinho</caption>
                 <thead>
@@ -96,21 +100,19 @@
                 <strong th:text="${#numbers.formatCurrency(resumo.total)}">R$ 0,00</strong>
             </p>
 
-            <p class="alerta alerta--erro" th:unless="${resumo.podeFinalizar}">
+            <p class="alerta alerta--erro" role="alert" th:unless="${resumo.podeFinalizar}">
                 Corrija os itens destacados para poder finalizar a compra.
             </p>
             <p class="carrinho__ajuda" sec:authorize="isAnonymous()" th:if="${resumo.podeFinalizar}">
                 Para finalizar a compra você precisa entrar na sua conta ou <a th:href="@{/cadastro(retorno='checkout')}">criar uma</a>. Seu carrinho será mantido.
             </p>
 
-            <div class="carrinho__acoes">
+            <div class="acoes carrinho__acoes">
                 <a class="btn-primario" th:if="${resumo.podeFinalizar}" th:href="@{/carrinho/finalizar}">Finalizar compra</a>
                 <button type="button" class="btn-primario" th:unless="${resumo.podeFinalizar}" disabled aria-disabled="true">Finalizar compra</button>
-
-                <form th:action="@{/carrinho/esvaziar}" method="post">
-                    <button type="submit" class="btn-secundario">Esvaziar carrinho</button>
-                </form>
-                <a class="btn-link" th:href="@{/}">Continuar comprando</a>
+                <a class="btn-secundario" th:href="@{/produtos}">Continuar comprando</a>
+                <!--/* Esvaziar pede confirmação numa página própria, como remover um item. */-->
+                <a class="link-perigo" th:href="@{/carrinho/esvaziar}">Esvaziar carrinho</a>
             </div>
         </div>
     </div>

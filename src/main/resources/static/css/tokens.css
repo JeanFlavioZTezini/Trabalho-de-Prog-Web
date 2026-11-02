@@ -10,11 +10,43 @@
   --cor-fundo: #F5F6F8;       /* fundo cinza claro da página */
   --cor-borda: #E3E6EA;       /* divisórias e bordas decorativas (cards, rodapé) */
   --cor-borda-controle: #7D8E9A; /* borda de campos de formulário (3,4:1 — WCAG 1.4.11) */
-}
 
-/* .btn-primario {                            ideia pros botões
-  background-color: var(--cor-azul);
-  color: var(--cor-branco);
+  /* Revisão visual: só acréscimos. Pares de contraste conferidos no ContrasteTokensTest. */
+  --cor-erro-hover: #991B1B;      /* hover do botão de perigo (8,3:1 com branco) */
+  --cor-erro-fundo: #FEF2F2;      /* fundo do selo "Cancelado" */
+  --cor-sucesso-fundo: #F0FDF4;   /* fundo do selo "Entregue" */
+  --cor-aviso: #92400E;           /* texto do selo "Aguardando pagamento" */
+  --cor-aviso-fundo: #FFFBEB;
+  --cor-fundo-imagem: #E9EBEE;    /* fundo atrás das fotos de produto e categoria */
+
+  /* Espaçamento (rem: acompanha o zoom). */
+  --esp-1: 0.25rem;
+  --esp-2: 0.5rem;
+  --esp-3: 0.75rem;
+  --esp-4: 1rem;
+  --esp-5: 1.5rem;
+  --esp-6: 2rem;
+
+  /* Raios. */
+  --raio-sm: 0.25rem;
+  --raio: 0.5rem;
+  --raio-lg: 0.75rem;
+  --raio-pilula: 999px;
+
+  /* Tipografia. */
+  --fonte-sm: 0.875rem;
+  --fonte-base: 1rem;
+  --fonte-lg: 1.25rem;
+  --fonte-xl: 1.75rem;
+
+  /* Sombras: derivadas da cor do texto. */
+  --sombra-1: 0 0.25rem 0.75rem rgba(31, 41, 55, 0.1);
+  --sombra-2: 0 0.5rem 1rem rgba(31, 41, 55, 0.16);
+
+  /* Camadas (z-index). */
+  --z-submenu: 20;
+  --z-menu: 30;
+  --z-topo: 40;
+  --z-painel: 50;
+  --z-skip: 100;
 }
-.btn-primario:hover {
-  background-color: var(--cor-azul-hover); */

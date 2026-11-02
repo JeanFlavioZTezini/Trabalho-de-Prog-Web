@@ -5,9 +5,10 @@
    ========================================================= */
 
 /* Tamanhos em rem (1rem = fonte do navegador), para respeitar zoom e fonte maior.
-   Só bordas, contornos e breakpoints de @media ficam em px. */
+   Só bordas, contornos e breakpoints de @media ficam em px.
+   Espaçamento, raios, fonte, sombras e camadas também vêm de tokens.css (--esp-*, --raio*, --fonte-*, --sombra-*, --z-*).
+   Breakpoints: 480px, 768px e 1024px (e as versões "max" 479/767/1023px). */
 :root {
-  --raio: 0.5rem;
   --altura-logo: 2.5rem;
 }
 
@@ -48,7 +49,7 @@ body {
   position: absolute;
   top: -6.25rem;
   left: 0.5rem;
-  z-index: 100;
+  z-index: var(--z-skip);
   background-color: var(--cor-azul);
   color: var(--cor-branco);
   padding: 0.625rem 1rem;
@@ -68,12 +69,14 @@ body {
 /* O <,main> recebe foco programático ao usar o skip-link; não é um controle. */
 #conteudo:focus { outline: none; }
 
-/* Foco visível para todos os controles. */
+/* Foco visível para todos os controles (e para regiões focáveis, como a .tabela-rolavel com tabindex="0"). */
 a:focus-visible,
 button:focus-visible,
 input:focus-visible,
 select:focus-visible,
-textarea:focus-visible {
+textarea:focus-visible,
+summary:focus-visible,
+[tabindex]:not([tabindex="-1"]):focus-visible {
   outline: 3px solid var(--cor-azul);
   outline-offset: 2px;
 }
@@ -82,7 +85,7 @@ textarea:focus-visible {
 /* Acompanha a rolagem só em tela grande: no celular o cabeçalho (com menu) ocuparia boa parte da altura. */
 @media (min-width: 48rem) and (min-height: 40rem) {
   html { scroll-padding-top: 7rem; }
-  .topo { position: sticky; top: 0; z-index: 40; }
+  .topo { position: sticky; top: 0; z-index: var(--z-topo); }
 }
 
 .topo {
@@ -126,9 +129,9 @@ textarea:focus-visible {
   width: 100%;
   padding: 0.625rem 2.75rem 0.625rem 0.875rem;
   border: 1px solid var(--cor-borda-controle);
-  border-radius: 1.25rem;
+  border-radius: var(--raio-pilula);
   background-color: var(--cor-branco);
-  font-size: 0.875rem;
+  font-size: var(--fonte-sm);
   color: var(--cor-texto);
 }
 
@@ -307,11 +310,11 @@ textarea:focus-visible {
     position: absolute;
     top: 100%;
     left: 0;
-    z-index: 20;
+    z-index: var(--z-submenu);
     min-width: 14rem;
     border: 1px solid var(--cor-borda);
     border-radius: var(--raio);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+    box-shadow: var(--sombra-2);
   }
 
   /* O último item fica no canto direito: abrir para a esquerda evita rolagem horizontal. */
@@ -354,7 +357,7 @@ textarea:focus-visible {
 .banner {
   background-color: var(--cor-azul);
   color: var(--cor-branco);
-  border-radius: 0.75rem;
+  border-radius: var(--raio-lg);
   padding: 3rem 2rem;
   margin: 1.5rem 0;
 }
@@ -448,18 +451,28 @@ textarea:focus-visible {
 }
 .filtros-catalogo__acoes a,
 .paginacao a { color: var(--cor-azul); font-weight: 600; }
+.filtros-catalogo__acoes a:not([class]):hover,
+.paginacao a:hover { color: var(--cor-azul-hover); text-decoration-thickness: 2px; }
 
-/* F-23: filtros de "Meus pedidos". */
+/* O campo de busca ocupa a linha inteira dos filtros. */
+.filtros-catalogo__termo { grid-column: 1 / -1; }
+
+/* Filtros em grade: base comum de "Meus pedidos" (F-23) e das listas do admin (.filtros). Quebra sozinha em telas
+   estreitas, sem rolagem lateral em 360 px. */
+.filtros,
 .filtros-pedidos {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
   align-items: end;
-  gap: 1rem;
-  margin: 1rem 0 1.5rem;
+  gap: var(--esp-4);
+  margin: var(--esp-4) 0 var(--esp-5);
 }
+.filtros .campo,
 .filtros-pedidos .campo { margin: 0; }
+.filtros .alerta,
 .filtros-pedidos .alerta { grid-column: 1 / -1; margin: 0; }
-.filtros-pedidos__acoes { display: flex; align-items: center; flex-wrap: wrap; gap: 1rem; }
+.filtros__acoes,
+.filtros-pedidos__acoes { display: flex; align-items: center; flex-wrap: wrap; gap: var(--esp-4); }
 
 .paginacao {
   display: flex;
@@ -477,7 +490,11 @@ textarea:focus-visible {
   padding: 0.75rem;
   display: flex;
   flex-direction: column;
+  transition: box-shadow 0.15s, border-color 0.15s;
 }
+
+.card:hover,
+.card:focus-within { border-color: var(--cor-borda-controle); box-shadow: var(--sombra-1); }
 
 .card-link {
   display: block;
@@ -493,7 +510,7 @@ textarea:focus-visible {
 }
 
 .card .imagem {
-  background-color: #E9EBEE;
+  background-color: var(--cor-fundo-imagem);
   border-radius: var(--raio);
   height: 8.125rem;
   margin-bottom: 0.75rem;
@@ -525,45 +542,50 @@ textarea:focus-visible {
   margin-bottom: 0.75rem;
 }
 
+/* Selo: rótulo curto de situação. A cor só reforça; o texto do selo sempre diz a situação. */
 .selo {
   display: inline-block;
   padding: 0.2rem 0.45rem;
-  border-radius: 0.25rem;
+  border: 1px solid transparent;
+  border-radius: var(--raio-sm);
   font-size: 0.75rem;
   font-weight: 700;
+  line-height: 1.4;
+  white-space: nowrap;
 }
 
+/* Tons do selo (pares de contraste conferidos no ContrasteTokensTest). */
+.selo--neutro,
 .selo--indisponivel {
   background-color: var(--cor-azul-suave);
   color: var(--cor-texto);
 }
 
-.selo--receita {
+/* F-25: o selo de endereço principal tem as mesmas cores do de receita. */
+.selo--destaque,
+.selo--receita,
+.selo--principal {
   background-color: var(--cor-azul);
   color: var(--cor-branco);
 }
 
-/* F-25: endereço principal (mesmas cores do selo de receita, que já passam em AA). */
-.selo--principal {
-  margin-left: 0.25rem;
-  background-color: var(--cor-azul);
-  color: var(--cor-branco);
-}
+.selo--principal { margin-left: 0.25rem; }
+
+.selo--info { border-color: var(--cor-azul); background-color: var(--cor-azul-suave); color: var(--cor-azul); }
+.selo--aviso { border-color: var(--cor-aviso); background-color: var(--cor-aviso-fundo); color: var(--cor-aviso); }
+.selo--sucesso { border-color: var(--cor-sucesso); background-color: var(--cor-sucesso-fundo); color: var(--cor-sucesso); }
+.selo--erro { border-color: var(--cor-erro); background-color: var(--cor-erro-fundo); color: var(--cor-erro); }
+
+/* Situação do pedido: a tela põe "selo selo--status-" + o nome do StatusPedido, e o tom vem daqui. */
+.selo--status-AGUARDANDO_PAGAMENTO { border-color: var(--cor-aviso); background-color: var(--cor-aviso-fundo); color: var(--cor-aviso); }
+.selo--status-PAGAMENTO_APROVADO,
+.selo--status-EM_SEPARACAO,
+.selo--status-ENVIADO,
+.selo--status-PRONTO_PARA_RETIRADA { border-color: var(--cor-azul); background-color: var(--cor-azul-suave); color: var(--cor-azul); }
+.selo--status-ENTREGUE { border-color: var(--cor-sucesso); background-color: var(--cor-sucesso-fundo); color: var(--cor-sucesso); }
+.selo--status-CANCELADO { border-color: var(--cor-erro); background-color: var(--cor-erro-fundo); color: var(--cor-erro); }
 
 .form-inline { display: inline; }
-
-.btn-carrinho {
-  background-color: var(--cor-azul);
-  color: var(--cor-branco);
-  border: none;
-  border-radius: 50%;
-  width: 2.125rem;
-  height: 2.125rem;
-  cursor: pointer;
-  font-size: 0.9375rem;
-}
-
-.btn-carrinho:hover { background-color: var(--cor-azul-hover); }
 
 /* ---------- Categorias (seção da home) ---------- */
 .categorias {
@@ -589,10 +611,13 @@ textarea:focus-visible {
   text-decoration: none;
   color: var(--cor-texto);
   display: block;
+  transition: box-shadow 0.15s, border-color 0.15s;
 }
 
+.categoria:hover { border-color: var(--cor-borda-controle); box-shadow: var(--sombra-1); color: var(--cor-azul); }
+
 .categoria .imagem {
-  background-color: #E9EBEE;
+  background-color: var(--cor-fundo-imagem);
   border-radius: var(--raio);
   height: 5.625rem;
   margin-top: 0.625rem;
@@ -605,7 +630,7 @@ textarea:focus-visible {
   padding: 1.75rem 2rem;
   background-color: var(--cor-branco);
   border: 1px solid var(--cor-borda);
-  border-radius: 0.75rem;
+  border-radius: var(--raio-lg);
 }
 
 .pagina-texto h1 { margin: 0 0 0.75rem; font-size: 1.75rem; line-height: 1.25; }
@@ -649,24 +674,6 @@ textarea:focus-visible {
 .alerta--erro { border-left-color: var(--cor-erro); }
 .alerta--sucesso { border-left-color: var(--cor-sucesso); }
 
-/* ---------- Botão primário ---------- */
-.btn-primario {
-  display: inline-block;
-  padding: 0.75rem 1.25rem;
-  border: none;
-  border-radius: var(--raio);
-  background-color: var(--cor-azul);
-  color: var(--cor-branco);
-  font: inherit;
-  font-weight: 600;
-  text-align: center;
-  cursor: pointer;
-}
-
-.btn-primario:hover { background-color: var(--cor-azul-hover); }
-
-.btn-primario--bloco { width: 100%; }
-
 /* ---------- Campo de formulário (ver templates/fragments/campo.html) ---------- */
 .campo { margin-bottom: 1rem; }
 
@@ -703,11 +710,9 @@ textarea:focus-visible {
   color: var(--cor-texto);
 }
 
-.campo input[aria-invalid="true"] { border-color: var(--cor-erro); }
-
-.tabela-admin { width: 100%; border-collapse: collapse; }
-.tabela-admin th, .tabela-admin td { padding: 0.5rem; border-bottom: 1px solid var(--cor-borda-controle); text-align: left; }
-.tabela-admin form { display: inline; }
+.campo input[aria-invalid="true"],
+.campo select[aria-invalid="true"],
+.campo textarea[aria-invalid="true"] { border-color: var(--cor-erro); }
 
 /* ---------- Rodapé do site ---------- */
 .site-rodape {
@@ -745,6 +750,233 @@ textarea:focus-visible {
   font-size: 0.8125rem;
   color: var(--cor-texto-hint);
 }
+
+/* =========================================================
+   Componentes (revisão visual)
+   Quando usar cada um: docs/acessibilidade.md, seção "Guia de componentes".
+   Ficam depois de .pagina-texto e do rodapé de propósito: "a.btn-*" precisa vencer ".pagina-texto a" na cascata.
+   ========================================================= */
+
+/* ---------- Links do conteúdo ---------- */
+/* Links sem classe no conteúdo: azul do projeto, sublinhado afastado do texto. */
+main a { color: var(--cor-azul); text-underline-offset: 2px; }
+main a:not([class]):hover { color: var(--cor-azul-hover); text-decoration-thickness: 2px; }
+
+/* Link de ação destrutiva que leva a uma tela de confirmação (ex.: "Excluir minha conta"). */
+main a.link-perigo { color: var(--cor-erro); font-weight: 600; }
+main a.link-perigo:hover { color: var(--cor-erro-hover); text-decoration-thickness: 2px; }
+
+/* ---------- Botões ---------- */
+/* Mesma altura (alvo de toque de 2.75rem), mesmo padding e mesmos estados para todas as variantes. */
+.btn-primario,
+.btn-secundario,
+.btn-perigo,
+.btn-adicionar {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--esp-2);
+  min-height: 2.75rem;
+  padding: var(--esp-2) var(--esp-5);
+  border: 1px solid transparent;
+  border-radius: var(--raio);
+  font: inherit;
+  font-weight: 600;
+  line-height: 1.25;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  transition: background-color 0.15s, border-color 0.15s, color 0.15s;
+}
+
+/* Principal: a ação da tela. Um por formulário, e o primeiro no DOM (o Enter aciona ele). */
+.btn-primario,
+.btn-adicionar,
+a.btn-primario { background-color: var(--cor-azul); color: var(--cor-branco); }
+.btn-primario:hover,
+.btn-adicionar:hover { background-color: var(--cor-azul-hover); }
+
+/* Secundário: alternativa ou saída (Cancelar, Voltar, Limpar filtros). */
+.btn-secundario,
+a.btn-secundario { border-color: var(--cor-azul); background-color: var(--cor-branco); color: var(--cor-azul); }
+.btn-secundario:hover { background-color: var(--cor-azul-suave); }
+
+/* Perigo: apaga ou desfaz algo (Excluir, Remover, Esvaziar). Sempre depois de uma confirmação. */
+.btn-perigo,
+a.btn-perigo { background-color: var(--cor-erro); color: var(--cor-branco); }
+.btn-perigo:hover { background-color: var(--cor-erro-hover); }
+
+.btn-primario:active,
+.btn-secundario:active,
+.btn-perigo:active,
+.btn-adicionar:active { transform: translateY(1px); }
+
+.btn-primario:disabled,
+.btn-secundario:disabled,
+.btn-perigo:disabled,
+.btn-adicionar:disabled,
+.btn-link:disabled,
+[aria-disabled="true"].btn-primario {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.btn-primario--bloco { width: 100%; }
+
+/* Botão do card de produto: ocupa a largura do card e tem fonte menor. */
+.btn-adicionar { width: 100%; padding: var(--esp-2) var(--esp-3); font-size: var(--fonte-sm); }
+
+/* Link com aparência de link, mas que é <button> (POST) ou ação discreta de uma linha de tabela. */
+.btn-link {
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--cor-azul);
+  font: inherit;
+  font-size: var(--fonte-sm);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+.btn-link:hover { color: var(--cor-azul-hover); text-decoration-thickness: 2px; }
+
+/* ---------- Grupo de ações ---------- */
+/* Botões de um formulário: principal primeiro, depois o secundário; quebram de linha no celular. */
+.acoes {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--esp-3);
+  margin-top: var(--esp-5);
+}
+.acoes form { margin: 0; }
+
+/* ---------- Tabelas ---------- */
+.tabela-admin,
+.carrinho__tabela {
+  width: 100%;
+  border-collapse: collapse;
+  background-color: var(--cor-branco);
+}
+.tabela-admin th,
+.tabela-admin td,
+.carrinho__tabela th,
+.carrinho__tabela td {
+  padding: var(--esp-3);
+  border-bottom: 1px solid var(--cor-borda);
+  text-align: left;
+  vertical-align: top;
+}
+.tabela-admin thead th,
+.carrinho__tabela thead th {
+  border-bottom: 2px solid var(--cor-borda-controle);
+  font-size: var(--fonte-sm);
+  white-space: nowrap;
+}
+.tabela-admin form { display: inline; }
+/* Valores e quantidades alinhados à direita, para comparar de cima a baixo. */
+.tabela-admin .num,
+.carrinho__tabela .num { text-align: right; white-space: nowrap; }
+
+/* ---------- Migalhas (breadcrumb) ---------- */
+/* <nav class="migalhas" aria-label="Você está em"><ol><li><a>…</a></li>…<li aria-current="page">…</li></ol></nav> */
+.migalhas { margin: var(--esp-4) 0 0; font-size: var(--fonte-sm); }
+.migalhas ol { display: flex; flex-wrap: wrap; margin: 0; padding: 0; list-style: none; }
+.migalhas li { display: flex; align-items: center; color: var(--cor-texto-hint); }
+.migalhas li + li::before { content: "›"; margin: 0 var(--esp-2); color: var(--cor-texto-hint); }
+.migalhas [aria-current="page"] { color: var(--cor-texto); font-weight: 600; }
+
+/* ---------- Etapas (checkout) ---------- */
+/* <ol class="etapas"><li><span class="etapas__numero">1</span> <span class="etapas__rotulo">Carrinho</span></li>…
+   A etapa atual leva aria-current="step". No celular só o rótulo da atual aparece; as outras ficam só com o número. */
+.etapas {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--esp-2) var(--esp-5);
+  margin: var(--esp-4) 0 var(--esp-5);
+  padding: 0;
+  list-style: none;
+  font-size: var(--fonte-sm);
+  counter-reset: none;
+}
+.etapas li { display: flex; align-items: center; gap: var(--esp-2); color: var(--cor-texto-hint); }
+.etapas__numero {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.75rem;
+  height: 1.75rem;
+  border: 2px solid var(--cor-borda-controle);
+  border-radius: 50%;
+  font-weight: 700;
+}
+.etapas [aria-current="step"] { color: var(--cor-texto); font-weight: 700; }
+.etapas [aria-current="step"] .etapas__numero { border-color: var(--cor-azul); background-color: var(--cor-azul); color: var(--cor-branco); }
+.etapas__feita .etapas__numero { border-color: var(--cor-azul); color: var(--cor-azul); }
+
+@media (max-width: 479px) {
+  .etapas li:not([aria-current="step"]) .etapas__rotulo {
+    position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+  }
+}
+
+/* ---------- Estado vazio ---------- */
+/* Lista sem itens ou página de erro: o que aconteceu e qual o próximo passo. */
+.estado-vazio {
+  padding: var(--esp-6) var(--esp-4);
+  border: 1px dashed var(--cor-borda-controle);
+  border-radius: var(--raio);
+  background-color: var(--cor-branco);
+  text-align: center;
+}
+.estado-vazio > :first-child { margin-top: 0; }
+.estado-vazio > :last-child { margin-bottom: 0; }
+.estado-vazio .acoes { justify-content: center; }
+
+/* ---------- Blocos ---------- */
+/* Seção agrupada com borda (Minha conta, detalhe do pedido, ambiente demo). */
+.secao-cartao {
+  margin: var(--esp-5) 0 0;
+  padding: var(--esp-4) var(--esp-5);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background-color: var(--cor-branco);
+}
+/* Dentro de .pagina-texto, a regra de "section" (divisória no topo) não vale para o cartão. */
+.pagina-texto .secao-cartao { margin-top: var(--esp-5); padding: var(--esp-4) var(--esp-5); border-top: 1px solid var(--cor-borda); }
+.secao-cartao > h2 { margin-top: 0; font-size: var(--fonte-base); }
+.secao-cartao > :last-child { margin-bottom: 0; }
+
+/* Grade de atalhos (painel do admin): cada cartão é um link com título e uma linha de descrição. */
+.cartoes-painel {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
+  gap: var(--esp-4);
+  margin: var(--esp-5) 0 0;
+  padding: 0;
+  list-style: none;
+}
+.cartoes-painel a {
+  display: block;
+  height: 100%;
+  padding: var(--esp-4) var(--esp-5);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background-color: var(--cor-branco);
+  color: var(--cor-texto);
+  text-decoration: none;
+  transition: box-shadow 0.15s, border-color 0.15s;
+}
+.cartoes-painel a:hover { border-color: var(--cor-azul); box-shadow: var(--sombra-1); }
+.cartoes-painel__titulo { display: block; margin-bottom: var(--esp-1); color: var(--cor-azul); font-size: var(--fonte-lg); font-weight: 700; }
+.cartoes-painel__descricao { display: block; color: var(--cor-texto-hint); font-size: var(--fonte-sm); }
+
+/* Recuo da árvore de categorias (no lugar do style inline). */
+.nivel-1 { padding-left: var(--esp-5); }
+.nivel-2 { padding-left: calc(var(--esp-5) * 2); }
+.nivel-3 { padding-left: calc(var(--esp-5) * 3); }
+.nivel-4 { padding-left: calc(var(--esp-5) * 4); }
 
 /* =========================================================
    Responsivo
@@ -805,12 +1037,12 @@ textarea:focus-visible {
     top: 100%;
     right: 0;
     left: 0;
-    z-index: 30;
+    z-index: var(--z-menu);
     max-height: 70vh;
     overflow-y: auto;
     background-color: var(--cor-branco);
     border-bottom: 1px solid var(--cor-borda);
-    box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.12);
+    box-shadow: var(--sombra-2);
   }
   .menu-categorias__item { flex-wrap: wrap; }
   .menu-categorias__submenu { flex-basis: 100%; padding-left: 1rem; }
@@ -841,16 +1073,10 @@ textarea:focus-visible {
 /* ---------- F-11: endereços ---------- */
 .usuario--logado { max-width: 32rem; }
 
-.campo select[aria-invalid="true"],
-.campo textarea[aria-invalid="true"] { border-color: var(--cor-erro); }
-
-/* Link com cara de botão: sem esta regra, ".pagina-texto a" deixa o texto azul sobre o fundo azul. */
-.pagina-texto a.btn-primario { color: var(--cor-branco); text-decoration: none; }
-
 /* Tabela larga: rola dentro da própria caixa, a página não rola para o lado. O "position: relative" mantém
-   dentro da caixa os textos escondidos (.visually-hidden), que são absolutos e senão escapam do corte. */
+   dentro da caixa os textos escondidos (.visually-hidden), que são absolutos e senão escapam do corte.
+   O foco (tabindex="0") usa a regra global de :focus-visible. */
 .tabela-rolavel { position: relative; overflow-x: auto; }
-.tabela-rolavel:focus-visible { outline: 3px solid var(--cor-azul); outline-offset: 2px; }
 
 /* ---------- F-04: cadastro ---------- */
 /* Chrome não aplica :focus-visible quando o foco está no botão do calendário do campo de data: sem esta regra o
@@ -861,9 +1087,12 @@ input[type="date"]:focus-within {
 }
 
 /* ---------- F-05: confirmação da conta e caixa de mensagens de teste ---------- */
-/* Grupo de opções (rádio): sem a moldura padrão do fieldset e com o rádio ao lado do texto. */
-.campo--opcoes { border: 0; margin: 0 0 1rem; padding: 0; }
-.campo--opcoes legend { margin-bottom: 0.5rem; padding: 0; font-weight: 700; }
+/* Grupo de opções (rádio) e grupo de campos (F-08: categorias, imagens): sem a moldura padrão do fieldset e com a
+   legenda em destaque. No grupo de opções, o rádio fica ao lado do texto. */
+.campo--opcoes,
+.campo--grupo { border: 0; margin: 0 0 1rem; padding: 0; }
+.campo--opcoes legend,
+.campo--grupo legend { margin-bottom: 0.5rem; padding: 0; font-weight: 700; }
 .campo--opcoes label { display: flex; align-items: center; gap: 0.5rem; margin-bottom: 0.5rem; font-weight: 400; }
 .campo--opcoes input { width: auto; margin: 0; }
 .pagina-texto form + h2 { margin-top: 2rem; }
@@ -893,7 +1122,11 @@ input[type="date"]:focus-within {
 .checkout-demo { margin: 1rem 0; }
 .checkout-demo form { display: inline-block; margin-right: 0.5rem; }
 
+/* Aviso "exige receita" dentro da linha de item do checkout (não é o .selo--receita do card). */
 .selo-receita { display: block; font-size: 0.75rem; font-weight: 700; }
+
+/* Bloco "Ambiente de demonstração" do pedido: botões de simulação lado a lado. */
+.checkout-demo .acoes { margin-top: var(--esp-3); }
 
 /* F-10: carrinho */
 .topo__carrinho {
@@ -908,23 +1141,9 @@ input[type="date"]:focus-within {
   .topo__carrinho { order: 2; }
 }
 
-/* margin-top: auto prende o botão ao fundo do card; o link acima ocupa o espaço que sobra */
+/* margin-top: auto prende o botão ao fundo do card; o link acima ocupa o espaço que sobra. O botão (.btn-adicionar)
+   está nos Componentes. */
 .card-carrinho { margin: auto 0 0; padding-top: 0.5rem; }
-
-.btn-adicionar {
-  width: 100%;
-  padding: 0.5rem 0.75rem;
-  border: none;
-  border-radius: var(--raio);
-  background-color: var(--cor-azul);
-  color: var(--cor-branco);
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-adicionar:hover { background-color: var(--cor-azul-hover); }
 
 /* ---------- F-02: detalhes e seleção de apresentação ---------- */
 .produto-detalhe {
@@ -932,7 +1151,9 @@ input[type="date"]:focus-within {
   padding-bottom: 2rem;
 }
 
-.produto-detalhe__marca { color: var(--cor-texto-hint); }
+.produto-detalhe__marca,
+.produto-detalhe__ean { color: var(--cor-texto-hint); }
+.produto-detalhe__ean { font-size: var(--fonte-sm); }
 
 .produto-detalhe__grade {
   display: grid;
@@ -1032,51 +1253,7 @@ input[type="date"]:focus-within {
   .produto-detalhe__dados { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
-.btn-secundario {
-  padding: 0.5rem 0.875rem;
-  border: 1px solid var(--cor-azul);
-  border-radius: var(--raio);
-  background-color: var(--cor-branco);
-  color: var(--cor-azul);
-  font: inherit;
-  font-size: 0.875rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-
-.btn-secundario:hover { background-color: var(--cor-azul-suave); }
-
-.btn-link {
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--cor-azul);
-  font: inherit;
-  font-size: 0.875rem;
-  text-decoration: underline;
-  text-underline-offset: 2px;
-  cursor: pointer;
-}
-
-.btn-primario[disabled] {
-  opacity: 0.6;
-  cursor: not-allowed;
-}
-
-.carrinho__tabela {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: var(--cor-branco);
-}
-
-.carrinho__tabela th,
-.carrinho__tabela td {
-  padding: 0.75rem;
-  border-bottom: 1px solid var(--cor-borda);
-  text-align: left;
-  vertical-align: top;
-}
-
+/* Os botões (.btn-secundario, .btn-link) e a tabela (.carrinho__tabela) estão nos Componentes. */
 .carrinho__produto { display: flex; gap: 0.75rem; font-weight: 400; }
 .carrinho__produto img { object-fit: contain; flex: none; }
 .carrinho__nome { display: block; font-weight: 600; }
@@ -1109,7 +1286,7 @@ input[type="date"]:focus-within {
   position: fixed;
   right: 1rem;
   bottom: 1rem;
-  z-index: 50;
+  z-index: var(--z-painel);
   width: min(22rem, calc(100vw - 2rem));
   padding: 1rem;
   border: 1px solid var(--cor-borda);
@@ -1118,7 +1295,7 @@ input[type="date"]:focus-within {
   background-color: var(--cor-branco);
   color: var(--cor-texto);
   font-size: 0.875rem;
-  box-shadow: 0 0.25rem 1rem rgba(31, 41, 55, 0.2);
+  box-shadow: var(--sombra-2);
 }
 
 .carrinho-painel[hidden] { display: none; }
@@ -1152,6 +1329,7 @@ input[type="date"]:focus-within {
 .conta__dados dt { font-weight: 600; }
 .conta__dados dd { margin: 0; }
 .conta__secao { margin-top: 2rem; }
+.conta__secao.secao-cartao { margin-top: var(--esp-5); }
 
 @media (max-width: 767px) {
   .conta__dados { grid-template-columns: 1fr; gap: 0.25rem 0; }
@@ -1195,10 +1373,6 @@ label.campo__marcador input {
   padding: 0;
 }
 
-/* Grupo de campos (categorias, imagens): sem moldura, legenda em destaque. */
-.campo--grupo { border: 0; margin: 0 0 1rem; padding: 0; }
-.campo--grupo legend { margin-bottom: 0.5rem; padding: 0; font-weight: 700; }
-
 /* Uma apresentação por cartão: cada campo com rótulo visível e sem rolagem horizontal. */
 .apresentacao {
   margin: 0 0 1rem;
@@ -1240,7 +1414,7 @@ label.interruptor input {
   flex: none;
   width: 2.75rem;
   height: 1.5rem;
-  border-radius: 999px;
+  border-radius: var(--raio-pilula);
   background-color: var(--cor-borda-controle);
   transition: background-color 0.15s;
 }
@@ -1258,9 +1432,7 @@ label.interruptor input {
 .interruptor input:checked ~ .interruptor__trilho { background-color: var(--cor-azul); }
 .interruptor input:checked ~ .interruptor__trilho::after { transform: translateX(1.25rem); }
 .interruptor input:focus-visible ~ .interruptor__trilho { outline: 3px solid var(--cor-azul); outline-offset: 2px; }
-@media (prefers-reduced-motion: reduce) {
-  .interruptor__trilho, .interruptor__trilho::after { transition: none; }
-}
+/* A transição do trilho já é anulada pelo bloco global de redução de movimento. */
 
 /* Foto do produto: miniatura com o controle de remover à direita. */
 .imagem-produto { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin-bottom: 0.75rem; }
@@ -1282,6 +1454,7 @@ label.remover-foto {
   cursor: pointer;
 }
 .remover-foto input { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; opacity: 0; }
+.remover-foto__icone { flex: none; }
 .remover-foto__estado { display: none; font-size: 0.8125rem; font-weight: 600; }
 .remover-foto:has(input:checked) { border-color: var(--cor-erro); background-color: var(--cor-erro); color: var(--cor-branco); }
 .remover-foto:has(input:checked) .remover-foto__estado { display: inline; }

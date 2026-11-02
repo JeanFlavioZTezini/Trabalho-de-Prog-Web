@@ -555,7 +555,7 @@ carrinho; o dono é o usuário **ou** o token, nunca os dois). Regras em `servic
 | `POST /carrinho/itens/{id}/quantidade` | altera; quantidade menor que 1 leva à confirmação de remoção |
 | `GET/POST /carrinho/itens/{id}/remover` | confirmação e remoção |
 | `POST /carrinho/itens/{id}/aceitar-preco` | aceita o preço novo (UC05-E3) |
-| `POST /carrinho/esvaziar` | esvazia |
+| `GET/POST /carrinho/esvaziar` | confirmação e esvaziamento |
 | `GET /carrinho/finalizar` | revalida e segue para `/checkout`; visitante vai ao login e **volta aqui** depois |
 
 - **De quem é o carrinho:** quem decide é o servidor. Usuário logado: o id do login. Visitante: o cookie `carrinho_token`
@@ -596,6 +596,8 @@ carrinho; o dono é o usuário **ou** o token, nunca os dois). Regras em `servic
 - O botão envia `apresentacaoId` e quantidade por `POST /carrinho/itens` (contrato da F-10). Estoque e limite são
   revalidados no servidor pelo `CarrinhoService`; sem estoque, a compra fica desabilitada. Produto inexistente/inativo
   retorna 404 com orientação para o catálogo.
+- Migalhas no topo (Início › Categoria › Produto): o caminho vai da raiz até a categoria ativa mais funda do produto
+  (empate: menor ordem). Sem categoria ativa, fica Início › Produtos.
 
 ## Cadastro de clientes (F-04 / UC03)
 

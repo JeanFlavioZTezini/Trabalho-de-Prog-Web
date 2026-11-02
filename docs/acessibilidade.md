@@ -150,14 +150,15 @@ Principal primeiro, depois o secundário. O grupo quebra de linha no celular.
 
 Padrão do projeto: uma **página de confirmação** (GET) que diz o que vai acontecer, com `.btn-perigo` para confirmar
 (POST com CSRF) e `.btn-secundario` para voltar. O recurso de outra pessoa responde 404. Exemplos: remover item do
-carrinho, excluir endereço, excluir categoria. Exceção: a exclusão de produto no admin usa `confirm()` do navegador.
+carrinho, esvaziar o carrinho, excluir endereço, excluir categoria. Exceção: a exclusão de produto no admin usa `confirm()` do navegador.
 
 ### Selos
 
 `<span class="selo selo--...">texto</span>`. O texto sempre diz a situação; a cor só reforça.
 
 - Tons: `selo--neutro`, `selo--destaque`, `selo--info`, `selo--aviso`, `selo--sucesso`, `selo--erro`.
-- Situação do pedido: `th:classappend="'selo--status-' + ${pedido.status.name()}"`. O tom de cada `StatusPedido` está no
+- Situação do pedido: `<span th:replace="~{fragments/componentes :: situacao(${pedido.status})}"></span>`, que gera
+  `selo selo--status-<STATUS>` com o rótulo. O tom de cada `StatusPedido` está no
   CSS (aguardando = aviso; aprovado, em separação, enviado e pronto = info; entregue = sucesso; cancelado = erro).
 
 ### Tabelas
@@ -178,11 +179,14 @@ carrinho, excluir endereço, excluir categoria. Exceção: a exclusão de produt
   `<nav class="migalhas" aria-label="Você está em"><ol><li><a>Início</a></li>…<li aria-current="page">Produto</li></ol></nav>`.
 - Etapas (checkout): `<ol class="etapas">` com `<span class="etapas__numero">` e `<span class="etapas__rotulo">` em cada
   `<li>`; a atual leva `aria-current="step"` e as anteriores `class="etapas__feita"`. No celular só o rótulo da atual
-  aparece.
+  aparece. Nas telas da compra use `<ol th:replace="~{fragments/componentes :: etapas(n)}"></ol>` (1 Carrinho,
+  2 Entrega e pagamento, 3 Resumo, 4 Pedido); se a etapa for condicional, ponha o `th:if` num `th:block` em volta,
+  porque o `th:replace` roda antes do `th:if` no mesmo elemento.
 
 ### Blocos
 
-- `.secao-cartao`: seção com borda e título (`h2`), para agrupar (Minha conta, detalhe do pedido).
+- `.secao-cartao`: seção com borda e título (`h2`, ou `h3` quando está dentro de outra seção), para agrupar (Minha
+  conta, detalhe do pedido, "Ambiente de demonstração" do pedido).
 - `.cartoes-painel`: grade de atalhos em cartão (painel do admin), com `.cartoes-painel__titulo` e
   `.cartoes-painel__descricao`.
 - `.nivel-1` a `.nivel-4`: recuo da árvore de categorias (no lugar de `style` inline).

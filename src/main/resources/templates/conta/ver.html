@@ -67,6 +67,8 @@
     <section class="conta__secao" aria-labelledby="titulo-pedidos" sec:authorize="hasRole('CLIENTE')">
         <h2 id="titulo-pedidos">Pedidos</h2>
         <p><a th:href="@{/pedidos}">Meus pedidos</a></p>
+        <p><a th:href="@{/enderecos}">Meus endereços</a> <span aria-hidden="true"> · </span>
+            <a th:href="@{/conta/cartoes}">Meus cartões</a></p>
     </section>
 
 </div>

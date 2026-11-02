@@ -16,7 +16,9 @@ import org.springframework.web.server.ResponseStatusException;
 import com.farmacia.farmaciaonline.gateway.GatewayDePagamento;
 import com.farmacia.farmaciaonline.gateway.dto.RequisicaoPagamento;
 import com.farmacia.farmaciaonline.gateway.dto.RespostaPagamento;
+import com.farmacia.farmaciaonline.gateway.dto.TokenCartao;
 import com.farmacia.farmaciaonline.model.CartaoForm;
+import com.farmacia.farmaciaonline.model.CartaoSalvo;
 import com.farmacia.farmaciaonline.model.CheckoutForm;
 import com.farmacia.farmaciaonline.model.Pagamento;
 import com.farmacia.farmaciaonline.model.Pedido;
@@ -73,11 +75,16 @@ public class PagamentoPedidoService {
     private final GatewayDePagamento gateway;
     private final PedidoRepository pedidoRepository;
     private final PagamentoRepository pagamentoRepository;
+    private final CartaoSalvoService cartoesSalvos;
 
     /**
      * Registra o pedido e faz a primeira cobrança.
      */
     public Long confirmarCompra(Long usuarioId, CheckoutForm form, String conferencia, UUID chave, CartaoForm cartao) {
+        if (form.isPagoComCartao() && cartao != null && cartao.isUsaCartaoSalvo()) {
+            // F-25: cartão salvo de outra pessoa responde 404 antes de registrar o pedido e reservar estoque.
+            cartoesSalvos.doUsuario(usuarioId, cartao.getCartaoSalvoId());
+        }
         Long pedidoId = checkout.registrar(usuarioId, form, conferencia, chave);
         pagar(usuarioId, pedidoId, chave, form.getMetodo(), form.parcelasEfetivas(), cartao);
         return pedidoId;
@@ -87,14 +94,19 @@ public class PagamentoPedidoService {
     public void pagar(Long usuarioId, Long pedidoId, UUID chave, MetodoPagamento metodo, int parcelas,
             CartaoForm cartao) {
         checkout.exigirClienteAtivo(usuarioId);
+        // F-25: cartão salvo de outra pessoa para aqui (404), antes de abrir a tentativa: nada é cobrado.
+        boolean pagaComCartao = cartao != null && metodo != MetodoPagamento.PIX && metodo != MetodoPagamento.BOLETO;
+        CartaoSalvo salvo = pagaComCartao && cartao.isUsaCartaoSalvo()
+                ? cartoesSalvos.doUsuario(usuarioId, cartao.getCartaoSalvoId())
+                : null;
         estado.abrirTentativa(usuarioId, pedidoId, chave, metodo, parcelas)
-                .ifPresent(tentativa -> cobrar(tentativa, cartao));
+                .ifPresent(tentativa -> cobrar(usuarioId, tentativa, pagaComCartao ? cartao : null, salvo));
     }
 
-    private void cobrar(EstadoPedidoService.Tentativa tentativa, CartaoForm cartao) {
+    private void cobrar(Long usuarioId, EstadoPedidoService.Tentativa tentativa, CartaoForm cartao, CartaoSalvo salvo) {
         RespostaPagamento retorno;
         try {
-            retorno = gateway.processar(requisicao(tentativa, cartao));
+            retorno = gateway.processar(requisicao(tentativa, cartao, salvo));
         } catch (IllegalArgumentException e) {
             estado.recusar(tentativa.pagamentoId(), e.getMessage());
             return;
@@ -104,14 +116,43 @@ public class PagamentoPedidoService {
             return;
         }
         estado.aplicarRetorno(tentativa.pagamentoId(), retorno);
+        if (retorno.status() == StatusPagamento.APROVADO) {
+            guardarCartao(usuarioId, tentativa, cartao, salvo);
+        }
         if (retorno.status() == StatusPagamento.APROVADO || retorno.status() == StatusPagamento.PENDENTE) {
             resumos.enviarSePendente(tentativa.pedidoId());
         }
     }
 
-    private static RequisicaoPagamento requisicao(EstadoPedidoService.Tentativa tentativa, CartaoForm cartao) {
-        boolean temCartao = cartao != null && tentativa.metodo() != MetodoPagamento.PIX
-                && tentativa.metodo() != MetodoPagamento.BOLETO;
+    /**
+     * F-25: com o pagamento aprovado, registra o cartão salvo usado ou, se a pessoa pediu, guarda o token do cartão
+     * novo. Falha aqui não desfaz o pagamento: o pedido já está pago.
+     */
+    private void guardarCartao(Long usuarioId, EstadoPedidoService.Tentativa tentativa, CartaoForm cartao,
+            CartaoSalvo salvo) {
+        try {
+            if (salvo != null) {
+                cartoesSalvos.vincularAoPagamento(tentativa.pagamentoId(), salvo.getId());
+            } else if (cartao != null && cartao.isSalvarCartao()) {
+                TokenCartao token = gateway.tokenizar(cartao.getNumeroCartao(), cartao.getValidadeCartao(),
+                        cartao.getNomeImpresso());
+                CartaoSalvo novo = cartoesSalvos.salvar(usuarioId, token, cartao.getNomeImpresso());
+                cartoesSalvos.vincularAoPagamento(tentativa.pagamentoId(), novo.getId());
+            }
+        } catch (RuntimeException e) {
+            log.warn("Não foi possível salvar o cartão do pedido {}: {}", tentativa.pedidoId(),
+                    e.getClass().getSimpleName());
+        }
+    }
+
+    private static RequisicaoPagamento requisicao(EstadoPedidoService.Tentativa tentativa, CartaoForm cartao,
+            CartaoSalvo salvo) {
+        boolean temCartao = cartao != null;
+        if (temCartao && salvo != null) {
+            return new RequisicaoPagamento(tentativa.pedidoId(), tentativa.valor(), tentativa.metodo(), null,
+                    cartao.getCvv(), null, salvo.getNomeImpresso(), tentativa.parcelas(), salvo.getId(),
+                    tentativa.chave().toString(), salvo.getTokenGateway());
+        }
         return new RequisicaoPagamento(tentativa.pedidoId(), tentativa.valor(), tentativa.metodo(),
                 temCartao ? cartao.getNumeroCartao() : null,
                 temCartao ? cartao.getCvv() : null,

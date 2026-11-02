@@ -444,7 +444,7 @@ expiração, cancelamento, gateway fora do ar e falha no envio); `CheckoutFluxoW
 `CheckoutDemoSemPerfilTest` (sem o perfil demo, os botões não existem). A base `CheckoutTesteBase` não usa `@Transactional` de
 propósito: um rollback no fim do teste esconderia os commits e as travas, que são o assunto.
 
-**Fora do escopo:** escolher um cartão salvo no pagamento (opcional, F-25).
+**Cartão salvo:** veio na F-25 (seção "Facilidades opcionais").
 
 ## Meus pedidos (F-16 / UC06)
 
@@ -474,7 +474,7 @@ cabeçalho só para o perfil `CLIENTE`. Código: `PedidosClienteController`, `Pe
   Reaproveite os métodos `findByUsuarioIdOrderByCriadoEmDescIdDesc` e `findByPedidoIdOrderByCriadoEmAscIdAsc`, que desempatam
   por id.
 - **Filtros por situação e período (UC06-A2):** vieram na F-23 (seção "Filtros por período e exportação CSV"). "Comprar
-  novamente" (UC06-A3) é opcional (F-25).
+  novamente" (UC06-A3) veio na F-25.
 
 ## Carrinho (F-10 / UC05)
 
@@ -784,6 +784,34 @@ tem `GET`, e não existe edição administrativa de conta.
   `ClienteAdminServiceIntegracaoTest` (PostgreSQL real: busca por nome, e-mail e CPF, status, só cliente, paginação,
   curingas como texto, auditoria sem o termo buscado, 404 sem log, pedidos recentes, log que falha derruba a consulta).
 
+## Facilidades opcionais (F-25 / UC06-A3, UC09-A2, UC16)
+
+- **Comprar novamente:** botão no detalhe do pedido (`POST /pedidos/{id}/comprar-novamente`, `RecompraController`).
+  - Cada item passa por `CarrinhoService.adicionar`, que revalida produto e apresentação ativos, estoque, limite por pedido
+    e preço atual. O preço antigo nunca é reaproveitado.
+  - Item recusado vira aviso e não impede os outros (cada item tem a própria transação).
+  - Leva ao carrinho para revisão: nada é comprado direto.
+  - Pedido de outra pessoa responde 404.
+- **Endereço principal** (`V9__endereco_principal.sql`):
+  - Coluna `endereco.principal` com índice único parcial (no máximo um por cliente).
+  - Regras: o primeiro endereço já nasce principal; "Tornar principal" em Meus endereços
+    (`POST /enderecos/{id}/principal`); excluir o principal promove o mais recente.
+  - A V9 marca como principal o endereço mais recente de quem já tinha endereço (o mesmo que o checkout pré-selecionava).
+  - O checkout abre com ele marcado. Pedidos não mudam, porque guardam a cópia `EnderecoEntrega`.
+- **Cartão salvo por token:**
+  - Na hora de pagar, "Salvar este cartão": só se o pagamento for **aprovado**, o gateway devolve um token
+    (`GatewayDePagamento.tokenizar`). O banco guarda token, bandeira, 4 últimos números, validade e nome. O mesmo cartão
+    não é salvo duas vezes.
+  - Pagar com cartão salvo pede o **código de segurança de novo**. O dono é conferido (`CartaoSalvoRepository.findByIdAndUsuarioId`)
+    **antes** de registrar o pedido: cartão de outra pessoa dá 404 sem pedido nem cobrança.
+  - O pagamento registra o cartão usado (`pagamento.cartao_salvo_id`).
+  - Remover o cartão em "Meus cartões" (`/conta/cartoes`); pagamentos antigos ficam com o cartão nulo.
+  - Número completo e CVV nunca vão para o banco, log nem `toString`.
+  - No gateway demo, o token vive na memória: depois de reiniciar o app, o cartão salvo é recusado com
+    "Cartão salvo não reconhecido" e basta informar o cartão de novo.
+- **Testes:** `FacilidadesOpcionaisIntegracaoTest` (recompra, endereço principal e cartão salvo, inclusive recurso de outra
+  pessoa e CSRF) e `DemoGatewayTokenizacaoTest` (tokenização, token desconhecido, CVV obrigatório).
+
 ## Filtros por período e exportação CSV (F-23 / UC06-A2, UC11-A2, UC17)
 
 - **Período:** `de` e `ate` (datas `AAAA-MM-DD`, as duas inclusivas, no horário de São Paulo) em três listas. Data inicial
@@ -996,4 +1024,4 @@ Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: a
 | Correção de busca e refinamentos do catálogo (UC01) | F-22 | Kauê (@KaueAlves09) | #75 |
 | Filtros completos de pedidos/clientes e exportação CSV (UC06/UC11) | F-23 | Kauê (@KaueAlves09) | #75 |
 | Excluir a própria conta preservando histórico necessário (regra I14) | F-24 | Kauê (@KaueAlves09) | |
-| Facilidades explicitamente opcionais | F-25 | Kauê (@KaueAlves09) | |
+| Facilidades explicitamente opcionais | F-25 | Kauê (@KaueAlves09) | #76 |

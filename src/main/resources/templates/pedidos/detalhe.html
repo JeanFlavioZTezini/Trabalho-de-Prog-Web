@@ -63,6 +63,14 @@
             <dt>Total</dt><dd class="checkout-totais__total" th:text="${#numbers.formatCurrency(pedido.total)}">R$ 10,00</dd>
         </dl>
 
+        <!--/* F-25 (UC06-A3): os itens voltam ao carrinho com preço e estoque de agora; nada é comprado sem revisão. */-->
+        <form th:action="@{/pedidos/{id}/comprar-novamente(id=${pedido.id})}" method="post">
+            <button type="submit" class="btn-primario" aria-describedby="comprar-novamente-ajuda">Comprar novamente</button>
+            <p id="comprar-novamente-ajuda" class="campo__ajuda">
+                Adiciona estes itens ao carrinho com o preço e o estoque atuais. Você revisa tudo antes de finalizar.
+            </p>
+        </form>
+
         <!--/* Cópia gravada no momento da compra: editar ou excluir o endereço salvo não muda isto. */-->
         <section th:if="${pedido.enderecoEntrega != null}">
             <h2>Entrega</h2>

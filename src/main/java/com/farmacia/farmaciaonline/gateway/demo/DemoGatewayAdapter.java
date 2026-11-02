@@ -13,6 +13,7 @@ import org.springframework.stereotype.Service;
 import com.farmacia.farmaciaonline.gateway.GatewayDePagamento;
 import com.farmacia.farmaciaonline.gateway.dto.RequisicaoPagamento;
 import com.farmacia.farmaciaonline.gateway.dto.RespostaPagamento;
+import com.farmacia.farmaciaonline.gateway.dto.TokenCartao;
 import com.farmacia.farmaciaonline.model.enums.MetodoPagamento;
 import com.farmacia.farmaciaonline.model.enums.StatusPagamento;
 
@@ -24,6 +25,15 @@ public class DemoGatewayAdapter implements GatewayDePagamento {
     private static final long DIAS_EXPIRACAO_BOLETO = 3;
     private final Map<String, EstadoTransacaoDemo> estadosDemo = new ConcurrentHashMap<>();
     private final Map<String, RespostaPagamento> respostasPorChave = new ConcurrentHashMap<>();
+    /** F-25: só o gateway (demo) conhece o número por trás do token; some ao reiniciar, como os outros estados demo. */
+    private final Map<String, CartaoTokenizado> cartoesTokenizados = new ConcurrentHashMap<>();
+
+    private record CartaoTokenizado(String numero, String validade) {
+        @Override
+        public String toString() {
+            return "CartaoTokenizado[***]";
+        }
+    }
     @Override
     public RespostaPagamento processar(RequisicaoPagamento req) {
         if (req.chaveIdempotencia() == null) {
@@ -73,9 +83,36 @@ public class DemoGatewayAdapter implements GatewayDePagamento {
         log.info("[DEMO] Status da transação {} forçado para {}", transacaoGatewayId, novoStatus);
     }
 
+    @Override
+    public TokenCartao tokenizar(String numeroCartao, String validadeCartao, String nomeImpresso) {
+        String numeroLimpo = validarFormatoCartao(numeroCartao);
+        String validade = validadeCartao == null ? null : validadeCartao.trim();
+        validarValidadeCartao(validade);
+        String token = "tok_demo_" + UUID.randomUUID().toString().replace("-", "");
+        cartoesTokenizados.put(token, new CartaoTokenizado(numeroLimpo, validade));
+        log.info("[DEMO] Cartão tokenizado: bandeira={} ultimos4={}", detectarBandeira(numeroLimpo),
+                numeroLimpo.substring(numeroLimpo.length() - 4));
+        return new TokenCartao(token, detectarBandeira(numeroLimpo), numeroLimpo.substring(numeroLimpo.length() - 4),
+                Integer.parseInt(validade.substring(0, 2)), 2000 + Integer.parseInt(validade.substring(3, 5)));
+    }
+
     private RespostaPagamento processarCartao(RequisicaoPagamento req) {
-        String numeroLimpo = validarFormatoCartao(req.numeroCartao());
-        validarValidadeCartao(req.validadeCartao());
+        String numeroInformado = req.numeroCartao();
+        String validadeInformada = req.validadeCartao();
+        if (req.tokenCartao() != null) {
+            // Cartão salvo: o número e a validade só existem aqui no gateway.
+            CartaoTokenizado salvo = cartoesTokenizados.get(req.tokenCartao());
+            if (salvo == null) {
+                throw new IllegalArgumentException("Cartão salvo não reconhecido pelo gateway. Informe os dados do cartão.");
+            }
+            if (req.cvv() == null || !req.cvv().trim().matches("\\d{3,4}")) {
+                throw new IllegalArgumentException("Informe o código de segurança do cartão.");
+            }
+            numeroInformado = salvo.numero();
+            validadeInformada = salvo.validade();
+        }
+        String numeroLimpo = validarFormatoCartao(numeroInformado);
+        validarValidadeCartao(validadeInformada);
 
         String ultimos4 = numeroLimpo.substring(numeroLimpo.length() - 4);
         String bandeira  = detectarBandeira(numeroLimpo);

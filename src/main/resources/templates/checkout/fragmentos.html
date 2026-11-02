@@ -18,10 +18,29 @@
         <strong>4111 1111 1111 1111</strong> aprova e <strong>4111 1111 1111 1210</strong> é recusado
         (validade futura e qualquer código de segurança).
     </p>
+    <!--/* F-25: cartão salvo guarda só o token do gateway; o código de segurança é digitado de novo a cada compra. */-->
+    <fieldset class="campo--opcoes" th:if="${cartoesSalvos != null and !#lists.isEmpty(cartoesSalvos)}">
+        <legend>Qual cartão usar?</legend>
+        <label th:each="c, estado : ${cartoesSalvos}">
+            <input type="radio" name="cartaoSalvoId" th:value="${c.id}" th:checked="${estado.first}">
+            <span th:text="|${c.bandeira} final ${c.ultimos4} (validade ${#numbers.formatInteger(c.validadeMes, 2)}/${c.validadeAno})|">VISA final 1111</span>
+        </label>
+        <label>
+            <input type="radio" name="cartaoSalvoId" value="">
+            Outro cartão (preencha os dados abaixo)
+        </label>
+    </fieldset>
     <div th:replace="~{fragments/campo :: campo(id='numeroCartao', nome='numeroCartao', rotulo='Número do cartão', tipo='text', ajuda=null, erro=null, autocomplete='cc-number')}"></div>
     <div th:replace="~{fragments/campo :: campo(id='validadeCartao', nome='validadeCartao', rotulo='Validade', tipo='text', ajuda='Mês e ano, ex.: 12/30', erro=null, autocomplete='cc-exp')}"></div>
-    <div th:replace="~{fragments/campo :: campo(id='cvv', nome='cvv', rotulo='Código de segurança', tipo='text', ajuda=null, erro=null, autocomplete='cc-csc')}"></div>
+    <div th:replace="~{fragments/campo :: campo(id='cvv', nome='cvv', rotulo='Código de segurança', tipo='text', ajuda='Pedido sempre, também para cartão salvo.', erro=null, autocomplete='cc-csc')}"></div>
     <div th:replace="~{fragments/campo :: campo(id='nomeImpresso', nome='nomeImpresso', rotulo='Nome impresso no cartão', tipo='text', ajuda=null, erro=null, autocomplete='cc-name')}"></div>
+    <div class="campo">
+        <input type="checkbox" id="salvarCartao" name="salvarCartao" value="true" aria-describedby="salvarCartao-ajuda">
+        <label for="salvarCartao">Salvar este cartão para as próximas compras</label>
+        <p id="salvarCartao-ajuda" class="campo__ajuda">
+            Guardamos só um código do gateway, a bandeira e os 4 últimos números. Nunca o número completo nem o código de segurança.
+        </p>
+    </div>
 </th:block>
 
 <th:block th:fragment="parcelas(selecionada)">

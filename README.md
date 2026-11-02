@@ -150,8 +150,8 @@ Rota de administração: coloque sob `/admin/**`.
 sistema é uma loja virtual: o papel `CLIENTE` também mexe no **próprio** carrinho e nos **próprios** pedidos
 (sem isso não existiria compra). O que é exclusivo do `ADMIN` é todo CRUD de catálogo e a moderação.
 
-Fica para a Fase 2 (UC10): login social, recuperação de senha e o bloqueio automático após várias senhas erradas
-(hoje o sistema só **respeita** o `bloqueado_ate` que já estiver preenchido).
+Na Fase 2 vieram a recuperação de senha (F-06), o bloqueio automático após várias senhas erradas (F-18) e o login social
+simulado (F-20).
 
 ## Home e menu de categorias
 
@@ -691,6 +691,39 @@ Fecha o UC07: o cliente logado troca o e-mail ou o celular confirmando o **novo*
   `ContaContatoIntegracaoTest` (fluxo completo com login no e-mail novo). `ContaControllerTest` e `ContaIntegracaoTest` foram
   ajustados: a tela da conta agora mostra os links de troca em vez do aviso de "ainda não disponível".
 
+
+## Login social simulado (F-20 / UC10-A1/A2)
+
+- **Não é OAuth real:** Google e Facebook são **simulados**. A interface `social/ProvedorIdentidade` tem um único
+  adaptador, `social/demo/DemoProvedorIdentidade`, que só existe no perfil `demo`; sem ele os botões somem e
+  `/login/social/**` responde 404. Um provedor real seria outro adaptador, e credenciais reais não fazem parte do projeto.
+- **Fluxo:**
+  1. "Google (simulado)" no login leva a `/login/social/google`, que guarda um `state` na sessão.
+  2. A tela do provedor simulado pede identificador, nome, e-mail (opcional) e "e-mail verificado", com as opções
+     Permitir, Cancelar ou Simular provedor fora do ar. Nunca entra numa conta pronta.
+  3. O retorno (`/login/social/google/retorno`) confere o `state` e troca um código de uso único pela identidade.
+- **Regras (`LoginSocialService`):**
+  - Identidade já vinculada a conta ativa: entra. Conta pendente vai para a confirmação da F-05. Excluída ou bloqueada
+    recebe mensagem genérica. **Administrador nunca entra nem vincula por aqui.**
+  - Sem vínculo, a pessoa completa CPF, nascimento (18+), gênero, celular, termos e, se faltar, e-mail
+    (`CompletarSocialForm`, sem perfil/status/senha). A identidade fica na sessão, nunca na URL.
+  - CPF novo cria uma conta CLIENTE **sem senha**. Fica ATIVA só se o provedor declarou o e-mail verificado; senão fica
+    PENDENTE e confirma com código.
+  - CPF de conta existente: o vínculo exige a **senha dessa conta** (erro conta como falha de login, F-18) **ou** um
+    código `VINCULO_SOCIAL` mandado ao **e-mail cadastrado na conta**. E-mail igual sozinho nunca basta.
+  - E-mail do provedor que já está em outra conta, com CPF diferente: recusa (conflito).
+- **Login sem formulário (`security/LoginProgramatico`):** troca o id da sessão, grava o contexto e registra a sessão no
+  `SessionRegistry` (a revogação da F-06 funciona). Publica o evento de login, que mescla o carrinho. Volta ao
+  carrinho/checkout como no login normal.
+- **Minha conta:**
+  - Logado, "Vincular Google/Facebook" liga a identidade à conta da sessão. Se a identidade já for de outra conta, recusa.
+  - A conta social define senha por "Esqueci minha senha", sem perder o vínculo.
+- **Sem migration:** `identidade_social` e a finalidade `VINCULO_SOCIAL` já existiam desde a V1.
+- **Testes:**
+  - `LoginSocialIntegracaoTest`: primeiro acesso e volta, menor de idade, e-mail não verificado ou ausente, CPF
+    existente com senha e com código, admin, cancelar, fora do ar, `state` forjado, campos proibidos, conflito de
+    e-mail, vincular logado, retorno ao carrinho, sessão registrada.
+  - `LoginSocialSemDemoTest`: sem perfil demo, as rotas dão 404 e os botões somem.
 
 ## Proteção do login (F-18 / UC10, UC15)
 

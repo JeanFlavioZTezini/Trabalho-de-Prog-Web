@@ -15,6 +15,7 @@ import org.springframework.stereotype.Repository;
 import org.springframework.transaction.annotation.Transactional;
 
 import com.farmacia.farmaciaonline.model.Pedido;
+import com.farmacia.farmaciaonline.model.enums.StatusPedido;
 
 @Repository
 public interface PedidoRepository extends JpaRepository<Pedido, Long> {
@@ -24,6 +25,20 @@ public interface PedidoRepository extends JpaRepository<Pedido, Long> {
 
     /** Igual ao anterior, com desempate pelo número: dois pedidos no mesmo instante não trocam de lugar entre páginas. */
     Page<Pedido> findByUsuarioIdOrderByCriadoEmDescIdDesc(Long usuarioId, Pageable pageable);
+
+    /** Lista administrativa: número exato e status são filtros opcionais; a relação é to-one, segura para paginação. */
+    @Query(value = """
+            select p from Pedido p join fetch p.usuario
+            where (:numero is null or p.id = :numero)
+              and (:status is null or p.status = :status)
+            """,
+            countQuery = """
+            select count(p) from Pedido p
+            where (:numero is null or p.id = :numero)
+              and (:status is null or p.status = :status)
+            """)
+    Page<Pedido> buscarParaAdministracao(@Param("numero") Long numero, @Param("status") StatusPedido status,
+            Pageable pageable);
 
     /** Garante que o usuário só enxerga os próprios pedidos (UC06): de outro usuário, vem vazio. */
     Optional<Pedido> findByIdAndUsuarioId(Long id, Long usuarioId);

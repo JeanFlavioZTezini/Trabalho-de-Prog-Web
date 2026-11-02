@@ -57,7 +57,7 @@
             </select>
         </div>
         <div class="campo">
-            <label><input type="checkbox" th:field="*{exigeReceita}"> Exige receita (obrigatório para tarja vermelha/preta)</label>
+            <label class="campo__marcador"><input type="checkbox" th:field="*{exigeReceita}"> Exige receita (obrigatório para tarja vermelha/preta)</label>
         </div>
         <div class="campo">
             <label for="registroMs">Registro no Ministério da Saúde</label>
@@ -90,13 +90,13 @@
             <textarea id="publicoAlvo" th:field="*{publicoAlvo}" rows="2"></textarea>
         </div>
         <div class="campo">
-            <label><input type="checkbox" th:field="*{ativo}"> Ativo</label>
+            <label class="interruptor"><input type="checkbox" role="switch" th:field="*{ativo}"><span class="interruptor__trilho" aria-hidden="true"></span> Ativo</label>
         </div>
 
-        <fieldset class="campo">
+        <fieldset class="campo--grupo">
             <legend>Categorias (ao menos uma ativa)</legend>
-            <label th:each="c : ${categorias}"
-                   th:style="|display:block; padding-left: ${c.nivel * 1.5}rem|">
+            <label class="campo__marcador" th:each="c : ${categorias}"
+                   th:style="|padding-left: ${c.nivel * 1.5}rem|">
                 <input type="checkbox" name="categoriaIds" th:value="${c.id}"
                        th:checked="${#lists.contains(produtoForm.categoriaIds, c.id)}">
                 <span th:text="${c.nome + (c.ativa ? '' : ' (inativa)')}">Categoria</span>
@@ -105,50 +105,56 @@
 
         <h2>Apresentações</h2>
         <p>Preencha as linhas em branco para adicionar apresentações. Apresentações não são removidas: desmarque "Ativa".</p>
-        <table class="tabela-admin">
-            <thead>
-                <tr>
-                    <th scope="col">Descrição</th>
-                    <th scope="col">SKU</th>
-                    <th scope="col">EAN</th>
-                    <th scope="col">Preço (R$)</th>
-                    <th scope="col">Estoque</th>
-                    <th scope="col">Limite/pedido</th>
-                    <th scope="col">Ativa</th>
-                </tr>
-            </thead>
-            <tbody>
-                <tr th:each="a, i : *{apresentacoes}">
-                    <td>
-                        <input type="hidden" th:field="*{apresentacoes[__${i.index}__].id}">
-                        <input type="hidden" th:field="*{apresentacoes[__${i.index}__].versao}">
-                        <input type="text" th:field="*{apresentacoes[__${i.index}__].descricao}" maxlength="60"
-                               th:aria-label="|Descrição da apresentação ${i.count}|">
-                    </td>
-                    <td><input type="text" th:field="*{apresentacoes[__${i.index}__].sku}" maxlength="40"
-                               th:aria-label="|SKU da apresentação ${i.count}|"></td>
-                    <td><input type="text" th:field="*{apresentacoes[__${i.index}__].ean}" maxlength="14"
-                               th:aria-label="|EAN da apresentação ${i.count}|"></td>
-                    <td><input type="number" step="0.01" min="0.01" th:field="*{apresentacoes[__${i.index}__].preco}"
-                               th:aria-label="|Preço da apresentação ${i.count}|"></td>
-                    <td><input type="number" min="0" th:field="*{apresentacoes[__${i.index}__].estoque}"
-                               th:aria-label="|Estoque da apresentação ${i.count}|"></td>
-                    <td><input type="number" min="1" th:field="*{apresentacoes[__${i.index}__].limitePorPedido}"
-                               th:aria-label="|Limite por pedido da apresentação ${i.count}|"></td>
-                    <td><input type="checkbox" th:field="*{apresentacoes[__${i.index}__].ativa}"
-                               th:aria-label="|Apresentação ${i.count} ativa|"></td>
-                </tr>
-            </tbody>
-        </table>
+        <fieldset class="apresentacao" th:each="a, i : *{apresentacoes}">
+            <legend th:text="|Apresentação ${i.count}|">Apresentação 1</legend>
+            <input type="hidden" th:field="*{apresentacoes[__${i.index}__].id}">
+            <input type="hidden" th:field="*{apresentacoes[__${i.index}__].versao}">
+            <div class="apresentacao__grade">
+                <div class="campo">
+                    <label th:for="|apr-descricao-${i.index}|">Descrição</label>
+                    <input type="text" th:id="|apr-descricao-${i.index}|" th:field="*{apresentacoes[__${i.index}__].descricao}" maxlength="60">
+                </div>
+                <div class="campo">
+                    <label th:for="|apr-sku-${i.index}|">SKU</label>
+                    <input type="text" th:id="|apr-sku-${i.index}|" th:field="*{apresentacoes[__${i.index}__].sku}" maxlength="40">
+                </div>
+                <div class="campo">
+                    <label th:for="|apr-ean-${i.index}|">EAN</label>
+                    <input type="text" th:id="|apr-ean-${i.index}|" th:field="*{apresentacoes[__${i.index}__].ean}" maxlength="14">
+                </div>
+                <div class="campo">
+                    <label th:for="|apr-preco-${i.index}|">Preço (R$)</label>
+                    <input type="number" th:id="|apr-preco-${i.index}|" th:field="*{apresentacoes[__${i.index}__].preco}" step="0.01" min="0.01">
+                </div>
+                <div class="campo">
+                    <label th:for="|apr-estoque-${i.index}|">Estoque</label>
+                    <input type="number" th:id="|apr-estoque-${i.index}|" th:field="*{apresentacoes[__${i.index}__].estoque}" min="0">
+                </div>
+                <div class="campo">
+                    <label th:for="|apr-limitePorPedido-${i.index}|">Limite por pedido</label>
+                    <input type="number" th:id="|apr-limitePorPedido-${i.index}|" th:field="*{apresentacoes[__${i.index}__].limitePorPedido}" min="1">
+                </div>
+                <label class="interruptor" th:for="|apr-ativa-${i.index}|">
+                    <input type="checkbox" role="switch" th:id="|apr-ativa-${i.index}|" th:field="*{apresentacoes[__${i.index}__].ativa}"><span class="interruptor__trilho" aria-hidden="true"></span> Ativa
+                </label>
+            </div>
+        </fieldset>
 
-        <fieldset class="campo">
+        <fieldset class="campo campo--grupo">
             <legend>Imagens</legend>
             <p th:if="${#lists.isEmpty(imagens)}">Sem fotos: o site usa a imagem padrão.</p>
-            <label th:each="img : ${imagens}">
+            <div class="imagem-produto" th:each="img : ${imagens}">
                 <img th:src="@{${img.arquivo}}" alt="" width="60" height="60">
-                <input type="checkbox" name="removerImagemIds" th:value="${img.id}"> Remover
-                <span th:text="${img.apresentacao == null} ? '(todas as apresentações)' : ${img.apresentacao.descricao}">vale para</span>
-            </label>
+                <label class="remover-foto">
+                    <input type="checkbox" name="removerImagemIds" th:value="${img.id}">
+                    <svg class="remover-foto__icone" viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                        <path d="M9 3h6l1 2h4v2H4V5h4l1-2zm-3 6h12l-1 12H7L6 9zm4 2v8h2v-8h-2zm4 0v8h2v-8h-2z" fill="currentColor"/>
+                    </svg>
+                    <span class="visually-hidden">Remover esta foto</span>
+                    <span class="remover-foto__estado" aria-hidden="true">Será removida ao salvar</span>
+                </label>
+                <span th:if="${img.apresentacao != null}" th:text="|Vale para: ${img.apresentacao.descricao}|">vale para</span>
+            </div>
             <label for="novasImagens">Adicionar fotos (JPG, PNG ou WebP, até 2 MB cada)</label>
             <input type="file" id="novasImagens" name="novasImagens" multiple accept=".jpg,.jpeg,.png,.webp">
             <p id="aviso-imagem" role="alert"></p>

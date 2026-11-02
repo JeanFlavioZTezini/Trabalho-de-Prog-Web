@@ -1113,3 +1113,131 @@ input[type="date"]:focus-within {
 .linha-do-tempo li:last-child { border-left-color: transparent; padding-bottom: 0; }
 .linha-do-tempo__atual::before { background-color: var(--cor-azul); }
 .linha-do-tempo li > span:not(.visually-hidden) { display: block; font-size: 0.875rem; }
+
+/* ---------- F-08: revisão das telas de produto ---------- */
+/* Rótulo de checkbox: anula o `.campo input { width: 100% }` só nele, para a caixa ficar pequena e alinhada ao texto. */
+label.campo__marcador {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 400;
+}
+label.campo__marcador input {
+  flex: none;
+  width: auto;
+  margin: 0;
+  padding: 0;
+}
+
+/* Grupo de campos (categorias, imagens): sem moldura, legenda em destaque. */
+.campo--grupo { border: 0; margin: 0 0 1rem; padding: 0; }
+.campo--grupo legend { margin-bottom: 0.5rem; padding: 0; font-weight: 700; }
+
+/* Uma apresentação por cartão: cada campo com rótulo visível e sem rolagem horizontal. */
+.apresentacao {
+  margin: 0 0 1rem;
+  padding: 0.75rem 1rem 1rem;
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: var(--raio);
+}
+.apresentacao legend { padding: 0 0.5rem; font-weight: 700; }
+.apresentacao__grade {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(9rem, 1fr));
+  gap: 0.75rem 1rem;
+  align-items: end;
+}
+.apresentacao .campo { margin: 0; }
+.apresentacao label.campo__marcador { min-height: 2.5rem; }
+
+/* Interruptor (liga/desliga): checkbox nativo com role="switch", só muda a aparência. O `~` é porque o th:field põe um
+   input hidden entre o checkbox e o trilho. */
+label.interruptor {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.625rem;
+  min-height: 2.5rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+label.interruptor input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  opacity: 0;
+}
+.interruptor__trilho {
+  position: relative;
+  flex: none;
+  width: 2.75rem;
+  height: 1.5rem;
+  border-radius: 999px;
+  background-color: var(--cor-borda-controle);
+  transition: background-color 0.15s;
+}
+.interruptor__trilho::after {
+  content: "";
+  position: absolute;
+  top: 0.1875rem;
+  left: 0.1875rem;
+  width: 1.125rem;
+  height: 1.125rem;
+  border-radius: 50%;
+  background-color: var(--cor-branco);
+  transition: transform 0.15s;
+}
+.interruptor input:checked ~ .interruptor__trilho { background-color: var(--cor-azul); }
+.interruptor input:checked ~ .interruptor__trilho::after { transform: translateX(1.25rem); }
+.interruptor input:focus-visible ~ .interruptor__trilho { outline: 3px solid var(--cor-azul); outline-offset: 2px; }
+@media (prefers-reduced-motion: reduce) {
+  .interruptor__trilho, .interruptor__trilho::after { transition: none; }
+}
+
+/* Foto do produto: miniatura com o controle de remover à direita. */
+.imagem-produto { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 1rem; margin-bottom: 0.75rem; }
+.imagem-produto img { display: block; flex: none; }
+
+/* Remover foto: ícone de lixeira sobre um checkbox nativo (envia removerImagemIds como antes, sem JS). */
+label.remover-foto {
+  margin: 0;
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 2.5rem;
+  padding: 0 0.625rem;
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: var(--raio);
+  background-color: var(--cor-branco);
+  color: var(--cor-erro);
+  cursor: pointer;
+}
+.remover-foto input { position: absolute; width: 1px; height: 1px; margin: 0; padding: 0; opacity: 0; }
+.remover-foto__estado { display: none; font-size: 0.8125rem; font-weight: 600; }
+.remover-foto:has(input:checked) { border-color: var(--cor-erro); background-color: var(--cor-erro); color: var(--cor-branco); }
+.remover-foto:has(input:checked) .remover-foto__estado { display: inline; }
+.remover-foto:has(input:focus-visible) { outline: 3px solid var(--cor-azul); outline-offset: 2px; }
+.imagem-produto:has(input:checked) img { opacity: 0.4; }
+
+/* Ações da lista de produtos: editar e excluir como ícones (o nome acessível vem do texto .visually-hidden). */
+.acoes-icone { white-space: nowrap; }
+.acoes-icone form { display: inline-block; margin: 0; vertical-align: middle; }
+.acao-icone {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border: 1px solid var(--cor-borda-controle);
+  border-radius: var(--raio);
+  background-color: var(--cor-branco);
+  color: var(--cor-azul);
+  vertical-align: middle;
+  cursor: pointer;
+}
+.acao-icone:hover { background-color: var(--cor-azul-suave); }
+.acao-icone--perigo { color: var(--cor-erro); }

@@ -51,11 +51,22 @@
                     <td th:text="${p.tarja}">SEM_TARJA</td>
                     <td th:text="${#lists.size(p.apresentacoes)}">0</td>
                     <td th:text="${p.ativo} ? 'Ativo' : 'Inativo'">Ativo</td>
-                    <td>
-                        <a th:href="@{/admin/produtos/{id}/editar(id=${p.id})}">Editar</a>
-                        <form th:action="@{/admin/produtos/{id}/excluir(id=${p.id})}" method="post" style="display:inline"
+                    <td class="acoes-icone">
+                        <a class="acao-icone" th:href="@{/admin/produtos/{id}/editar(id=${p.id})}"
+                           th:title="|Editar ${p.nome}|">
+                            <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                                <path d="M3 17.25V21h3.75L17.8 9.94l-3.75-3.75L3 17.25zm17.7-10.2a1 1 0 0 0 0-1.41l-2.34-2.34a1 1 0 0 0-1.41 0l-1.83 1.83 3.75 3.75 1.83-1.83z" fill="currentColor"/>
+                            </svg>
+                            <span class="visually-hidden" th:text="|Editar ${p.nome}|">Editar</span>
+                        </a>
+                        <form th:action="@{/admin/produtos/{id}/excluir(id=${p.id})}" method="post"
                               onsubmit="return confirm('Excluir este produto? Se houver pedidos, ele será apenas inativado.')">
-                            <button type="submit">Excluir</button>
+                            <button type="submit" class="acao-icone acao-icone--perigo" th:title="|Excluir ${p.nome}|">
+                                <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" focusable="false">
+                                    <path d="M9 3h6l1 2h4v2H4V5h4l1-2zm-3 6h12l-1 12H7L6 9zm4 2v8h2v-8h-2zm4 0v8h2v-8h-2z" fill="currentColor"/>
+                                </svg>
+                                <span class="visually-hidden" th:text="|Excluir ${p.nome}|">Excluir</span>
+                            </button>
                         </form>
                     </td>
                 </tr>
@@ -70,6 +81,8 @@
         <a th:if="${pagina.hasNext()}"
            th:href="@{/admin/produtos(q=${q}, status=${status}, pagina=${pagina.number + 1})}">Próxima</a>
     </p>
+
+    <p><a th:href="@{/admin}">Voltar ao painel</a></p>
 
 </div>
 </body>

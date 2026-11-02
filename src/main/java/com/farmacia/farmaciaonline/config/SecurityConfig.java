@@ -1,5 +1,6 @@
 package com.farmacia.farmaciaonline.config;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -38,7 +39,10 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, SessionRegistry sessionRegistry,
-            LoginTentativasService loginTentativasService) throws Exception {
+            ObjectProvider<LoginTentativasService> tentativasProvider) throws Exception {
+        // Opcional de propósito: os testes de camada web (@WebMvcTest + SecurityConfig) não carregam o serviço, e os handlers
+        // aceitam null (sem contagem de falhas).
+        LoginTentativasService loginTentativasService = tentativasProvider.getIfAvailable();
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(ROTAS_PUBLICAS).permitAll()

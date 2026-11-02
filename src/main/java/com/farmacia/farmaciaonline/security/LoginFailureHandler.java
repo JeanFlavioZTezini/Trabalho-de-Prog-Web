@@ -17,7 +17,14 @@ import org.slf4j.LoggerFactory;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 
-/** Redireciona com motivo genérico e contabiliza somente credenciais realmente incorretas. */
+/**
+ * Login recusado: volta para {@code /login?erro=<motivo>}, e o LoginController escolhe a mensagem. Só senha realmente
+ * incorreta conta como tentativa (F-18); conta bloqueada, pendente ou falha do sistema não contam.
+ *
+ * Por que desembrulhar a exceção: o DaoAuthenticationProvider embrulha qualquer exceção lançada
+ * pelo UserDetailsService (como LockedException) numa InternalAuthenticationServiceException.
+ * Sem olhar a causa, conta bloqueada e conta pendente apareceriam como "erro interno".
+ */
 public class LoginFailureHandler implements AuthenticationFailureHandler {
 
     public static final String MOTIVO_CREDENCIAIS = "credenciais";
@@ -58,10 +65,15 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
         if (exception instanceof InternalAuthenticationServiceException && exception.getCause() != null) {
             causa = exception.getCause();
         }
-        if (causa instanceof LockedException) return MOTIVO_BLOQUEADA;
-        if (causa instanceof DisabledException) return MOTIVO_PENDENTE;
-        if (exception instanceof InternalAuthenticationServiceException) return MOTIVO_INDISPONIVEL;
-        if (exception instanceof BadCredentialsException) return MOTIVO_CREDENCIAIS;
+        if (causa instanceof LockedException) {
+            return MOTIVO_BLOQUEADA;
+        }
+        if (causa instanceof DisabledException) {
+            return MOTIVO_PENDENTE;
+        }
+        if (exception instanceof InternalAuthenticationServiceException) {
+            return MOTIVO_INDISPONIVEL; // falha do sistema (ex.: banco fora do ar), não erro da pessoa
+        }
         return MOTIVO_CREDENCIAIS;
     }
 }

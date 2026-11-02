@@ -147,6 +147,12 @@ class EnderecoControllerTest {
         assertLayoutComUmH1(html);
         assertThat(html).contains("Meus endereços").contains("Avenida Paulista, 1000").contains("01310-100");
         assertThat(html).doesNotContain("Usar este endereço").contains("class=\"tabela-rolavel\"");
+        // Ações da linha com o endereço no nome acessível; excluir leva à confirmação como link de perigo.
+        assertThat(html).containsPattern("(?s)<div class=\"acoes-linha\">.*?<a class=\"btn-link\" href=\"[^\"]*/editar\">"
+                + "\\s*Editar<span class=\"visually-hidden\"> \\(Maria da Silva, Avenida Paulista\\)</span></a>"
+                + "\\s*<a class=\"link-perigo\" href=\"[^\"]*/excluir\">"
+                + "\\s*Excluir<span class=\"visually-hidden\"> \\(Maria da Silva, Avenida Paulista\\)</span></a>");
+        assertThat(html).contains("<a href=\"/conta\">Voltar para Minha conta</a>");
     }
 
     @Test
@@ -170,7 +176,7 @@ class EnderecoControllerTest {
 
         String html = html(get("/enderecos").param("retorno", "checkout").with(cliente(CLIENTE)));
 
-        assertThat(html).contains("Usar este endereço").contains("retorno=checkout").contains("Voltar ao checkout");
+        assertThat(html).contains("Usar este endereço").contains("retorno=checkout").contains("Voltar para o checkout");
     }
 
     @Test
@@ -211,6 +217,8 @@ class EnderecoControllerTest {
 
         assertLayoutComUmH1(html);
         assertThat(html).contains("Tem certeza").contains("action=\"/enderecos/5/excluir\"");
+        assertThat(html).containsPattern("(?s)<div class=\"acoes\">\\s*<button type=\"submit\" class=\"btn-perigo\">Excluir endereço</button>"
+                + "\\s*<a class=\"btn-secundario\" href=\"/enderecos\">Cancelar</a>");
         verify(service, never()).excluir(any(), any());
     }
 

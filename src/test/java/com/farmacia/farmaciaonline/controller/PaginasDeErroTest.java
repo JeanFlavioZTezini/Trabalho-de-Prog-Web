@@ -6,6 +6,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 import java.nio.charset.StandardCharsets;
 
+import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -67,5 +68,17 @@ class PaginasDeErroTest {
         assertThat(html).contains("href=\"/\"");
         assertThat(StringUtils.countOccurrencesOf(html, "<h1")).isEqualTo(1);
         assertThat(html).doesNotContain("Exception").doesNotContain("trace");
+        // O que aconteceu e a próxima ação, no bloco de estado vazio.
+        assertThat(html).containsPattern("(?s)<div class=\"estado-vazio\">.*?<div class=\"acoes\">"
+                + "\\s*<a class=\"btn-primario\" href=\"/\">Ir para a página inicial</a>");
+    }
+
+    @Test
+    void acessoNegadoOfereceEntrarParaVisitante() throws Exception {
+        String html = mvc.perform(get("/institucional/teste-erro/403"))
+                .andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+
+        assertThat(html).contains("<a class=\"btn-secundario\" href=\"/login\">Entrar</a>");
     }
 }

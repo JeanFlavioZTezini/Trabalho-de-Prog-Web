@@ -29,6 +29,7 @@ import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
+import org.springframework.util.StringUtils;
 import org.springframework.test.web.servlet.request.RequestPostProcessor;
 
 import com.farmacia.farmaciaonline.config.SecurityConfig;
@@ -125,6 +126,24 @@ class ContaControllerTest {
     }
 
     @Test
+    @DisplayName("Minha conta: um h1, seções em cartão na ordem certa e excluir conta como link de perigo")
+    void contaEmCartoes() throws Exception {
+        when(service.dados(CLIENTE)).thenReturn(DadosDaConta.de(usuario()));
+
+        String pagina = html(get("/conta").with(cliente()));
+
+        assertThat(StringUtils.countOccurrencesOf(pagina, "<h1")).isEqualTo(1);
+        assertThat(StringUtils.countOccurrencesOf(pagina, "<section class=\"conta__secao secao-cartao\"")).isEqualTo(6);
+        assertThat(pagina).containsPattern("(?s)<h1>Minha conta</h1>.*?<h2 id=\"titulo-dados\">Dados pessoais</h2>"
+                + ".*?<h2 id=\"titulo-contatos\">Contatos</h2>.*?<h2 id=\"titulo-seguranca\">Segurança</h2>"
+                + ".*?<h2 id=\"titulo-enderecos\">Endereços e cartões</h2>.*?href=\"/enderecos\".*?href=\"/conta/cartoes\""
+                + ".*?<h2 id=\"titulo-pedidos\">Pedidos</h2>.*?href=\"/pedidos\""
+                + ".*?<h2 id=\"titulo-excluir\">Excluir conta</h2>");
+        assertThat(pagina).doesNotContainPattern("<h[3-6]");
+        assertThat(pagina).contains("<a class=\"link-perigo\" href=\"/conta/excluir\">Excluir minha conta</a>");
+    }
+
+    @Test
     @DisplayName("a tela de edição não tem campo de CPF, perfil ou status e tem o link Cancelar")
     void editarNaoOfereceCamposProtegidos() throws Exception {
         ContaForm form = new ContaForm();
@@ -138,7 +157,9 @@ class ContaControllerTest {
 
         assertThat(pagina).contains("name=\"nome\"", "name=\"dataNascimento\"", "name=\"genero\"");
         assertThat(pagina).doesNotContain("name=\"cpf\"", "name=\"perfil\"", "name=\"status\"", "name=\"email\"");
-        assertThat(pagina).contains("Cancelar").contains("href=\"/conta\"");
+        // Salvar primeiro no DOM (o Enter aciona ele) e Cancelar como botão secundário no mesmo grupo.
+        assertThat(pagina).containsPattern("(?s)<div class=\"acoes\">\\s*<button type=\"submit\" class=\"btn-primario\">Salvar alterações</button>"
+                + "\\s*<a class=\"btn-secundario\" href=\"/conta\">Cancelar</a>");
     }
 
     @Test

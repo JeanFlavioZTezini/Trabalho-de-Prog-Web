@@ -405,6 +405,42 @@ class FacilidadesOpcionaisIntegracaoTest extends CheckoutTesteBase {
     }
 
     @Test
+    @DisplayName("Meus cartões: remover passa por uma página de confirmação; a de outra pessoa é 404 e só o POST remove")
+    void confirmacaoDeRemoverCartao() throws Exception {
+        Usuario cliente = novoCliente();
+        Usuario outro = novoCliente();
+        noCarrinho(cliente, novaApresentacao("10.00", 20), 1);
+        comprar(cliente, retirada(MetodoPagamento.CARTAO_CREDITO), salvando(CARTAO_APROVADO));
+        Long cartaoId = cartaoRepository.findByUsuarioId(cliente.getId()).get(0).getId();
+
+        String lista = mvc.perform(get("/conta/cartoes").with(como(cliente)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        assertThat(lista).contains("<a class=\"link-perigo\" href=\"/conta/cartoes/" + cartaoId + "/remover\">Remover");
+
+        String tela = mvc.perform(get("/conta/cartoes/{id}/remover", cartaoId).with(como(cliente)))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        assertThat(tela.split("<h1").length - 1).isEqualTo(1);
+        assertThat(tela).contains("<h1>Remover o cartão?</h1>").contains("VISA final 1111")
+                .containsPattern("(?s)<form class=\"acoes\" action=\"/conta/cartoes/" + cartaoId + "/remover\" method=\"post\">"
+                        + ".*?name=\"_csrf\".*?<button type=\"submit\" class=\"btn-perigo\">Sim, remover</button>");
+        assertThat(cartaoRepository.findById(cartaoId)).isPresent();
+
+        mvc.perform(get("/conta/cartoes/{id}/remover", cartaoId).with(como(outro))).andExpect(status().isNotFound());
+        mvc.perform(post("/conta/cartoes/{id}/remover", cartaoId).with(como(cliente)))
+                .andExpect(status().isForbidden());
+        assertThat(cartaoRepository.findById(cartaoId)).isPresent();
+    }
+
+    @Test
+    @DisplayName("Meus cartões sem nenhum cartão: estado vazio")
+    void semCartoes() throws Exception {
+        String html = mvc.perform(get("/conta/cartoes").with(como(novoCliente())))
+                .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+        assertThat(html).containsPattern("(?s)<div class=\"estado-vazio\">\\s*<p>Você não tem cartões salvos.</p>");
+        assertThat(html).doesNotContain("class=\"lista-cartoes\"");
+    }
+
+    @Test
     @DisplayName("resumo do checkout oferece o cartão salvo e a opção de salvar")
     void resumoOfereceCartaoSalvo() throws Exception {
         Usuario cliente = novoCliente();

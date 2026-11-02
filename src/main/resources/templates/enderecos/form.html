@@ -34,7 +34,7 @@
                    autocomplete="postal-code" th:aria-invalid="${#fields.hasErrors('cep')} ? 'true'"
                    th:aria-describedby="${#fields.hasErrors('cep')} ? 'cep-ajuda cep-erro' : 'cep-ajuda'">
             <p class="campo__erro" role="alert" id="cep-erro" th:if="${#fields.hasErrors('cep')}" th:errors="*{cep}"></p>
-            <button type="submit" formnovalidate
+            <button type="submit" class="btn-secundario" formnovalidate
                     th:formaction="${enderecoId == null} ? @{/enderecos/cep} : @{/enderecos/{id}/cep(id=${enderecoId})}">Buscar CEP</button>
         </div>
 
@@ -101,8 +101,10 @@
                th:errors="*{referencia}"></p>
         </div>
 
-        <button type="submit" class="btn-primario">Salvar endereço</button>
-        <a th:href="${checkout} ? @{/checkout} : @{/enderecos}">Cancelar</a>
+        <div class="acoes">
+            <button type="submit" class="btn-primario">Salvar endereço</button>
+            <a class="btn-secundario" th:href="${checkout} ? @{/checkout} : @{/enderecos}">Cancelar</a>
+        </div>
     </form>
 
     <script th:src="@{/js/cep.js}" defer></script>

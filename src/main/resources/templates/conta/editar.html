@@ -54,8 +54,10 @@
             <p class="campo__erro" role="alert" id="genero-erro" th:if="${#fields.hasErrors('genero')}" th:errors="*{genero}"></p>
         </div>
 
-        <button type="submit" class="btn-primario">Salvar alterações</button>
-        <a th:href="@{/conta}">Cancelar</a>
+        <div class="acoes">
+            <button type="submit" class="btn-primario">Salvar alterações</button>
+            <a class="btn-secundario" th:href="@{/conta}">Cancelar</a>
+        </div>
     </form>
 
 </div>

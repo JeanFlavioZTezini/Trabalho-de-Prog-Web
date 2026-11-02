@@ -150,7 +150,7 @@ Principal primeiro, depois o secundário. O grupo quebra de linha no celular.
 
 Padrão do projeto: uma **página de confirmação** (GET) que diz o que vai acontecer, com `.btn-perigo` para confirmar
 (POST com CSRF) e `.btn-secundario` para voltar. O recurso de outra pessoa responde 404. Exemplos: remover item do
-carrinho, esvaziar o carrinho, excluir endereço, excluir categoria. Exceção: a exclusão de produto no admin usa `confirm()` do navegador.
+carrinho, esvaziar o carrinho, remover cartão salvo, excluir endereço, excluir categoria. Exceção: a exclusão de produto no admin usa `confirm()` do navegador.
 
 ### Selos
 
@@ -165,7 +165,8 @@ carrinho, esvaziar o carrinho, excluir endereço, excluir categoria. Exceção: 
 
 `.tabela-admin` (listas) ou `.carrinho__tabela`, sempre dentro de
 `<div class="tabela-rolavel" role="region" aria-label="..." tabindex="0">`. Valores e quantidades com `class="num"`
-(alinhados à direita). Ação por linha com o nome do item em `.visually-hidden` ("Editar <span class="visually-hidden">Analgésicos</span>").
+(alinhados à direita). Ação por linha com o nome do item em `.visually-hidden` ("Editar <span class="visually-hidden">Analgésicos</span>"),
+lado a lado em `<div class="acoes-linha">` (`.btn-link` para editar, `a.link-perigo` para a confirmação de excluir).
 
 ### Filtros, paginação e estado vazio
 

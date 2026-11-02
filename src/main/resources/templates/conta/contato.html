@@ -59,8 +59,10 @@
             <input type="text" id="codigo" name="codigo" inputmode="numeric" autocomplete="one-time-code"
                    maxlength="6" pattern="[0-9]{6}" required aria-describedby="codigo-ajuda">
         </div>
-        <button type="submit" class="btn-primario">Confirmar e alterar</button>
-        <a th:href="@{/conta}">Cancelar</a>
+        <div class="acoes">
+            <button type="submit" class="btn-primario">Confirmar e alterar</button>
+            <a class="btn-secundario" th:href="@{/conta}">Cancelar</a>
+        </div>
     </form>
 
     <p class="pagina-texto__rodape-form" th:if="${demo}">

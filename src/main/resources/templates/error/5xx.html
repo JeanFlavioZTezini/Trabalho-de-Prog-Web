@@ -10,8 +10,12 @@
 <div id="pagina" class="pagina-texto">
 
     <h1>Algo deu errado</h1>
-    <p>Não foi possível concluir o que você pediu. Tente de novo em instantes.</p>
-    <p><a th:href="@{/}">Voltar para a página inicial</a></p>
+    <div class="estado-vazio">
+        <p>Não foi possível concluir o que você pediu. Tente de novo em instantes.</p>
+        <div class="acoes">
+            <a class="btn-primario" th:href="@{/}">Ir para a página inicial</a>
+        </div>
+    </div>
 
 </div>
 </body>

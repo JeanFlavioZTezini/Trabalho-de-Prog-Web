@@ -13,15 +13,17 @@
     <p>Para salvar um cartão, marque "Salvar este cartão" ao pagar um pedido. Guardamos só um código do gateway de
         pagamento, a bandeira, os 4 últimos números e a validade; nunca o número completo nem o código de segurança.</p>
 
-    <p th:if="${#lists.isEmpty(cartoes)}">Você não tem cartões salvos.</p>
+    <div class="estado-vazio" th:if="${#lists.isEmpty(cartoes)}">
+        <p>Você não tem cartões salvos.</p>
+    </div>
 
-    <ul th:unless="${#lists.isEmpty(cartoes)}">
-        <li th:each="c : ${cartoes}">
-            <span th:text="|${c.bandeira} final ${c.ultimos4}, validade ${#numbers.formatInteger(c.validadeMes, 2)}/${c.validadeAno}, ${c.nomeImpresso}|">VISA final 1111</span>
-            <form class="form-inline" th:action="@{/conta/cartoes/{id}/remover(id=${c.id})}" method="post">
-                <button type="submit" class="btn-link">Remover<span class="visually-hidden"
-                        th:text="| o cartão ${c.bandeira} final ${c.ultimos4}|"></span></button>
-            </form>
+    <ul class="lista-cartoes" th:unless="${#lists.isEmpty(cartoes)}">
+        <li class="secao-cartao" th:each="c : ${cartoes}">
+            <p class="lista-cartoes__titulo" th:text="|${c.bandeira} final ${c.ultimos4}|">VISA final 1111</p>
+            <p th:text="|Validade ${#numbers.formatInteger(c.validadeMes, 2)}/${c.validadeAno}|">Validade 12/2030</p>
+            <p th:text="${c.nomeImpresso}">MARIA DA SILVA</p>
+            <p><a class="link-perigo" th:href="@{/conta/cartoes/{id}/remover(id=${c.id})}">Remover<span class="visually-hidden"
+                    th:text="| o cartão ${c.bandeira} final ${c.ultimos4}|"></span></a></p>
         </li>
     </ul>
 

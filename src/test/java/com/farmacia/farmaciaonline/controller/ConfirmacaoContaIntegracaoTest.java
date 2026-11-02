@@ -227,4 +227,14 @@ class ConfirmacaoContaIntegracaoTest {
 
         assertThat(html(get("/caixa-demo"))).contains(EMAIL).contains(codigoEnviadoPara(EMAIL));
     }
+
+    @Test
+    @DisplayName("a caixa de mensagens volta para os três fluxos que pedem código, não só para a confirmação")
+    void caixaDemoVoltaParaOsTresFluxos() throws Exception {
+        String caixa = html(get("/caixa-demo"));
+
+        assertThat(caixa).containsPattern("(?s)<nav class=\"pagina-texto__rodape-form\" aria-label=\"Voltar para onde digitar o código\">"
+                + ".*?href=\"/confirmar-conta\".*?href=\"/recuperar-senha/codigo\".*?href=\"/conta\".*?</nav>");
+        assertThat(caixa).contains("<p class=\"alerta\" role=\"note\">");
+    }
 }

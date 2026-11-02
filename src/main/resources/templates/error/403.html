@@ -11,12 +11,17 @@
 <div id="pagina" class="pagina-texto">
 
     <h1>Acesso negado</h1>
-    <p>Você não tem permissão para acessar esta página.</p>
-    <p>
-        Se você estava preenchendo um formulário, a sessão pode ter expirado:
-        volte, recarregue a página e envie de novo.
-    </p>
-    <p><a th:href="@{/}">Voltar para a página inicial</a></p>
+    <div class="estado-vazio">
+        <p>Você não tem permissão para acessar esta página.</p>
+        <p>
+            Se você estava preenchendo um formulário, a sessão pode ter expirado:
+            volte, recarregue a página e envie de novo.
+        </p>
+        <div class="acoes">
+            <a class="btn-primario" th:href="@{/}">Ir para a página inicial</a>
+            <a class="btn-secundario" th:href="@{/login}" sec:authorize="isAnonymous()">Entrar</a>
+        </div>
+    </div>
 
 </div>
 </body>

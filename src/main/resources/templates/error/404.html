@@ -11,8 +11,13 @@
 <div id="pagina" class="pagina-texto">
 
     <h1>Página não encontrada</h1>
-    <p>Não encontramos o que você procurava. O endereço pode estar errado, o produto pode não estar disponível ou esta área ainda não foi criada.</p>
-    <p><a th:href="@{/produtos}">Ver produtos</a> ou <a th:href="@{/}">voltar para a página inicial</a>.</p>
+    <div class="estado-vazio">
+        <p>Não encontramos o que você procurava. O endereço pode estar errado, o produto pode não estar disponível ou esta área ainda não foi criada.</p>
+        <div class="acoes">
+            <a class="btn-primario" th:href="@{/}">Ir para a página inicial</a>
+            <a class="btn-secundario" th:href="@{/produtos}">Ver produtos</a>
+        </div>
+    </div>
 
 </div>
 </body>

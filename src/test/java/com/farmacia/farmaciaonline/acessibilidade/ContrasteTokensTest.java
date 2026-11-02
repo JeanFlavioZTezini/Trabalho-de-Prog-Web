@@ -65,7 +65,14 @@ class ContrasteTokensTest {
             "cor-branco, cor-azul, 3.0",
             "cor-erro, cor-branco, 3.0",
             "cor-erro, cor-fundo, 3.0",
-            "cor-sucesso, cor-fundo, 3.0"
+            "cor-sucesso, cor-fundo, 3.0",
+            // Revisão visual: botão de perigo e selos de situação do pedido.
+            "cor-branco, cor-erro, 4.5",
+            "cor-branco, cor-erro-hover, 4.5",
+            "cor-erro, cor-erro-fundo, 4.5",
+            "cor-sucesso, cor-sucesso-fundo, 4.5",
+            "cor-aviso, cor-aviso-fundo, 4.5",
+            "cor-azul, cor-azul-suave, 4.5"
     })
     void parDeCoresAtingeAMetaDoWcagAA(String frente, String fundo, double meta) {
         assertThat(TOKENS).containsKeys(frente, fundo);

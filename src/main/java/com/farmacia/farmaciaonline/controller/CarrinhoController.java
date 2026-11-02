@@ -141,6 +141,16 @@ public class CarrinhoController {
         });
     }
 
+    @GetMapping("/esvaziar")
+    public String confirmarEsvaziar(HttpServletRequest request, Authentication autenticacao, Model model) {
+        ResumoCarrinho resumo = carrinhoService.resumo(donoParaLeitura(request, autenticacao));
+        if (resumo.isVazio()) {
+            return VOLTAR_AO_CARRINHO;
+        }
+        model.addAttribute("resumo", resumo);
+        return "carrinho-esvaziar";
+    }
+
     @PostMapping("/esvaziar")
     public String esvaziar(HttpServletRequest request, HttpServletResponse response,
             Authentication autenticacao, RedirectAttributes redirect) {

@@ -13,9 +13,9 @@
         (<span th:text="${linha.quantidade}">1</span> un.) do carrinho.
     </p>
 
-    <form th:action="@{/carrinho/itens/{id}/remover(id=${linha.itemId})}" method="post">
-        <button type="submit" class="btn-primario">Sim, remover</button>
-        <a class="btn-link" th:href="@{/carrinho}">Não, voltar ao carrinho</a>
+    <form class="acoes" th:action="@{/carrinho/itens/{id}/remover(id=${linha.itemId})}" method="post">
+        <button type="submit" class="btn-perigo">Sim, remover</button>
+        <a class="btn-secundario" th:href="@{/carrinho}">Não, voltar ao carrinho</a>
     </form>
 
 </div>

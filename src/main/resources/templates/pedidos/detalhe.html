@@ -18,7 +18,7 @@
     <th:block th:unless="${erroAoCarregar}">
         <h1>Pedido nº <span th:text="${pedido.id}">1</span></h1>
         <p>Feito em <span th:text="${pedido.criadoEmFormatado}">01/01/2026 às 10:00</span>.
-           Situação: <strong th:text="${pedido.status.rotulo}">Aguardando pagamento</strong></p>
+           Situação: <span th:replace="~{fragments/componentes :: situacao(${pedido.status})}"></span></p>
 
         <p class="alerta" role="status" th:if="${pedido.aguardandoPagamento}">
             Este pedido aguarda o pagamento.
@@ -27,7 +27,7 @@
         <p class="alerta alerta--sucesso" role="status" th:if="${pedido.prontoParaRetirada and pedido.localRetirada != null}">
             Seu pedido está pronto para retirada em <strong th:text="${pedido.localRetirada.nome}">Loja</strong>.
         </p>
-        <p class="alerta alerta--erro" role="status" th:if="${pedido.status.name() == 'CANCELADO'}">
+        <p class="alerta" role="status" th:if="${pedido.status.name() == 'CANCELADO'}">
             Este pedido foi cancelado.
         </p>
 
@@ -65,7 +65,7 @@
 
         <!--/* F-25 (UC06-A3): os itens voltam ao carrinho com preço e estoque de agora; nada é comprado sem revisão. */-->
         <form th:action="@{/pedidos/{id}/comprar-novamente(id=${pedido.id})}" method="post">
-            <button type="submit" class="btn-primario" aria-describedby="comprar-novamente-ajuda">Comprar novamente</button>
+            <button type="submit" class="btn-secundario" aria-describedby="comprar-novamente-ajuda">Comprar novamente</button>
             <p id="comprar-novamente-ajuda" class="campo__ajuda">
                 Adiciona estes itens ao carrinho com o preço e o estoque atuais. Você revisa tudo antes de finalizar.
             </p>
@@ -118,7 +118,7 @@
             <h2>Histórico de status</h2>
             <ol class="linha-do-tempo">
                 <li th:each="passo : ${pedido.historico}" th:classappend="${passo.atual} ? 'linha-do-tempo__atual'">
-                    <strong th:text="${passo.status.rotulo}">Aguardando pagamento</strong>
+                    <span th:replace="~{fragments/componentes :: situacao(${passo.status})}"></span>
                     <span th:text="${passo.quandoFormatado}">01/01/2026 às 10:00</span>
                     <span class="visually-hidden" th:if="${passo.atual}">(situação atual)</span>
                 </li>

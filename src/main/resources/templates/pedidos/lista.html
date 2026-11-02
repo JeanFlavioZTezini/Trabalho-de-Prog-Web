@@ -41,18 +41,20 @@
                th:text="${erroFiltro}">A data inicial não pode ser depois da data final.</p>
             <div class="filtros-pedidos__acoes">
                 <button type="submit" class="btn-primario">Filtrar</button>
-                <a th:href="@{/pedidos}">Limpar filtros</a>
+                <a class="btn-secundario" th:href="@{/pedidos}">Limpar filtros</a>
             </div>
         </form>
 
-        <div th:if="${lista.vazia and (filtrado or erroFiltro != null)}">
+        <div class="estado-vazio" th:if="${lista.vazia and (filtrado or erroFiltro != null)}">
             <p role="status">Nenhum pedido encontrado com esses filtros.</p>
         </div>
 
         <!--/* UC06-A1: nenhum pedido. */-->
-        <div th:if="${lista.vazia and !filtrado and erroFiltro == null}">
+        <div class="estado-vazio" th:if="${lista.vazia and !filtrado and erroFiltro == null}">
             <p>Você ainda não fez nenhum pedido.</p>
-            <p><a class="btn-primario" th:href="@{/produtos}">Ver produtos</a></p>
+            <div class="acoes">
+                <a class="btn-primario" th:href="@{/produtos}">Ver produtos</a>
+            </div>
         </div>
 
         <th:block th:unless="${lista.vazia}">
@@ -76,7 +78,7 @@
                             <td th:text="${p.criadoEmFormatado}">01/01/2026 às 10:00</td>
                             <td th:text="${p.unidades == 1} ? '1 unidade' : |${p.unidades} unidades|">2 unidades</td>
                             <td th:text="${#numbers.formatCurrency(p.total)}">R$ 10,00</td>
-                            <td th:text="${p.status.rotulo}">Aguardando pagamento</td>
+                            <td><span th:replace="~{fragments/componentes :: situacao(${p.status})}"></span></td>
                         </tr>
                     </tbody>
                 </table>

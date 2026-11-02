@@ -98,6 +98,9 @@ public class RecuperacaoSenhaService {
             throw new IllegalArgumentException("A nova senha é igual à atual.");
         }
         usuario.setSenhaHash(encoder.encode(novaSenha));
+        // quem recuperou a senha não deve continuar preso no bloqueio do login (F-18)
+        usuario.setTentativasLoginFalhas(0);
+        usuario.setBloqueadoAte(null);
         revogacao.encerrarSessoesDe(usuario.getId());
     }
 

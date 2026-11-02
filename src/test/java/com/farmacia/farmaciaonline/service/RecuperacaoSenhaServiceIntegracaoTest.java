@@ -176,6 +176,21 @@ class RecuperacaoSenhaServiceIntegracaoTest {
     }
 
     @Test
+    @DisplayName("recuperar a senha zera as falhas e o bloqueio do login (F-18)")
+    void recuperarSenhaLiberaAContaBloqueada() {
+        Usuario cliente = conta("cliente@farma.com");
+        cliente.setTentativasLoginFalhas(5);
+        cliente.setBloqueadoAte(Instant.now().plusSeconds(900));
+        usuarios.saveAndFlush(cliente);
+
+        servico.redefinir(cliente.getId(), "NovaSenha1");
+
+        Usuario depois = conta("cliente@farma.com");
+        assertThat(depois.getTentativasLoginFalhas()).isZero();
+        assertThat(depois.getBloqueadoAte()).isNull();
+    }
+
+    @Test
     @DisplayName("reconhece a senha atual; conta sem senha local nunca coincide")
     void reconheceASenhaAtual() {
         Long id = conta("cliente@farma.com").getId();

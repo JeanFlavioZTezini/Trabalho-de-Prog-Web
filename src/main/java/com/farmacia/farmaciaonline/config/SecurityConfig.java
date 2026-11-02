@@ -1,5 +1,6 @@
 package com.farmacia.farmaciaonline.config;
 
+import org.springframework.beans.factory.ObjectProvider;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
@@ -13,6 +14,7 @@ import org.springframework.security.web.session.HttpSessionEventPublisher;
 
 import com.farmacia.farmaciaonline.security.LoginFailureHandler;
 import com.farmacia.farmaciaonline.security.LoginSuccessHandler;
+import com.farmacia.farmaciaonline.security.LoginTentativasService;
 
 @Configuration
 @EnableWebSecurity
@@ -36,7 +38,11 @@ public class SecurityConfig {
     };
 
     @Bean
-    public SecurityFilterChain filterChain(HttpSecurity http, SessionRegistry sessionRegistry) throws Exception {
+    public SecurityFilterChain filterChain(HttpSecurity http, SessionRegistry sessionRegistry,
+            ObjectProvider<LoginTentativasService> tentativasProvider) throws Exception {
+        // Opcional de propósito: os testes de camada web (@WebMvcTest + SecurityConfig) não carregam o serviço, e os handlers
+        // aceitam null (sem contagem de falhas).
+        LoginTentativasService loginTentativasService = tentativasProvider.getIfAvailable();
         http
             .authorizeHttpRequests(auth -> auth
                 .requestMatchers(ROTAS_PUBLICAS).permitAll()
@@ -47,8 +53,8 @@ public class SecurityConfig {
                 .loginProcessingUrl("/login")
                 .usernameParameter("identificador") // e-mail ou CPF
                 .passwordParameter("senha")
-                .successHandler(new LoginSuccessHandler())
-                .failureHandler(new LoginFailureHandler())
+                .successHandler(new LoginSuccessHandler(loginTentativasService))
+                .failureHandler(new LoginFailureHandler(loginTentativasService))
                 .permitAll())
             .logout(logout -> logout
                 .logoutUrl("/logout") // com CSRF ligado, só aceita POST

@@ -7,6 +7,8 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import com.farmacia.farmaciaonline.security.LoginFailureHandler;
 
+import jakarta.servlet.http.HttpServletRequest;
+
 /**
  * Mostra a página de login. Quem processa o POST /login é o Spring Security (ver SecurityConfig).
  *
@@ -23,7 +25,12 @@ public class LoginController {
             @RequestParam(name = "confirmada", required = false) String confirmada,
             @RequestParam(name = "senhaAlterada", required = false) String senhaAlterada,
             @RequestParam(name = "expirada", required = false) String expirada,
-            Model model) {
+            @RequestParam(name = "retorno", required = false) String retorno,
+            HttpServletRequest request, Model model) {
+        // "Entrar" do cabeçalho no carrinho: guarda para onde voltar (mesma sessão e mesmas duas palavras do cadastro)
+        if (CadastroController.destinoDoRetorno(retorno) != null) {
+            request.getSession().setAttribute(CadastroController.SESSAO_RETORNO, retorno);
+        }
         model.addAttribute("erroLogin", mensagemDeErro(erro));
         model.addAttribute("contaPendente", LoginFailureHandler.MOTIVO_PENDENTE.equals(erro));
         model.addAttribute("saiu", logout != null);
@@ -41,7 +48,7 @@ public class LoginController {
             case LoginFailureHandler.MOTIVO_PENDENTE ->
                     "Sua conta ainda não foi confirmada. Confirme seu e-mail ou celular para poder entrar.";
             case LoginFailureHandler.MOTIVO_BLOQUEADA ->
-                    "Sua conta está temporariamente bloqueada. Tente novamente mais tarde.";
+                    "Sua conta foi temporariamente bloqueada por segurança após várias tentativas. Aguarde 15 minutos antes de tentar novamente.";
             case LoginFailureHandler.MOTIVO_INDISPONIVEL ->
                     "Não foi possível entrar agora. Tente novamente em instantes.";
             default -> "E-mail, CPF ou senha incorretos. Confira os dados e tente de novo.";

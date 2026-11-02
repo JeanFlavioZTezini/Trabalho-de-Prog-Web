@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Provedor simulado | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1 th:text="|Entrar com ${nomeProvedor}|">Entrar com Google (simulado)</h1>
+
+    <p class="alerta" role="note">
+        Esta tela faz o papel do <span th:text="${nomeProvedor}">Google</span>: é uma simulação para a demonstração.
+        Escolha quem você é no provedor. O mesmo identificador sempre volta para a mesma conta vinculada.
+    </p>
+
+    <form th:action="@{/login/social/demo/{p}/consentimento(p=${caminho})}" method="post">
+        <input type="hidden" name="state" th:value="${state}">
+
+        <div class="campo">
+            <label for="idExterno">Identificador no provedor</label>
+            <p class="campo__ajuda" id="idExterno-ajuda">Use o mesmo valor para entrar de novo com a mesma conta.</p>
+            <input type="text" id="idExterno" name="idExterno" maxlength="100" th:value="${idSugerido}"
+                   aria-describedby="idExterno-ajuda">
+        </div>
+        <div th:replace="~{fragments/campo :: campo(id='nome', nome='nome', rotulo='Nome', tipo='text', ajuda=null, erro=null, autocomplete='name')}"></div>
+        <div th:replace="~{fragments/campo :: campo(id='email', nome='email', rotulo='E-mail (opcional)', tipo='email', ajuda='Deixe em branco para simular um provedor que não informa e-mail.', erro=null, autocomplete='email')}"></div>
+        <div class="campo">
+            <input type="checkbox" id="emailVerificado" name="emailVerificado" value="true" checked
+                   aria-describedby="emailVerificado-ajuda">
+            <label for="emailVerificado">O provedor confirma que o e-mail é verificado</label>
+            <p class="campo__ajuda" id="emailVerificado-ajuda">Desmarcado, a conta nova precisa confirmar o e-mail com um código.</p>
+        </div>
+
+        <!--/* Botão principal primeiro: Enter permite, como na tela real. */-->
+        <button type="submit" class="btn-primario btn-primario--bloco" name="acao" value="permitir">Permitir</button>
+        <p class="pagina-texto__rodape-form">
+            <button type="submit" class="btn-link" name="acao" value="cancelar">Cancelar</button>
+            <span aria-hidden="true"> · </span>
+            <button type="submit" class="btn-link" name="acao" value="indisponivel">Simular provedor fora do ar</button>
+        </p>
+    </form>
+
+</div>
+</body>
+</html>

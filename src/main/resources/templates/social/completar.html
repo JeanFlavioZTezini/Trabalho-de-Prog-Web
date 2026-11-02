@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Complete seu cadastro | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto pagina-texto--estreita">
+
+    <h1>Complete seu cadastro</h1>
+
+    <p>Você entrou com <strong th:text="${nomeProvedor}">Google (simulado)</strong>. Para comprar remédios precisamos de
+        alguns dados que o provedor não informa. Se o CPF já tiver conta aqui, pediremos para você comprovar que ela é sua.</p>
+    <p th:if="${emailDoProvedor != null}">E-mail informado pelo provedor: <strong th:text="${emailDoProvedor}">nome@exemplo.com</strong>
+        <span th:text="${emailVerificado} ? '(verificado)' : '(não verificado: você vai confirmar com um código)'">(verificado)</span></p>
+
+    <form th:action="@{/login/social/completar}" th:object="${completarSocialForm}" method="post" novalidate>
+        <div class="alerta alerta--erro" role="alert" th:if="${#fields.hasGlobalErrors()}">
+            <p th:each="e : ${#fields.globalErrors()}" th:text="${e}">Erro</p>
+        </div>
+
+        <div class="campo">
+            <label for="nome">Nome completo</label>
+            <input type="text" id="nome" th:field="*{nome}" maxlength="150" autocomplete="name" required
+                   th:aria-invalid="${#fields.hasErrors('nome')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('nome')} ? 'nome-erro'">
+            <p class="campo__erro" role="alert" id="nome-erro" th:if="${#fields.hasErrors('nome')}" th:errors="*{nome}"></p>
+        </div>
+        <div class="campo">
+            <label for="cpf">CPF</label>
+            <p class="campo__ajuda" id="cpf-ajuda">Só os números ou no formato 000.000.000-00.</p>
+            <input type="text" id="cpf" th:field="*{cpf}" maxlength="14" data-mascara="cpf" inputmode="numeric" required
+                   th:aria-invalid="${#fields.hasErrors('cpf')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('cpf')} ? 'cpf-ajuda cpf-erro' : 'cpf-ajuda'">
+            <p class="campo__erro" role="alert" id="cpf-erro" th:if="${#fields.hasErrors('cpf')}" th:errors="*{cpf}"></p>
+        </div>
+        <div class="campo">
+            <label for="dataNascimento">Data de nascimento</label>
+            <p class="campo__ajuda" id="dataNascimento-ajuda">É preciso ter 18 anos ou mais.</p>
+            <input type="date" id="dataNascimento" th:field="*{dataNascimento}" autocomplete="bday"
+                   min="1900-01-01" th:max="${hoje}" required
+                   th:aria-invalid="${#fields.hasErrors('dataNascimento')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('dataNascimento')} ? 'dataNascimento-ajuda dataNascimento-erro' : 'dataNascimento-ajuda'">
+            <p class="campo__erro" role="alert" id="dataNascimento-erro" th:if="${#fields.hasErrors('dataNascimento')}" th:errors="*{dataNascimento}"></p>
+        </div>
+        <div class="campo">
+            <label for="genero">Gênero</label>
+            <select id="genero" th:field="*{genero}" required autocomplete="sex"
+                    th:aria-invalid="${#fields.hasErrors('genero')} ? 'true'"
+                    th:aria-describedby="${#fields.hasErrors('genero')} ? 'genero-erro'">
+                <option value="">Selecione</option>
+                <option th:each="g : ${generos}" th:value="${g}" th:text="${#strings.capitalize(#strings.toLowerCase(g))}">Gênero</option>
+            </select>
+            <p class="campo__erro" role="alert" id="genero-erro" th:if="${#fields.hasErrors('genero')}" th:errors="*{genero}"></p>
+        </div>
+        <div class="campo">
+            <label for="celular">Celular</label>
+            <p class="campo__ajuda" id="celular-ajuda">DDD e número, por exemplo (67) 99999-9999.</p>
+            <input type="tel" id="celular" th:field="*{celular}" maxlength="15" data-mascara="celular" inputmode="numeric"
+                   autocomplete="tel-national" required
+                   th:aria-invalid="${#fields.hasErrors('celular')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('celular')} ? 'celular-ajuda celular-erro' : 'celular-ajuda'">
+            <p class="campo__erro" role="alert" id="celular-erro" th:if="${#fields.hasErrors('celular')}" th:errors="*{celular}"></p>
+        </div>
+        <div class="campo" th:if="${emailDoProvedor == null}">
+            <label for="email">E-mail</label>
+            <p class="campo__ajuda" id="email-ajuda">O provedor não informou um e-mail. Você vai confirmá-lo com um código.</p>
+            <input type="email" id="email" th:field="*{email}" maxlength="254" autocomplete="email" required
+                   th:aria-invalid="${#fields.hasErrors('email')} ? 'true'"
+                   th:aria-describedby="${#fields.hasErrors('email')} ? 'email-ajuda email-erro' : 'email-ajuda'">
+            <p class="campo__erro" role="alert" id="email-erro" th:if="${#fields.hasErrors('email')}" th:errors="*{email}"></p>
+        </div>
+        <p class="campo__erro" role="alert" id="email-erro" th:if="${emailDoProvedor != null and #fields.hasErrors('email')}"
+           th:errors="*{email}"></p>
+        <div class="campo">
+            <label for="aceiteTermos">
+                <input type="checkbox" id="aceiteTermos" th:field="*{aceiteTermos}" required
+                       th:aria-invalid="${#fields.hasErrors('aceiteTermos')} ? 'true'"
+                       th:aria-describedby="${#fields.hasErrors('aceiteTermos')} ? 'aceiteTermos-erro'">
+                Li e aceito os <a th:href="@{/institucional/termos-de-uso}">Termos de Uso</a> e a
+                <a th:href="@{/institucional/privacidade}">Política de Privacidade</a>.
+            </label>
+            <p class="campo__erro" role="alert" id="aceiteTermos-erro" th:if="${#fields.hasErrors('aceiteTermos')}"
+               th:errors="*{aceiteTermos}"></p>
+        </div>
+
+        <button type="submit" class="btn-primario btn-primario--bloco">Continuar</button>
+    </form>
+
+    <p class="pagina-texto__rodape-form"><a th:href="@{/login}">Voltar para o login</a></p>
+</div>
+</body>
+</html>

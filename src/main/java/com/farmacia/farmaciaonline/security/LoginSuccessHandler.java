@@ -64,8 +64,11 @@ public class LoginSuccessHandler extends SavedRequestAwareAuthenticationSuccessH
         super.onAuthenticationSuccess(request, response, authentication);
     }
 
-    /** Consome o {@code retornoCadastro} da sessão; só "carrinho" e "checkout" viram caminho (contrato da F-04). */
-    private static String retornoDoCadastro(HttpServletRequest request) {
+    /**
+     * Consome o {@code retornoCadastro} da sessão; só "carrinho" e "checkout" viram caminho (contrato da F-04). Também
+     * usado pelo {@link LoginProgramatico} (login social, F-20).
+     */
+    static String retornoDoCadastro(HttpServletRequest request) {
         HttpSession sessao = request.getSession(false);
         if (sessao == null) {
             return null;

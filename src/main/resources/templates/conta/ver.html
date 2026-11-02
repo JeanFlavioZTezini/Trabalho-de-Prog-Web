@@ -9,6 +9,8 @@
     <h1>Minha conta</h1>
 
     <p class="alerta alerta--sucesso" role="status" th:if="${sucesso != null}" th:text="${sucesso}">Mensagem de sucesso</p>
+    <p class="alerta alerta--erro" role="alert" th:if="${erroSocial != null}" th:text="${erroSocial}">Erro ao vincular</p>
+    <p class="alerta" role="status" th:if="${avisoSocial != null}" th:text="${avisoSocial}">Aviso</p>
 
     <section aria-labelledby="titulo-dados">
         <h2 id="titulo-dados">Dados pessoais</h2>
@@ -51,6 +53,15 @@
     <section class="conta__secao" aria-labelledby="titulo-seguranca">
         <h2 id="titulo-seguranca">Segurança</h2>
         <p><a th:href="@{/conta/senha}">Alterar senha</a></p>
+        <p class="campo__ajuda">Entrou só pelo Google ou Facebook e não tem senha? Defina uma em
+            <a th:href="@{/recuperar-senha}">Esqueci minha senha</a>.</p>
+        <!--/* F-20: vincular estando logado (a sessão já prova quem é); só com o provedor simulado do perfil demo. */-->
+        <p th:if="${ambienteDemo}" sec:authorize="hasRole('CLIENTE')">
+            Vincular para entrar sem senha:
+            <a th:href="@{/login/social/google}">Google (simulado)</a>
+            <span aria-hidden="true"> · </span>
+            <a th:href="@{/login/social/facebook}">Facebook (simulado)</a>
+        </p>
     </section>
 
     <section class="conta__secao" aria-labelledby="titulo-pedidos" sec:authorize="hasRole('CLIENTE')">

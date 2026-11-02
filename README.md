@@ -686,6 +686,27 @@ Fecha o UC07: o cliente logado troca o e-mail ou o celular confirmando o **novo*
   ajustados: a tela da conta agora mostra os links de troca em vez do aviso de "ainda não disponível".
 
 
+## Proteção do login (F-18 / UC10, UC15)
+
+Completa o login da F1-09 sem trocar o que já existia (CPF ou e-mail, conta pendente, redirecionamentos). Regras em
+`security/LoginTentativasService`, chamado pelos handlers do login; sem migration (usa `tentativas_login_falhas` e
+`bloqueado_ate` do `usuario`).
+
+- **Bloqueio:** só senha realmente incorreta conta (`BadCredentialsException`). Cinco falhas seguidas bloqueiam a conta por 15 minutos;
+  login bem-sucedido ou senha recuperada (F-06) zera o contador e o bloqueio. Conta pendente, identificador inexistente, conta já
+  bloqueada e falha do sistema (banco fora do ar) não contam. Se o bloqueio já venceu, a próxima senha errada recomeça a contagem.
+  A atualização usa lock pessimista para não perder falhas simultâneas. O limite está fixo em `LoginTentativasService`.
+- **Sessão:** expira após 30 minutos de inatividade (`server.servlet.session.timeout`). O logout é `POST /logout` com CSRF, invalida só a
+  sessão que saiu (outras abas da mesma conta, com outra sessão, seguem até o próprio logout ou a revogação da F-06) e as páginas
+  protegidas saem com `Cache-Control: no-store`, então "voltar" não as restaura.
+- **Perfil:** o formulário de login ignora `perfil`, `status` e afins; o perfil vem só do banco.
+- **Volta ao carrinho/checkout:** quem se cadastrou a partir do carrinho ou do checkout (`retornoCadastro` na sessão, F-04) volta para
+  lá depois do login; qualquer outro valor é ignorado e apagado. Admin vai sempre para `/admin`.
+- **Rotas:** conferidas contra `ROTAS_PUBLICAS`; `/conta/**`, `/enderecos/**`, `/checkout/**` e `/admin/**` exigem login.
+- **Testes:** `LoginProtecaoIntegracaoTest` (contagem, bloqueio vencido, campos proibidos, sessão, logout, cache, rotas, retorno),
+  acréscimos em `LoginIntegracaoTest`, `LoginHandlersTest` e `RecuperacaoSenhaServiceIntegracaoTest`. Os testes que mexem no cliente do seed
+  limpam falhas e bloqueio antes e depois, porque o banco é compartilhado entre as classes.
+
 ## Consulta de clientes (F-09 / UC11)
 
 Consulta administrativa **somente leitura** de clientes, com auditoria. Regras em `service/ClienteAdminService`, telas em
@@ -884,5 +905,11 @@ Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: a
 | Contratos e modelos de pedidos e migrations de compatibilidade (UC06/UC08/UC14/UC17) | F-15 | Pessoa F: _preencher_, com Kauê (contatos confirmados) e a pessoa E | |
 | Histórico e detalhe de pedidos do cliente (UC06) | F-16 | Pessoa F: _preencher_ | |
 | Administração de pedidos: transições, receita e histórico (UC17) | F-17 | Pessoa F: _preencher_ | |
-| Proteção do login e logout validado nos novos fluxos (UC10/UC15) | F-18 | Pessoa F: _preencher_ | |
+| Proteção do login e logout validado nos novos fluxos (UC10/UC15) | F-18 | Jean (@JeanFlavioZTezini), correções por Kauê (@KaueAlves09) | #68 |
 | Integração, teste do percurso completo e entrega reproduzível | F-19 | Todos | |
+| Login social demonstrável com vínculo seguro de CPF (UC10) | F-20 | Kauê (@KaueAlves09) | |
+| Alteração de e-mail/celular com confirmação do novo contato (UC07) | F-21 | Kauê (@KaueAlves09) | #67 |
+| Correção de busca e refinamentos do catálogo (UC01) | F-22 | Kauê (@KaueAlves09) | |
+| Filtros completos de pedidos/clientes e exportação CSV (UC06/UC11) | F-23 | Kauê (@KaueAlves09) | |
+| Excluir a própria conta preservando histórico necessário (regra I14) | F-24 | Kauê (@KaueAlves09) | |
+| Facilidades explicitamente opcionais | F-25 | Kauê (@KaueAlves09) | |

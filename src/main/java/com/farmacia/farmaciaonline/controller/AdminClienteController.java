@@ -1,8 +1,19 @@
 package com.farmacia.farmaciaonline.controller;
 
+import java.nio.charset.StandardCharsets;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.Arrays;
 
+import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 import org.springframework.data.domain.Sort;
 import org.springframework.security.core.Authentication;
 import org.springframework.stereotype.Controller;
@@ -15,6 +26,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.farmacia.farmaciaonline.model.enums.StatusUsuario;
 import com.farmacia.farmaciaonline.security.UsuarioAutenticado;
 import com.farmacia.farmaciaonline.service.ClienteAdminService;
+import com.farmacia.farmaciaonline.service.PeriodoFiltro;
 
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -35,15 +47,45 @@ public class AdminClienteController {
     @GetMapping
     public String listar(@RequestParam(required = false) String q,
             @RequestParam(required = false) String status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate de,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ate,
             @RequestParam(defaultValue = "0") int pagina, Authentication auth, HttpServletRequest request,
             Model model) {
         StatusUsuario filtro = statusDe(status);
-        model.addAttribute("pagina", service.listar(adminId(auth), request.getRemoteAddr(), q, filtro,
-                PageRequest.of(Math.max(pagina, 0), TAMANHO_PAGINA, Sort.by("nome"))));
+        PeriodoFiltro periodo = new PeriodoFiltro(de, ate);
+        PageRequest pageable = PageRequest.of(Math.max(pagina, 0), TAMANHO_PAGINA, Sort.by("nome"));
+        String erroFiltro = periodo.erro();
+        model.addAttribute("pagina", erroFiltro != null ? Page.empty(pageable)
+                : service.listar(adminId(auth), request.getRemoteAddr(), q, filtro, periodo, pageable));
         model.addAttribute("q", q);
         model.addAttribute("status", filtro == null ? "" : filtro.name());
+        model.addAttribute("de", de);
+        model.addAttribute("ate", ate);
+        model.addAttribute("erroFiltro", erroFiltro);
         model.addAttribute("statuses", StatusUsuario.values());
         return "admin/clientes";
+    }
+
+    /** F-23: mesmos filtros da lista; o arquivo sai como anexo e a exportação vai para a auditoria. */
+    @GetMapping("/exportar.csv")
+    public ResponseEntity<byte[]> exportar(@RequestParam(required = false) String q,
+            @RequestParam(required = false) String status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate de,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate ate,
+            Authentication auth, HttpServletRequest request) {
+        PeriodoFiltro periodo = new PeriodoFiltro(de, ate);
+        if (periodo.erro() != null) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST, periodo.erro());
+        }
+        String csv = service.exportarCsv(adminId(auth), request.getRemoteAddr(), q, statusDe(status), periodo);
+        String arquivo = "clientes-" + LocalDate.now(PeriodoFiltro.FUSO_SAO_PAULO).format(DateTimeFormatter.BASIC_ISO_DATE)
+                + ".csv";
+        return ResponseEntity.ok()
+                .contentType(new MediaType("text", "csv", StandardCharsets.UTF_8))
+                .header(HttpHeaders.CONTENT_DISPOSITION,
+                        ContentDisposition.attachment().filename(arquivo).build().toString())
+                .header(HttpHeaders.CACHE_CONTROL, "no-store")
+                .body(csv.getBytes(StandardCharsets.UTF_8));
     }
 
     @GetMapping("/{id}")

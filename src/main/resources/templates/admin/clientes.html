@@ -23,8 +23,27 @@
                         th:text="${s.name() == 'ATIVA'} ? 'Ativa' : (${s.name() == 'PENDENTE'} ? 'Pendente' : 'Excluída')">Ativa</option>
             </select>
         </div>
+        <div class="campo">
+            <label for="de">Cadastrado de</label>
+            <input type="date" id="de" name="de" th:value="${de}"
+                   th:aria-describedby="${erroFiltro != null ? 'erro-filtro' : null}">
+        </div>
+        <div class="campo">
+            <label for="ate">Cadastrado até</label>
+            <input type="date" id="ate" name="ate" th:value="${ate}"
+                   th:aria-invalid="${erroFiltro != null ? 'true' : null}"
+                   th:aria-describedby="${erroFiltro != null ? 'erro-filtro' : null}">
+        </div>
+        <p id="erro-filtro" class="alerta alerta--erro" role="alert" th:if="${erroFiltro != null}"
+           th:text="${erroFiltro}">A data inicial não pode ser depois da data final.</p>
         <button type="submit" class="btn-primario">Filtrar</button>
+        <a th:href="@{/admin/clientes}">Limpar filtros</a>
     </form>
+
+    <p th:if="${erroFiltro == null}">
+        <a th:href="@{/admin/clientes/exportar.csv(q=${q}, status=${status}, de=${de}, ate=${ate})}">Exportar CSV
+            <span class="visually-hidden">dos clientes filtrados (dados pessoais mascarados)</span></a>
+    </p>
 
     <p th:if="${pagina.empty}">Nenhum cliente encontrado.</p>
 
@@ -58,10 +77,10 @@
 
     <p th:if="${pagina.totalPages > 1}">
         <a th:if="${pagina.hasPrevious()}"
-           th:href="@{/admin/clientes(q=${q}, status=${status}, pagina=${pagina.number - 1})}">Anterior</a>
+           th:href="@{/admin/clientes(q=${q}, status=${status}, de=${de}, ate=${ate}, pagina=${pagina.number - 1})}">Anterior</a>
         <span th:text="|Página ${pagina.number + 1} de ${pagina.totalPages}|">Página 1 de 1</span>
         <a th:if="${pagina.hasNext()}"
-           th:href="@{/admin/clientes(q=${q}, status=${status}, pagina=${pagina.number + 1})}">Próxima</a>
+           th:href="@{/admin/clientes(q=${q}, status=${status}, de=${de}, ate=${ate}, pagina=${pagina.number + 1})}">Próxima</a>
     </p>
 
     <p><a th:href="@{/admin}">Voltar ao painel</a></p>

@@ -160,6 +160,8 @@ carrinho, esvaziar o carrinho, remover cartão salvo, excluir endereço, excluir
 - Situação do pedido: `<span th:replace="~{fragments/componentes :: situacao(${pedido.status})}"></span>`, que gera
   `selo selo--status-<STATUS>` com o rótulo. O tom de cada `StatusPedido` está no
   CSS (aguardando = aviso; aprovado, em separação, enviado e pronto = info; entregue = sucesso; cancelado = erro).
+- Situação da conta (admin): `situacaoConta(${c.status}, ${c.statusRotulo})` (ativa = sucesso, pendente = aviso,
+  excluída = neutro). Ativo/inativo de produto e categoria: `selo--sucesso` e `selo--neutro`.
 
 ### Tabelas
 
@@ -167,17 +169,28 @@ carrinho, esvaziar o carrinho, remover cartão salvo, excluir endereço, excluir
 `<div class="tabela-rolavel" role="region" aria-label="..." tabindex="0">`. Valores e quantidades com `class="num"`
 (alinhados à direita). Ação por linha com o nome do item em `.visually-hidden` ("Editar <span class="visually-hidden">Analgésicos</span>"),
 lado a lado em `<div class="acoes-linha">` (`.btn-link` para editar, `a.link-perigo` para a confirmação de excluir).
+No admin, as ações por linha são ícones (`<td class="acoes-icone">` com `a.acao-icone`): lápis
+(`fragments/componentes :: iconeEditar`), lixeira (`iconeExcluir`, com `acao-icone--perigo`) e olho (`iconeVer`), sempre com
+o nome da ação e do item em `title` e em `.visually-hidden`. Nas telas do cliente as ações ficam em texto.
+Valores em reais sempre com `#numbers.formatCurrency`. Recuo da árvore de categorias com as classes `nivel nivel-<n>`
+(0 = raiz), nunca com `style` inline.
 
 ### Filtros, paginação e estado vazio
 
 - Filtros de lista: `<form class="filtros">` (grade que quebra sozinha) com os botões em `.filtros__acoes`.
-- Paginação: `<nav class="paginacao" aria-label="Paginação">`.
+- Paginação: `<nav class="paginacao" aria-label="Paginação de <lista>">`, nunca um `<p>`.
 - Lista sem itens: `<div class="estado-vazio">` com o que aconteceu e a próxima ação (`.acoes`).
 
 ### Navegação
 
 - Migalhas (breadcrumb):
   `<nav class="migalhas" aria-label="Você está em"><ol><li><a>Início</a></li>…<li aria-current="page">Produto</li></ol></nav>`.
+  No admin: `<nav th:replace="~{fragments/componentes :: migalhasAdmin('Produtos', '/admin/produtos', 'Editar')}"></nav>`
+  (Painel › Seção › página; `atual = null` quando a seção é a página). O fragmento traz também o link "‹ Voltar", que leva ao
+  nível de cima (não ao histórico) e só aparece a partir de 768 px: no celular o voltar é o do aparelho. Por isso as telas
+  do admin não têm outro "Voltar" no rodapé.
+- Menu da conta (cabeçalho): "Olá, Nome ▾" é um `<button aria-expanded aria-controls="menu-usuario">` que abre os atalhos
+  e o Sair (`menu.js`); Esc fecha e devolve o foco ao botão, clicar fora fecha. Sem JavaScript os atalhos ficam visíveis.
 - Etapas (checkout): `<ol class="etapas">` com `<span class="etapas__numero">` e `<span class="etapas__rotulo">` em cada
   `<li>`; a atual leva `aria-current="step"` e as anteriores `class="etapas__feita"`. No celular só o rótulo da atual
   aparece. Nas telas da compra use `<ol th:replace="~{fragments/componentes :: etapas(n)}"></ol>` (1 Carrinho,

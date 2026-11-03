@@ -239,7 +239,7 @@ public class CheckoutService {
                 String.valueOf(endereco.getCidade()), String.valueOf(endereco.getUf()));
     }
 
-        private void reservarEstoque(Carrinho carrinho) {
+    private void reservarEstoque(Carrinho carrinho) {
         carrinho.getItens().stream()
                 .sorted(Comparator.comparing((ItemCarrinho i) -> i.getApresentacao().getId()))
                 .forEach(item -> {

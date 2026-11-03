@@ -149,6 +149,17 @@ class CheckoutFluxoWebIntegracaoTest extends CheckoutTesteBase {
     }
 
     @Test
+    @DisplayName("o resumo do pedido aparece na caixa demo do dono e não na de outro cliente")
+    void resumoNaCaixaDoDono() throws Exception {
+        Usuario cliente = novoCliente();
+        noCarrinho(cliente, novaApresentacao("10.00", 5), 1);
+        Long id = idDoRedirecionamento(confirmar(cliente, "tipoEntrega=RETIRADA&metodo=PIX&lojaId=1"));
+
+        assertThat(pagina(cliente, "/caixa-demo")).contains("Resumo do pedido nº " + id);
+        assertThat(pagina(novoCliente(), "/caixa-demo")).doesNotContain("Resumo do pedido nº " + id);
+    }
+
+    @Test
     @DisplayName("o total enviado pelo navegador é ignorado")
     void totalDoNavegadorIgnorado() throws Exception {
         Usuario cliente = novoCliente();
@@ -315,13 +326,13 @@ class CheckoutFluxoWebIntegracaoTest extends CheckoutTesteBase {
     void reenvioDoResumo() throws Exception {
         Usuario cliente = novoCliente();
         noCarrinho(cliente, novaApresentacao("10.00", 5), 1);
-        doThrow(new IllegalStateException("fora do ar")).when(envio).enviar(any(), anyString(), anyString(), anyString());
+        doThrow(new IllegalStateException("fora do ar")).when(envio).enviar(any(), anyString(), anyString(), anyString(), any());
 
         Long id = idDoRedirecionamento(confirmar(cliente, "tipoEntrega=RETIRADA&metodo=PIX&lojaId=1"));
 
         assertThat(pagina(cliente, "/checkout/pedidos/" + id)).contains("não conseguimos enviar o resumo").contains("Reenviar resumo");
 
-        doCallRealMethod().when(envio).enviar(any(), anyString(), anyString(), anyString());
+        doCallRealMethod().when(envio).enviar(any(), anyString(), anyString(), anyString(), any());
         mvc.perform(post("/checkout/pedidos/" + id + "/resumo").with(como(cliente)).with(csrf()))
                 .andExpect(redirectedUrl("/checkout/pedidos/" + id));
 

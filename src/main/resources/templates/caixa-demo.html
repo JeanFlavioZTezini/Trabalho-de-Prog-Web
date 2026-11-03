@@ -12,8 +12,9 @@
     <h1>Caixa de mensagens de teste</h1>
 
     <p class="alerta" role="note">Página de demonstração: nenhum e-mail ou SMS sai de verdade. As mensagens ficam só na memória
-        (as últimas 50) e somem quando a aplicação reinicia. Você vê só as mensagens geradas nesta sessão do navegador
-        (o administrador vê todas).</p>
+        (as últimas 50) e somem quando a aplicação reinicia. Você vê as mensagens enviadas para os contatos da sua conta
+        (ou da conta que está confirmando). Códigos de recuperação de senha e de vínculo social aparecem só para o
+        administrador.</p>
 
     <div class="estado-vazio" th:if="${#lists.isEmpty(mensagens)}">
         <p>Nenhuma mensagem ainda.</p>

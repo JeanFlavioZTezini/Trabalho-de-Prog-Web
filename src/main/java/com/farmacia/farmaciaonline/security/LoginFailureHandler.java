@@ -35,23 +35,37 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
     private static final Logger log = LoggerFactory.getLogger(LoginFailureHandler.class);
     private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
     private final LoginTentativasService tentativasService;
+    private final LimiteDeTentativasEmMemoria tentativasEmMemoria;
 
     /** Mantido para os testes unitários dos redirecionamentos. */
     public LoginFailureHandler() {
-        this(null);
+        this(null, null);
     }
 
     public LoginFailureHandler(LoginTentativasService tentativasService) {
+        this(tentativasService, null);
+    }
+
+    public LoginFailureHandler(LoginTentativasService tentativasService, LimiteDeTentativasEmMemoria tentativasEmMemoria) {
         this.tentativasService = tentativasService;
+        this.tentativasEmMemoria = tentativasEmMemoria;
     }
 
     @Override
     public void onAuthenticationFailure(HttpServletRequest request, HttpServletResponse response,
             AuthenticationException exception) throws IOException {
         String motivo = motivo(exception);
-        if (exception instanceof BadCredentialsException && tentativasService != null) {
+        String identificador = request.getParameter("identificador");
+        if (exception instanceof BadCredentialsException && tentativasEmMemoria != null
+                && tentativasEmMemoria.bloqueado(identificador)) {
+            // Identificador sem conta ativa que já errou 5 vezes: mesma resposta da conta real bloqueada.
+            motivo = MOTIVO_BLOQUEADA;
+        } else if (exception instanceof BadCredentialsException && tentativasService != null) {
             try {
-                tentativasService.registrarFalha(request.getParameter("identificador"));
+                boolean contada = tentativasService.registrarFalhaEContar(identificador);
+                if (!contada && tentativasEmMemoria != null) {
+                    tentativasEmMemoria.registrarFalha(identificador);
+                }
             } catch (DataAccessException erro) {
                 // A falha de persistência não deve ser convertida em uma tentativa de senha incorreta.
                 log.warn("Não foi possível registrar a tentativa de login", erro);

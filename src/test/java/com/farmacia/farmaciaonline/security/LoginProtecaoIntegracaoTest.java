@@ -75,6 +75,35 @@ class LoginProtecaoIntegracaoTest {
 
     // ---------- contagem de falhas ----------
 
+    @Autowired
+    private LimiteDeTentativasEmMemoria tentativasEmMemoria;
+
+    /** As 6 respostas seguidas a uma senha errada: o motivo de cada redirecionamento. */
+    private java.util.List<String> seisSenhasErradas(String identificador) throws Exception {
+        java.util.List<String> motivos = new java.util.ArrayList<>();
+        for (int i = 0; i < 6; i++) {
+            motivos.add(mvc.perform(formLogin("/login").user("identificador", identificador).password("senha", "errada"))
+                    .andReturn().getResponse().getRedirectedUrl());
+        }
+        return motivos;
+    }
+
+    @Test
+    @DisplayName("o bloqueio não revela se a conta existe: conta real e e-mail inexistente dão a mesma sequência")
+    void bloqueioIgualParaContaRealEInexistente() throws Exception {
+        try {
+            java.util.List<String> real = seisSenhasErradas("cliente@farma.com");
+            java.util.List<String> inexistente = seisSenhasErradas("ninguem-bloqueio@teste.com");
+
+            assertThat(real).containsExactly("/login?erro=credenciais", "/login?erro=credenciais",
+                    "/login?erro=credenciais", "/login?erro=credenciais", "/login?erro=credenciais",
+                    "/login?erro=bloqueada");
+            assertThat(inexistente).isEqualTo(real);
+        } finally {
+            tentativasEmMemoria.limparTudo();
+        }
+    }
+
     @Test
     @DisplayName("quatro senhas incorretas ainda não bloqueiam; a quinta falha conta pelo CPF também")
     void quatroFalhasNaoBloqueiam() throws Exception {

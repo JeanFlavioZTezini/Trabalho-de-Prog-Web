@@ -13,22 +13,21 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.context.annotation.Import;
-import org.springframework.mock.web.MockHttpServletRequest;
 import org.springframework.mock.web.MockHttpSession;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.request.MockHttpServletRequestBuilder;
 import org.springframework.util.StringUtils;
-import org.springframework.web.context.request.RequestContextHolder;
-import org.springframework.web.context.request.ServletRequestAttributes;
 
 import com.farmacia.farmaciaonline.config.SecurityConfig;
 import com.farmacia.farmaciaonline.mensagem.demo.DemoEnvioAdapter;
 import com.farmacia.farmaciaonline.model.enums.CanalCodigo;
+import com.farmacia.farmaciaonline.model.enums.Perfil;
 import com.farmacia.farmaciaonline.repository.CategoriaRepository;
+import com.farmacia.farmaciaonline.security.UsuarioAutenticado;
 
 /**
  * Caixa de mensagens de teste com o perfil demo (ligado no application.properties). Sem banco e sem Docker.
- * A caixa fica na memória entre testes: cada teste usa textos próprios e confere só eles.
+ * A caixa fica na memória entre testes: cada teste usa contas e textos próprios e confere só eles.
  */
 @WebMvcTest(CaixaDemoController.class)
 @Import({SecurityConfig.class, DemoEnvioAdapter.class})
@@ -43,16 +42,8 @@ class CaixaDemoControllerTest {
     @Autowired
     private DemoEnvioAdapter caixa;
 
-    /** Envia como se fosse durante uma requisição da sessão dada (é assim que o adaptador descobre a caixa). */
-    private void enviarNaSessao(MockHttpSession sessao, CanalCodigo canal, String destino, String assunto, String texto) {
-        MockHttpServletRequest requisicao = new MockHttpServletRequest();
-        requisicao.setSession(sessao);
-        RequestContextHolder.setRequestAttributes(new ServletRequestAttributes(requisicao));
-        try {
-            caixa.enviar(canal, destino, assunto, texto);
-        } finally {
-            RequestContextHolder.resetRequestAttributes();
-        }
+    private static UsuarioAutenticado cliente(long id) {
+        return new UsuarioAutenticado(id, "Cliente " + id, Perfil.CLIENTE, "cliente" + id + "@exemplo.com", "hash");
     }
 
     private String html(MockHttpServletRequestBuilder requisicao) throws Exception {
@@ -61,48 +52,59 @@ class CaixaDemoControllerTest {
     }
 
     @Test
-    @DisplayName("a sessão vê as próprias mensagens, da mais recente para a mais antiga, com um único h1")
-    void sessaoVeAsPropriasMensagens() throws Exception {
-        MockHttpSession sessao = new MockHttpSession();
-        enviarNaSessao(sessao, CanalCodigo.EMAIL, "maria@exemplo.com", "Assunto antigo", "Seu código do Farma++ é 111111.");
-        enviarNaSessao(sessao, CanalCodigo.SMS, "67999998888", "Assunto novo", "Seu código do Farma++ é 222222.");
+    @DisplayName("a conta logada vê as próprias mensagens, da mais recente para a mais antiga, com um único h1")
+    void contaVeAsPropriasMensagens() throws Exception {
+        caixa.enviar(CanalCodigo.EMAIL, "maria@exemplo.com", "Assunto antigo", "Seu código é 111111.", 9001L);
+        caixa.enviar(CanalCodigo.SMS, "67999998888", "Assunto novo", "Seu código é 222222.", 9001L);
 
-        String html = html(get("/caixa-demo").session(sessao));
+        String html = html(get("/caixa-demo").with(user(cliente(9001))));
 
-        assertThat(html).contains("<h1>Caixa de mensagens de teste</h1>").contains("nenhum e-mail ou SMS sai de verdade")
-                .contains("Você vê só as mensagens geradas nesta sessão");
+        assertThat(html).contains("<h1>Caixa de mensagens de teste</h1>")
+                .contains("nenhum e-mail ou SMS sai de verdade")
+                .contains("Você vê as mensagens enviadas para os contatos da sua conta");
         assertThat(StringUtils.countOccurrencesOf(html, "<h1")).isEqualTo(1);
         assertThat(html).contains("SMS para 67999998888").contains("E-mail para maria@exemplo.com").contains("222222");
         assertThat(html.indexOf("Assunto novo")).isLessThan(html.indexOf("Assunto antigo"));
     }
 
     @Test
-    @DisplayName("uma sessão não vê o código gerado em outra (era assim que se tomava a conta de alguém)")
-    void sessaoNaoVeCodigoDeOutra() throws Exception {
-        MockHttpSession vitima = new MockHttpSession();
-        MockHttpSession atacante = new MockHttpSession();
-        enviarNaSessao(vitima, CanalCodigo.EMAIL, "vitima@exemplo.com", "Recuperação", "Seu código do Farma++ é 314159.");
-        enviarNaSessao(atacante, CanalCodigo.EMAIL, "atacante@exemplo.com", "Cadastro", "Seu código do Farma++ é 271828.");
+    @DisplayName("a conta logada não vê mensagem de outra conta (nem para o mesmo celular) nem mensagem sem conta")
+    void contaNaoVeMensagemDeOutra() throws Exception {
+        caixa.enviar(CanalCodigo.SMS, "67911112222", "Recuperação", "Seu código do Farma++ é 314159.", 9002L);
+        caixa.enviar(CanalCodigo.EMAIL, "job@exemplo.com", "Sem conta", "Mensagem sem dono: 314160.");
+        caixa.enviar(CanalCodigo.SMS, "67911112222", "Cadastro", "Seu código do Farma++ é 271828.", 9003L);
 
-        String html = html(get("/caixa-demo").session(atacante));
+        String html = html(get("/caixa-demo").with(user(cliente(9003))));
 
-        assertThat(html).contains("271828").doesNotContain("314159").doesNotContain("vitima@exemplo.com");
+        assertThat(html).contains("271828").doesNotContain("314159").doesNotContain("314160");
     }
 
     @Test
-    @DisplayName("requisição sem sessão (ou mensagem gerada fora de requisição) não mostra nada a visitante")
-    void semSessaoNaoVeNada() throws Exception {
-        caixa.enviar(CanalCodigo.EMAIL, "job@exemplo.com", "Pedido expirado", "Seu pedido foi cancelado: 999001.");
+    @DisplayName("visitante com a conta em confirmação na sessão vê as mensagens dessa conta")
+    void contaEmConfirmacaoVeAsMensagens() throws Exception {
+        caixa.enviar(CanalCodigo.EMAIL, "novo@exemplo.com", "Cadastro", "Seu código do Farma++ é 505001.", 9004L);
+        caixa.enviar(CanalCodigo.EMAIL, "outro@exemplo.com", "Cadastro", "Seu código do Farma++ é 505002.", 9005L);
+        MockHttpSession sessao = new MockHttpSession();
+        sessao.setAttribute(CadastroController.SESSAO_CONTA, 9004L);
 
-        String html = html(get("/caixa-demo"));
+        String html = html(get("/caixa-demo").session(sessao));
 
-        assertThat(html).contains("Nenhuma mensagem ainda").doesNotContain("999001");
+        assertThat(html).contains("505001").doesNotContain("505002");
     }
 
     @Test
-    @DisplayName("o administrador vê as mensagens de todas as sessões e as geradas fora de requisição")
+    @DisplayName("visitante sem conta em confirmação vê a caixa vazia")
+    void visitanteSemContaNaoVeNada() throws Exception {
+        caixa.enviar(CanalCodigo.EMAIL, "alguem@exemplo.com", "Recuperação", "Seu código do Farma++ é 999001.", 9006L);
+
+        assertThat(html(get("/caixa-demo"))).contains("Nenhuma mensagem ainda").doesNotContain("999001");
+        assertThat(html(get("/caixa-demo").session(new MockHttpSession()))).contains("Nenhuma mensagem ainda");
+    }
+
+    @Test
+    @DisplayName("o administrador vê as mensagens de todas as contas e as sem conta")
     void administradorVeTodas() throws Exception {
-        enviarNaSessao(new MockHttpSession(), CanalCodigo.EMAIL, "a@exemplo.com", "A", "Seu código do Farma++ é 404001.");
+        caixa.enviar(CanalCodigo.EMAIL, "a@exemplo.com", "A", "Seu código do Farma++ é 404001.", 9007L);
         caixa.enviar(CanalCodigo.EMAIL, "job@exemplo.com", "Pedido expirado", "Seu pedido foi cancelado: 404002.");
 
         String html = html(get("/caixa-demo").with(user("admin").roles("ADMIN")));

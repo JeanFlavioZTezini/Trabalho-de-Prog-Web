@@ -5,9 +5,9 @@ import java.time.LocalDateTime;
 import com.farmacia.farmaciaonline.model.enums.CanalCodigo;
 
 /**
- * Uma mensagem guardada pelo envio de demonstração. {@code caixaId} identifica a sessão do navegador que gerou a mensagem
- * (null quando não houve requisição, como num job): a caixa demo só mostra a cada navegador o que ele mesmo gerou.
+ * Uma mensagem guardada pelo envio de demonstração. {@code contaId} é a conta dona da mensagem (null quando o envio não
+ * disse): a caixa demo só mostra a cada pessoa as mensagens da própria conta.
  */
 public record MensagemEnviada(LocalDateTime enviadaEm, CanalCodigo canal, String destino, String assunto, String texto,
-        String caixaId) {
+        Long contaId) {
 }

@@ -329,4 +329,22 @@ class LoginSocialIntegracaoTest {
                 + "aria-describedby=\"emailVerificado-ajuda\">");
         assertThat(html).doesNotContainPattern("id=\"emailVerificado\"[^>]*checked");
     }
+
+    @Test
+    @DisplayName("quem completa com o CPF de outra pessoa não lê o código do vínculo na caixa demo; o admin lê")
+    void caixaDemoNaoEntregaCodigoDoVinculo() throws Exception {
+        MockHttpSession atacante = new MockHttpSession();
+        viaProvedor(atacante, "permitir", "g-atacante", "atacante@teste.com", true);
+        completar(atacante, CPF_SEED, "1990-01-01", null);
+        mvc.perform(post("/login/social/vincular/codigo/enviar").session(atacante).with(csrf()))
+                .andExpect(flash().attributeExists("sucesso"));
+        Matcher codigo = SEIS_DIGITOS.matcher(caixa.mensagens().stream()
+                .filter(m -> m.destino().equals("cliente@farma.com")).findFirst().orElseThrow().texto());
+        assertThat(codigo.find()).isTrue();
+
+        assertThat(html(mvc.perform(get("/caixa-demo").session(atacante)).andReturn()))
+                .doesNotContain(codigo.group(1)).doesNotContain("cliente@farma.com");
+        assertThat(html(mvc.perform(get("/caixa-demo").with(user("admin").roles("ADMIN"))).andReturn()))
+                .contains(codigo.group(1));
+    }
 }

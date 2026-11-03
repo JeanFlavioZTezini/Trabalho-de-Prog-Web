@@ -117,7 +117,7 @@ public class CodigoVerificacaoService {
                 .expiraEm(agora.plus(validade))
                 .criadoEm(agora)
                 .build());
-        envio.enviar(canal, destino, assunto(finalidade), texto(finalidade, codigo));
+        envio.enviar(canal, destino, assunto(finalidade), texto(finalidade, codigo), usuario.getId());
         return new ResultadoEnvio(SituacaoEnvio.ENVIADO, 0);
     }
 

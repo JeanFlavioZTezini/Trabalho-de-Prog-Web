@@ -37,7 +37,7 @@ public class ResumoPedidoService {
         try {
             Pedido pedido = pedidoRepository.buscarParaResumo(pedidoId).orElseThrow();
             envio.enviar(CanalCodigo.EMAIL, pedido.getUsuario().getEmail(),
-                    "Resumo do pedido nº " + pedido.getId(), texto(pedido));
+                    "Resumo do pedido nº " + pedido.getId(), texto(pedido), pedido.getUsuario().getId());
             return true;
         } catch (RuntimeException e) {
             log.warn("Não foi possível enviar o resumo do pedido {}: {}", pedidoId, e.getClass().getSimpleName());

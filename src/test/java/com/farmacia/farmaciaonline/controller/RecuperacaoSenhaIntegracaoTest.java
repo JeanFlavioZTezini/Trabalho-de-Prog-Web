@@ -4,6 +4,7 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestBuilders.formLogin;
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.csrf;
+import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.authenticated;
 import static org.springframework.security.test.web.servlet.response.SecurityMockMvcResultMatchers.unauthenticated;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -249,5 +250,15 @@ class RecuperacaoSenhaIntegracaoTest {
     @DisplayName("a tela de pedido não diz que o código já foi enviado")
     void telaDePedidoNaoDizQueJaEnviou() throws Exception {
         assertThat(html(get("/recuperar-senha"))).contains("Ele será enviado").doesNotContain("Mandamos um código");
+    }
+
+    @Test
+    @DisplayName("quem pede a recuperação de outra conta não lê o código na caixa demo da própria sessão; o admin lê")
+    void caixaDemoNaoEntregaCodigoDeRecuperacao() throws Exception {
+        MockHttpSession atacante = pedirCodigo("cliente@farma.com");
+        String codigo = codigoEnviadoPara("cliente@farma.com");
+
+        assertThat(html(get("/caixa-demo").session(atacante))).doesNotContain(codigo).doesNotContain("cliente@farma.com");
+        assertThat(html(get("/caixa-demo").with(user("admin").roles("ADMIN")))).contains(codigo);
     }
 }

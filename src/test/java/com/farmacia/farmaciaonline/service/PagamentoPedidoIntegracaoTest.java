@@ -113,7 +113,7 @@ class PagamentoPedidoIntegracaoTest extends CheckoutTesteBase {
         doAnswer(chamada -> {
             envioEmTransacao.set(TransactionSynchronizationManager.isActualTransactionActive());
             return chamada.callRealMethod();
-        }).when(envio).enviar(any(), anyString(), anyString(), anyString());
+        }).when(envio).enviar(any(), anyString(), anyString(), anyString(), any());
 
         comprar(cliente, retirada(MetodoPagamento.CARTAO_CREDITO), cartao(CARTAO_APROVADO));
 
@@ -504,11 +504,11 @@ class PagamentoPedidoIntegracaoTest extends CheckoutTesteBase {
 
         Long id = comprar(cliente, retirada(MetodoPagamento.CARTAO_CREDITO), cartao(CARTAO_RECUSADO));
         assertThat(pedido(id).getResumoEnviadoEm()).isNull();
-        verify(envio, times(0)).enviar(any(), anyString(), anyString(), anyString());
+        verify(envio, times(0)).enviar(any(), anyString(), anyString(), anyString(), any());
 
         pagamentos.pagar(cliente.getId(), id, UUID.randomUUID(), MetodoPagamento.CARTAO_CREDITO, 1, cartao(CARTAO_APROVADO));
 
-        verify(envio, times(1)).enviar(any(), anyString(), anyString(), anyString());
+        verify(envio, times(1)).enviar(any(), anyString(), anyString(), anyString(), any());
         assertThat(pedido(id).getResumoEnviadoEm()).isNotNull();
         var mensagem = envio.mensagens().get(0);
         assertThat(mensagem.canal()).isEqualTo(CanalCodigo.EMAIL);
@@ -523,7 +523,7 @@ class PagamentoPedidoIntegracaoTest extends CheckoutTesteBase {
         Usuario cliente = novoCliente();
         Apresentacao a = novaApresentacao("10.00", 5);
         noCarrinho(cliente, a, 1);
-        doThrow(new IllegalStateException("caixa fora do ar")).when(envio).enviar(any(), anyString(), anyString(), anyString());
+        doThrow(new IllegalStateException("caixa fora do ar")).when(envio).enviar(any(), anyString(), anyString(), anyString(), any());
 
         Long id = comprar(cliente, retirada(MetodoPagamento.CARTAO_CREDITO), cartao(CARTAO_APROVADO));
 
@@ -532,7 +532,7 @@ class PagamentoPedidoIntegracaoTest extends CheckoutTesteBase {
         assertThat(pagamentos.telaPedido(cliente.getId(), id).isResumoNaoEnviado()).isTrue();
         assertThat(resumos.reenviar(cliente.getId(), id)).isFalse();
 
-        doCallRealMethod().when(envio).enviar(any(), anyString(), anyString(), anyString());
+        doCallRealMethod().when(envio).enviar(any(), anyString(), anyString(), anyString(), any());
         assertThat(resumos.reenviar(cliente.getId(), id)).isTrue();
 
         assertThat(pedido(id).getResumoEnviadoEm()).isNotNull();

@@ -670,18 +670,27 @@ carrinho."), como o número do cabeçalho. Regras em `service/CarrinhoService`, 
   o perfil `demo`, que vem ligado no `application.properties` (`spring.profiles.active=demo`). Para desligar, apague a
   linha ou suba com outro perfil (`$env:SPRING_PROFILES_ACTIVE="producao"`): aí `/caixa-demo` dá 404. O código nunca vai
   para log nem para resposta fora dessa página.
-- **Cada navegador vê só a própria caixa:** cada mensagem guarda a "caixa" da sessão que a gerou (um UUID no atributo de
-  sessão `caixaDemo`; é atributo, e não o id da sessão, porque o id muda no login). A `/caixa-demo` mostra só as mensagens
-  dessa caixa; o administrador vê todas, inclusive as geradas fora de requisição (como a expiração de pedidos). Sem isso,
-  qualquer visitante lia o código de recuperação de outra conta.
+- **Cada pessoa vê só as mensagens da própria conta:** cada mensagem guarda a conta dona (a do código ou a do pedido). A
+  `/caixa-demo` mostra as mensagens da conta logada e as da conta em confirmação na sessão (`contaEmConfirmacao`, que só o
+  cadastro, a retomada com senha e o login social de conta pendente preenchem); o administrador vê todas, inclusive as sem conta.
+  Visitante sem nada disso vê a caixa vazia. Por isso os códigos de **recuperação de senha** e de **vínculo social** só
+  aparecem para o administrador: quem pede o envio não prova ser o dono da conta. Na apresentação, mostre esses códigos
+  pela aba do admin.
+  Antes, a caixa era a da sessão que pediu o envio: um visitante pedia a recuperação de `admin@farma.com`, lia o código na
+  própria caixa e trocava a senha. Filtrar pelo destino também não bastaria, porque o celular pode se repetir entre contas
+  (cadastro ou troca de celular para o número de outra pessoa).
 - **Código validado uma vez só:** `validar` busca o último código com trava (`SELECT ... FOR UPDATE`), então duas
   requisições simultâneas com o código certo não passam as duas.
-- **Contrato de envio para outras issues:** `mensagem/EnvioDeMensagem.enviar(canal, destino, assunto, texto)`. O resumo
-  do pedido (F-14) usa a mesma interface com o canal `EMAIL`.
+- **Contrato de envio para outras issues:** `mensagem/EnvioDeMensagem.enviar(canal, destino, assunto, texto)`, com a
+  variante `enviar(..., contaId)` que diz de qual conta é a mensagem (o adaptador demo usa para a caixa; a variante
+  padrão chama a de quatro argumentos). Os códigos e o resumo do pedido (F-14) usam a variante com a conta.
 - **Testes:** `ContatoMascaradoTest` e `DemoEnvioAdapterTest` (unitários), `CaixaDemoControllerTest` e
   `CaixaDemoSemPerfilTest` (camada web, com e sem o perfil demo), `CodigoVerificacaoServiceIntegracaoTest` (expirado,
   incorreto, uso repetido, finalidade errada, bloqueio por tentativas, reenvio, limite por hora, código fora do log e
   tentativa gravada mesmo com a recusa) e `ConfirmacaoContaIntegracaoTest` (fluxo completo, SMS, retomada e caixa demo).
+  A caixa por conta também é testada em `RecuperacaoSenhaIntegracaoTest` e `LoginSocialIntegracaoTest` (quem pede o código
+  de outra conta não o lê), `ContaContatoIntegracaoTest` (código da troca para o e-mail novo) e
+  `CheckoutFluxoWebIntegracaoTest` (resumo do pedido só na caixa do dono).
 
 ## Recuperação de senha e revogação de sessões (F-06 / UC14)
 

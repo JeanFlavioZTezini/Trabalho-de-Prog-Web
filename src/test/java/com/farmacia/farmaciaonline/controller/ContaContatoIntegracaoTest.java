@@ -8,6 +8,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
+import java.nio.charset.StandardCharsets;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -26,6 +27,7 @@ import com.farmacia.farmaciaonline.TestcontainersConfiguration;
 import com.farmacia.farmaciaonline.mensagem.MensagemEnviada;
 import com.farmacia.farmaciaonline.mensagem.demo.DemoEnvioAdapter;
 import com.farmacia.farmaciaonline.model.Usuario;
+import com.farmacia.farmaciaonline.model.enums.CanalCodigo;
 import com.farmacia.farmaciaonline.repository.UsuarioRepository;
 
 /** Fluxo completo da troca de e-mail e de celular com login, banco real e a caixa de mensagens de demonstração. */
@@ -125,5 +127,23 @@ class ContaContatoIntegracaoTest {
 
         assertThat(usuarios.findByEmailIgnoreCase(EMAIL)).isPresent();
         assertThat(usuarios.findByEmailIgnoreCase("recusa.f21@teste.com")).isEmpty();
+    }
+
+    @Test
+    @DisplayName("caixa demo do cliente logado: vê o código da troca para o e-mail novo e não vê mensagem de outra conta")
+    void caixaDemoDoClienteLogado() throws Exception {
+        MockHttpSession sessao = entrar(EMAIL, SENHA);
+        String novo = "caixa.demo.f05@teste.com";
+        mvc.perform(post("/conta/contato/email/enviar").session(sessao).with(csrf())
+                        .param("novoContato", novo).param("senhaAtual", SENHA))
+                .andExpect(redirectedUrl("/conta/contato/email"));
+        String codigo = codigoPara(novo);
+        Long outraConta = usuarios.findByEmailIgnoreCase("pendente@farma.com").orElseThrow().getId();
+        caixa.enviar(CanalCodigo.SMS, "11987654321", "De outra conta", "Seu código do Farma++ é 808080.", outraConta);
+
+        String html = mvc.perform(get("/caixa-demo").session(sessao)).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+
+        assertThat(html).contains(codigo).contains(novo).doesNotContain("808080");
     }
 }

@@ -84,7 +84,8 @@
                 Exige receita
             </p>
 
-            <form class="produto-detalhe__adicionar" th:action="@{/carrinho/itens}" method="post">
+            <form class="produto-detalhe__adicionar" th:action="@{/carrinho/itens}" method="post"
+                  sec:authorize="!hasRole('ADMIN')">
                 <input th:if="${produto.apresentacaoSelecionada != null}" type="hidden" name="apresentacaoId"
                        th:value="${produto.apresentacaoSelecionada.id}">
                 <div class="campo">

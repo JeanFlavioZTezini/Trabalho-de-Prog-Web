@@ -146,6 +146,8 @@ class LayoutTest {
                 .contains("href=\"/enderecos\"")
                 .contains("href=\"/admin\">Painel admin");
         assertThat(html).doesNotContain("href=\"/pedidos\"");
+        // Administrador não compra: sem link nem contador do carrinho no cabeçalho.
+        assertThat(html).doesNotContain("class=\"topo__carrinho\"").doesNotContain("id=\"carrinho-contagem\"");
     }
 
     @Test

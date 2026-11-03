@@ -1,5 +1,6 @@
 package com.farmacia.farmaciaonline.service;
 
+import java.time.Instant;
 import java.time.LocalDate;
 import java.time.Period;
 import java.util.LinkedHashMap;
@@ -15,6 +16,7 @@ import com.farmacia.farmaciaonline.model.SenhaForm;
 import com.farmacia.farmaciaonline.model.Usuario;
 import com.farmacia.farmaciaonline.model.enums.StatusUsuario;
 import com.farmacia.farmaciaonline.repository.UsuarioRepository;
+import com.farmacia.farmaciaonline.security.LoginTentativasService;
 import com.farmacia.farmaciaonline.validacao.PoliticaDeSenha;
 
 import lombok.RequiredArgsConstructor;
@@ -23,10 +25,13 @@ import lombok.RequiredArgsConstructor;
 @RequiredArgsConstructor
 public class ContaService {
 
+    static final String MENSAGEM_BLOQUEADA = "Muitas tentativas com a senha errada. Tente de novo em alguns minutos.";
+
     private static final LocalDate NASCIMENTO_MAIS_ANTIGO = LocalDate.of(1900, 1, 1);
 
     private final UsuarioRepository usuarios;
     private final PasswordEncoder encoder;
+    private final LoginTentativasService tentativas;
 
     @Transactional(readOnly = true)
     public DadosDaConta dados(Long usuarioId) {
@@ -65,16 +70,26 @@ public class ContaService {
         return usuarios.saveAndFlush(usuario);
     }
 
-    @Transactional
+    /**
+     * Confere a senha atual com o mesmo limite do login (padrão de {@code ExclusaoContaService#excluir}): conta bloqueada
+     * é recusada antes de conferir, e a senha errada conta uma falha que fica gravada mesmo com a troca recusada.
+     */
+    @Transactional(noRollbackFor = ContaInvalidaException.class)
     public Usuario alterarSenha(Long usuarioId, SenhaForm form) {
         Usuario usuario = contaAtiva(usuarioId);
+        if (bloqueada(usuario)) {
+            throw new ContaInvalidaException(Map.of("senhaAtual", MENSAGEM_BLOQUEADA));
+        }
 
         Map<String, String> erros = new LinkedHashMap<>();
         String hashAtual = usuario.getSenhaHash();
         if (hashAtual == null || hashAtual.isBlank()) {
             erros.put("senhaAtual", "Esta conta não tem senha cadastrada.");
         } else if (!encoder.matches(form.getSenhaAtual(), hashAtual)) {
+            tentativas.registrarFalha(usuario.getEmail());
             erros.put("senhaAtual", "Senha atual incorreta.");
+        } else {
+            tentativas.limparFalhas(usuarioId);
         }
 
         String nova = form.getNovaSenha();
@@ -101,5 +116,9 @@ public class ContaService {
             throw new AccessDeniedException("Conta não está ativa.");
         }
         return usuario;
+    }
+
+    static boolean bloqueada(Usuario usuario) {
+        return usuario.getBloqueadoAte() != null && usuario.getBloqueadoAte().isAfter(Instant.now());
     }
 }

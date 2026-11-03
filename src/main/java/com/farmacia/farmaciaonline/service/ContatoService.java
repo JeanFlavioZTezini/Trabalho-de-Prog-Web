@@ -16,6 +16,7 @@ import com.farmacia.farmaciaonline.model.enums.CanalCodigo;
 import com.farmacia.farmaciaonline.model.enums.FinalidadeCodigo;
 import com.farmacia.farmaciaonline.model.enums.StatusUsuario;
 import com.farmacia.farmaciaonline.repository.UsuarioRepository;
+import com.farmacia.farmaciaonline.security.LoginTentativasService;
 import com.farmacia.farmaciaonline.service.CodigoVerificacaoService.ResultadoEnvio;
 import com.farmacia.farmaciaonline.service.CodigoVerificacaoService.ResultadoValidacao;
 
@@ -73,11 +74,14 @@ public class ContatoService {
     private final UsuarioRepository usuarios;
     private final PasswordEncoder encoder;
     private final CodigoVerificacaoService codigos;
+    private final LoginTentativasService tentativas;
 
-    public ContatoService(UsuarioRepository usuarios, PasswordEncoder encoder, CodigoVerificacaoService codigos) {
+    public ContatoService(UsuarioRepository usuarios, PasswordEncoder encoder, CodigoVerificacaoService codigos,
+            LoginTentativasService tentativas) {
         this.usuarios = usuarios;
         this.encoder = encoder;
         this.codigos = codigos;
+        this.tentativas = tentativas;
     }
 
     /**
@@ -85,16 +89,23 @@ public class ContatoService {
      *
      * @throws ContaInvalidaException com os erros por campo ({@code novoContato}, {@code senhaAtual})
      */
-    @Transactional
+    @Transactional(noRollbackFor = ContaInvalidaException.class)
     public ResultadoEnvio solicitar(Long usuarioId, Tipo tipo, String novoContato, String senhaAtual) {
         Usuario usuario = contaAtiva(usuarioId);
+        // Mesmo limite do login: conta bloqueada é recusada antes de conferir; a falha fica gravada mesmo com a recusa.
+        if (ContaService.bloqueada(usuario)) {
+            throw new ContaInvalidaException(Map.of("senhaAtual", ContaService.MENSAGEM_BLOQUEADA));
+        }
         Map<String, String> erros = new LinkedHashMap<>();
 
         String hash = usuario.getSenhaHash();
         if (hash == null || hash.isBlank()) {
             erros.put("senhaAtual", "Esta conta não tem senha cadastrada.");
         } else if (!encoder.matches(senhaAtual == null ? "" : senhaAtual, hash)) {
+            tentativas.registrarFalha(usuario.getEmail());
             erros.put("senhaAtual", "Senha atual incorreta.");
+        } else {
+            tentativas.limparFalhas(usuarioId);
         }
 
         String novo = normalizar(tipo, novoContato);

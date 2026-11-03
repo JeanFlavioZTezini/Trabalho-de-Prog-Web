@@ -106,6 +106,14 @@
                     Adicionar ao carrinho
                 </button>
             </form>
+
+            <!--/* Informação de pagamento (F-02) junto da decisão de compra, numa linha só. A lista vem de MetodoPagamento. */-->
+            <p class="produto-detalhe__pagamento">
+                <strong>Formas de pagamento:</strong>
+                <th:block th:each="metodo, estado : ${metodosPagamento}"><span th:text="${metodo.rotulo}">Pix</span><th:block
+                        th:unless="${estado.last}" th:text="${estado.count == estado.size - 1} ? ' e ' : ', '">, </th:block></th:block>.
+                As condições são confirmadas no checkout.
+            </p>
         </div>
     </div>
 
@@ -136,14 +144,6 @@
             <li th:each="indicacao : ${produto.indicacoes}" th:text="${indicacao}">Indicação</li>
         </ul>
         <p th:if="${#lists.isEmpty(produto.indicacoes)}">Não há indicações cadastradas para este produto.</p>
-    </section>
-
-    <section class="produto-detalhe__secao" aria-labelledby="titulo-pagamento">
-        <h2 id="titulo-pagamento">Formas de pagamento</h2>
-        <p>As opções disponíveis para este pedido serão confirmadas no checkout.</p>
-        <ul>
-            <li th:each="metodo : ${metodosPagamento}" th:text="${metodo.rotulo}">Pix</li>
-        </ul>
     </section>
 
     <script th:src="@{/js/detalhe-produto.js}" defer></script>

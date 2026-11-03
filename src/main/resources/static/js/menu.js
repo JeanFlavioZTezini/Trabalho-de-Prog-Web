@@ -63,3 +63,35 @@
     }
   });
 })();
+
+/*
+ * Menu da conta no cabeçalho ("Olá, Nome ▾"): mesmo padrão de disclosure do menu de categorias.
+ * - O botão alterna aria-expanded e a classe is-open do menu.
+ * - Esc fecha e devolve o foco ao botão; clicar fora fecha.
+ * - Sem JavaScript, o CSS deixa os links sempre visíveis (ver .js em style.css).
+ */
+(function () {
+  var botao = document.querySelector('.usuario__toggle');
+  var menu = document.getElementById('menu-usuario');
+  if (!botao || !menu) return;
+
+  function definirAberto(aberto) {
+    botao.setAttribute('aria-expanded', String(aberto));
+    menu.classList.toggle('is-open', aberto);
+  }
+
+  botao.addEventListener('click', function () {
+    definirAberto(botao.getAttribute('aria-expanded') !== 'true');
+  });
+
+  document.addEventListener('click', function (evento) {
+    if (!evento.target.closest('.usuario--logado')) definirAberto(false);
+  });
+
+  document.addEventListener('keydown', function (evento) {
+    if (evento.key === 'Escape' && botao.getAttribute('aria-expanded') === 'true') {
+      definirAberto(false);
+      botao.focus();
+    }
+  });
+})();

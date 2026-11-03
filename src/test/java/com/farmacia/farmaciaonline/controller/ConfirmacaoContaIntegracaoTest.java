@@ -225,7 +225,20 @@ class ConfirmacaoContaIntegracaoTest {
         assertThat(html(get("/confirmar-conta").session(sessao))).contains("href=\"/caixa-demo\"");
         pedirCodigo(sessao, "EMAIL");
 
-        assertThat(html(get("/caixa-demo"))).contains(EMAIL).contains(codigoEnviadoPara(EMAIL));
+        // Mesma sessão do cadastro: o fluxo cadastro → código → confirmação continua funcionando.
+        assertThat(html(get("/caixa-demo").session(sessao))).contains(EMAIL).contains(codigoEnviadoPara(EMAIL));
+    }
+
+    @Test
+    @DisplayName("pedir a recuperação da conta de outra pessoa e abrir a caixa noutra sessão não mostra o código")
+    void caixaDemoNaoMostraCodigoDeOutraSessao() throws Exception {
+        MockHttpSession sessaoDaVitima = cadastrar();
+        pedirCodigo(sessaoDaVitima, "EMAIL");
+        String codigo = codigoEnviadoPara(EMAIL);
+
+        MockHttpSession outraSessao = new MockHttpSession();
+        assertThat(html(get("/caixa-demo").session(outraSessao))).doesNotContain(codigo).doesNotContain(EMAIL);
+        assertThat(html(get("/caixa-demo"))).doesNotContain(codigo);
     }
 
     @Test

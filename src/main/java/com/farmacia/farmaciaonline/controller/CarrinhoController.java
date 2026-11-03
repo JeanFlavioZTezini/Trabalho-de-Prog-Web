@@ -18,7 +18,9 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+import org.springframework.web.servlet.support.RequestContextUtils;
 
 import com.farmacia.farmaciaonline.security.CarrinhoCookie;
 import com.farmacia.farmaciaonline.security.MesclagemCarrinhoNoLogin;
@@ -41,6 +43,7 @@ public class CarrinhoController {
     static final String DESTINO_CHECKOUT = "/checkout";
 
     private static final String VOLTAR_AO_CARRINHO = "redirect:/carrinho";
+    static final String MENSAGEM_ADMIN = "Contas de administrador não fazem compras.";
 
     private final CarrinhoService carrinhoService;
 
@@ -89,6 +92,9 @@ public class CarrinhoController {
     public ResponseEntity<?> adicionarRapido(@RequestParam Long apresentacaoId,
             @RequestParam(defaultValue = "1") int quantidade,
             HttpServletRequest request, HttpServletResponse response, Authentication autenticacao) {
+        if (ehAdministrador(autenticacao)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).body(new RespostaErro(MENSAGEM_ADMIN));
+        }
         DonoCarrinho dono = donoParaEscrita(request, response, autenticacao);
         try {
             List<String> avisos = carrinhoService.adicionar(dono, apresentacaoId, quantidade);
@@ -164,6 +170,10 @@ public class CarrinhoController {
     @GetMapping("/finalizar")
     public String finalizar(HttpServletRequest request, HttpServletResponse response,
             Authentication autenticacao, RedirectAttributes redirect) {
+        if (ehAdministrador(autenticacao)) {
+            redirect.addFlashAttribute("erro", MENSAGEM_ADMIN);
+            return VOLTAR_AO_CARRINHO;
+        }
         Long usuarioId = usuarioId(autenticacao);
         if (usuarioId == null) {
             new HttpSessionRequestCache().saveRequest(request, response);
@@ -224,8 +234,26 @@ public class CarrinhoController {
         return CarrinhoCookie.ler(request).map(DonoCarrinho::deVisitante).orElse(null);
     }
 
+    /**
+     * O checkout é só de cliente: o administrador não monta carrinho. Recusa toda escrita (e o "Finalizar") com uma
+     * mensagem no carrinho, em vez de deixar ele descobrir só no 403 do checkout.
+     */
+    @ExceptionHandler(CompraDeAdministradorException.class)
+    public String recusarAdministrador(HttpServletRequest request) {
+        RequestContextUtils.getOutputFlashMap(request).put("erro", MENSAGEM_ADMIN);
+        return VOLTAR_AO_CARRINHO;
+    }
+
+    static boolean ehAdministrador(Authentication autenticacao) {
+        return autenticacao != null && autenticacao.getAuthorities().stream()
+                .anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()));
+    }
+
     private static DonoCarrinho donoParaEscrita(HttpServletRequest request, HttpServletResponse response,
             Authentication autenticacao) {
+        if (ehAdministrador(autenticacao)) {
+            throw new CompraDeAdministradorException();
+        }
         Long usuarioId = usuarioId(autenticacao);
         if (usuarioId != null) {
             return DonoCarrinho.deUsuario(usuarioId);
@@ -246,5 +274,9 @@ public class CarrinhoController {
             return avisos.stream().map(String::valueOf).toList();
         }
         return List.of();
+    }
+
+    /** Escrita no carrinho pedida por administrador; vira a mensagem do {@link #recusarAdministrador}. */
+    static class CompraDeAdministradorException extends RuntimeException {
     }
 }

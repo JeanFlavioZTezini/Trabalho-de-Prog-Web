@@ -53,4 +53,17 @@ class CardCarrinhoIntegracaoTest {
     void catalogoTemBotaoNoCard() throws Exception {
         assertThat(pagina("/produtos")).contains("class=\"card-carrinho\"");
     }
+
+    @Test
+    void administradorNaoVeBotaoDeAdicionar() throws Exception {
+        var admin = org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors
+                .user("admin").roles("ADMIN");
+        String home = mvc.perform(get("/").with(admin)).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+        String detalhe = mvc.perform(get("/produtos/1").with(admin)).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+
+        assertThat(home).contains("<article class=\"card\">").doesNotContain("class=\"card-carrinho\"");
+        assertThat(detalhe).doesNotContain("class=\"produto-detalhe__adicionar\"");
+    }
 }

@@ -216,4 +216,18 @@ class AdminProdutoTelaTest {
         assertThat(html).contains(">Editar Dipirona</span>").contains(">Excluir Dipirona</span>");
         assertThat(html).containsPattern("class=\"acao-icone\"").containsPattern("acao-icone acao-icone--perigo");
     }
+
+    @Test
+    @DisplayName("a lista pagina por nome e desempata pelo id (nomes iguais não repetem nem pulam entre páginas)")
+    void paginacaoDesempataPeloId() throws Exception {
+        when(service.buscar(any(), any(), any())).thenReturn(new PageImpl<>(List.of()));
+
+        html("/admin/produtos");
+
+        org.mockito.ArgumentCaptor<org.springframework.data.domain.Pageable> paginacao =
+                org.mockito.ArgumentCaptor.forClass(org.springframework.data.domain.Pageable.class);
+        org.mockito.Mockito.verify(service).buscar(any(), any(), paginacao.capture());
+        assertThat(paginacao.getValue().getSort())
+                .isEqualTo(org.springframework.data.domain.Sort.by("nome", "id"));
+    }
 }

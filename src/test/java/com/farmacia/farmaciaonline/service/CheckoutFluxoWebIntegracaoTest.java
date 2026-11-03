@@ -237,6 +237,36 @@ class CheckoutFluxoWebIntegracaoTest extends CheckoutTesteBase {
     }
 
     @Test
+    @DisplayName("endereço editado em outra aba mantendo o CEP: a conferência antiga é recusada e nada é reservado")
+    void enderecoEditadoComMesmoCepMudaAConferencia() throws Exception {
+        Usuario cliente = novoCliente();
+        Apresentacao a = novaApresentacao("10.00", 5);
+        noCarrinho(cliente, a, 1);
+        Long enderecoId = novoEndereco(cliente, "79002-000", "MS");
+        String html = pagina(cliente, "/checkout/resumo?tipoEntrega=ENTREGA&metodo=PIX&enderecoId=" + enderecoId);
+
+        // Em outra aba, o mesmo endereço é editado para outra rua, mantendo o CEP e a cidade.
+        com.farmacia.farmaciaonline.model.EnderecoForm editado = new com.farmacia.farmaciaonline.model.EnderecoForm();
+        editado.setDestinatario("Destinatário");
+        editado.setCep("79002-000");
+        editado.setLogradouro("Rua Outra");
+        editado.setNumero("999");
+        editado.setBairro("Centro");
+        editado.setCidade("Cidade");
+        editado.setUf("MS");
+        enderecos.salvar(cliente.getId(), enderecoId, editado);
+
+        mvc.perform(post("/checkout/confirmar").with(como(cliente)).with(csrf())
+                        .param("tipoEntrega", "ENTREGA").param("metodo", "PIX").param("enderecoId", enderecoId.toString())
+                        .param("conferencia", campoOculto(html, "conferencia"))
+                        .param("chave", campoOculto(html, "chave")))
+                .andExpect(redirectedUrlPattern("/checkout/resumo?*"));
+
+        assertThat(estoqueDe(a)).isEqualTo(5);
+        assertThat(itensNoCarrinho(cliente)).isEqualTo(1);
+    }
+
+    @Test
     @DisplayName("controlado: a tela não oferece entrega, avisa da receita e o POST de entrega é recusado")
     void controladoNaTela() throws Exception {
         Usuario cliente = novoCliente();

@@ -172,4 +172,18 @@ class AdminClienteTelaTest {
 
         assertThat(html("/admin/clientes")).contains("<a href=\"/admin\">Painel admin</a>");
     }
+
+    @Test
+    @DisplayName("a lista pagina por nome e desempata pelo id (nomes iguais não repetem nem pulam entre páginas)")
+    void paginacaoDesempataPeloId() throws Exception {
+        when(service.listar(any(), any(), any(), any(), any(), any())).thenReturn(new PageImpl<>(List.of()));
+
+        html("/admin/clientes");
+
+        org.mockito.ArgumentCaptor<org.springframework.data.domain.Pageable> paginacao =
+                org.mockito.ArgumentCaptor.forClass(org.springframework.data.domain.Pageable.class);
+        org.mockito.Mockito.verify(service).listar(any(), any(), any(), any(), any(), paginacao.capture());
+        assertThat(paginacao.getValue().getSort())
+                .isEqualTo(org.springframework.data.domain.Sort.by("nome", "id"));
+    }
 }

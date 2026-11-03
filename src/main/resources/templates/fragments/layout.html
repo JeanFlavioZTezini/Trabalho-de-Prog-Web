@@ -52,7 +52,7 @@
 
         <!--/* O número vem do CarrinhoContagemAdvice; o carrinho-rapido.js atualiza o mesmo span. Sem espaço entre as
              tags, para o :empty do CSS valer quando não há itens. */-->
-        <a class="topo__carrinho" th:href="@{/carrinho}"><svg th:replace="~{fragments/componentes :: iconeCarrinho}"></svg>Carrinho<span class="topo__carrinho-contagem" id="carrinho-contagem"><th:block th:if="${carrinhoNoCabecalho != null and carrinhoNoCabecalho.unidades > 0}">(<span th:text="${carrinhoNoCabecalho.unidades}">3</span>)<span class="visually-hidden"> itens no carrinho</span></th:block></span></a>
+        <a class="topo__carrinho" th:href="@{/carrinho}" sec:authorize="!hasRole('ADMIN')"><svg th:replace="~{fragments/componentes :: iconeCarrinho}"></svg>Carrinho<span class="topo__carrinho-contagem" id="carrinho-contagem"><th:block th:if="${carrinhoNoCabecalho != null and carrinhoNoCabecalho.unidades > 0}">(<span th:text="${carrinhoNoCabecalho.unidades}">3</span>)<span class="visually-hidden"> itens no carrinho</span></th:block></span></a>
 
         <!--/* Visitante: convite para entrar/cadastrar. */-->
         <div class="usuario usuario--visitante" sec:authorize="isAnonymous()">

@@ -416,6 +416,9 @@ Telas em `/enderecos` (lista, `novo`, `{id}/editar`, `{id}/excluir`); exigem log
   continua com o que já foi digitado e a pessoa preenche à mão. O botão "Buscar CEP" é um `POST` (funciona sem JavaScript). O Enter dentro do
   formulário **salva** (há um botão de envio escondido antes dele, porque o Enter aciona o primeiro botão do formulário).
 - **Área atendida:** o endereço fora dela **pode ser salvo**; quem bloqueia a compra é o checkout.
+- **Principal sob concorrência:** salvar e "Tornar principal" travam a linha da conta (`UsuarioRepository#findByIdParaAtualizar`)
+  antes de mexer no principal, então um duplo clique em "Salvar" no primeiro endereço grava os dois com um só principal, em
+  vez de violar o índice `ux_endereco_principal` (erro 500).
 - **Exclusão** pede confirmação (`/{id}/excluir`). Editar ou excluir **não altera pedidos antigos**: o pedido guarda a
   cópia `EnderecoEntrega`. `EnderecoService#copiaParaEntrega(usuarioId, enderecoId)` entrega essa cópia (só de
   endereço do próprio usuário) para o checkout/F-14 gravar no pedido.
@@ -459,7 +462,8 @@ receita é apresentada na loja. Não há envio nem análise de receita pelo site
 
 **O servidor recalcula tudo.** Do navegador só vêm as escolhas. Não existe campo de total: um `total=` na requisição é
 ignorado. O formulário leva uma `conferencia` (impressão digital do resumo mostrado): se o recalculado for diferente, a
-pessoa volta ao resumo. Se `ItemCarrinho.precoVisto` difere do preço atual, a tela mostra o aviso e só deixa confirmar
+pessoa volta ao resumo. Na entrega, a conferência inclui o `enderecoId` e o endereço inteiro (não só o CEP): editar o
+endereço em outra aba, mesmo mantendo o CEP, também manda de volta ao resumo. Se `ItemCarrinho.precoVisto` difere do preço atual, a tela mostra o aviso e só deixa confirmar
 depois de aceitar o preço novo.
 
 **Política de pagamento e estoque** (uma só, em `EstadoPedidoService`; todo evento trava a linha do pedido antes de agir):
@@ -545,7 +549,11 @@ cabeçalho só para o perfil `CLIENTE`. Código: `PedidosClienteController`, `Pe
 ## Carrinho (F-10 / UC05)
 
 Entidades `Carrinho` e `ItemCarrinho` (as tabelas e unicidades já vinham da `V1`: um item por apresentação em cada
-carrinho; o dono é o usuário **ou** o token, nunca os dois). Regras em `service/CarrinhoService`, telas em
+carrinho; o dono é o usuário **ou** o token, nunca os dois). O **administrador não compra**: toda escrita no carrinho e o
+"Finalizar compra" voltam ao carrinho com "Contas de administrador não fazem compras." (na adição rápida em JSON, 403 com a
+mesma mensagem); o login de administrador não mescla o carrinho de visitante, e para ele o cabeçalho não mostra o carrinho
+nem os cards e o detalhe mostram "Adicionar ao carrinho". O aviso do login conta **unidades** ("Você tem 3 unidades no seu
+carrinho."), como o número do cabeçalho. Regras em `service/CarrinhoService`, telas em
 `CarrinhoController` + `templates/carrinho*.html`.
 
 | Rota | O que faz |
@@ -780,7 +788,8 @@ Fecha o UC07: o cliente logado troca o e-mail ou o celular confirmando o **novo*
   1. "Google (simulado)" no login leva a `/login/social/google`, que guarda um `state` na sessão.
   2. A tela do provedor simulado pede identificador, nome, e-mail (opcional) e "e-mail verificado", com as opções
      Permitir, Cancelar ou Simular provedor fora do ar. Nunca entra numa conta pronta.
-  3. O retorno (`/login/social/google/retorno`) confere o `state` e troca um código de uso único pela identidade.
+  3. O retorno (`/login/social/google/retorno`) confere o `state` e troca um código de uso único pela identidade. O código
+     vale 5 minutos, e os vencidos são varridos a cada código novo. A opção "e-mail verificado" vem desmarcada.
 - **Regras (`LoginSocialService`):**
   - Identidade já vinculada a conta ativa: entra. Conta pendente vai para a confirmação da F-05. Excluída ou bloqueada
     recebe mensagem genérica. **Administrador nunca entra nem vincula por aqui.**
@@ -1024,6 +1033,9 @@ Limites assumidos de propósito neste trabalho acadêmico (não são defeitos a 
   login dessa conta por 15 minutos. Não há CAPTCHA nem limite por IP.
 - **Tempo de resposta do bloqueio:** a conta real bloqueada é recusada antes de conferir a senha (sem BCrypt), enquanto o
   identificador inexistente bloqueado passa pelo hash fictício. A mensagem é a mesma; só o tempo difere.
+- **Provedor social demo e e-mail verificado:** na tela do provedor simulado, quem marca "e-mail verificado" cria uma
+  conta ATIVA com um e-mail que ninguém confirmou (desde que ainda não esteja cadastrado). Se o dono real recuperar a senha
+  depois, a identidade social de quem criou a conta continua vinculada. A opção vem desmarcada; o fluxo real não muda.
 - **Contadores na memória:** o limite de recuperação (`LimiteDeSolicitacoes`) e o de tentativas para identificador sem conta
   (`LimiteDeTentativasEmMemoria`) recomeçam quando a aplicação reinicia e não são compartilhados entre várias instâncias.
 

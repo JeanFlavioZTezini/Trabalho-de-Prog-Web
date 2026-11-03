@@ -406,15 +406,15 @@ class CarrinhoControllerTest {
     void avisoDeCarrinhoMantidoApareceUmaVez() throws Exception {
         when(carrinhoService.resumo(any())).thenReturn(ResumoCarrinho.vazio());
         MockHttpSession sessao = new MockHttpSession();
-        sessao.setAttribute(MesclagemCarrinhoNoLogin.AVISO_MANTIDO_NA_SESSAO, "Você tem 2 itens no seu carrinho.");
+        sessao.setAttribute(MesclagemCarrinhoNoLogin.AVISO_MANTIDO_NA_SESSAO, "Você tem 2 unidades no seu carrinho.");
 
         String primeira = mvc.perform(get("/carrinho").with(user(cliente())).session(sessao))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
         String segunda = mvc.perform(get("/carrinho").with(user(cliente())).session(sessao))
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
-        assertThat(primeira).contains("Você tem 2 itens no seu carrinho.").contains("role=\"status\"");
-        assertThat(segunda).doesNotContain("Você tem 2 itens no seu carrinho.");
+        assertThat(primeira).contains("Você tem 2 unidades no seu carrinho.").contains("role=\"status\"");
+        assertThat(segunda).doesNotContain("Você tem 2 unidades no seu carrinho.");
         assertThat(primeira.split("<h1", -1)).hasSize(2);
     }
 
@@ -423,11 +423,38 @@ class CarrinhoControllerTest {
     void redirectNaoConsomeOAviso() throws Exception {
         when(carrinhoService.resumo(any())).thenReturn(resumoCom(linha(5L, null)));
         MockHttpSession sessao = new MockHttpSession();
-        sessao.setAttribute(MesclagemCarrinhoNoLogin.AVISO_MANTIDO_NA_SESSAO, "Você tem 2 itens no seu carrinho.");
+        sessao.setAttribute(MesclagemCarrinhoNoLogin.AVISO_MANTIDO_NA_SESSAO, "Você tem 2 unidades no seu carrinho.");
 
         mvc.perform(get("/carrinho/finalizar").with(user(cliente())).session(sessao))
                 .andExpect(redirectedUrl("/checkout"));
 
         assertThat(sessao.getAttribute(MesclagemCarrinhoNoLogin.AVISO_MANTIDO_NA_SESSAO)).isNotNull();
+    }
+
+    @Test
+    @DisplayName("administrador não monta carrinho: adicionar volta ao carrinho com a mensagem e nada é gravado")
+    void administradorNaoAdiciona() throws Exception {
+        mvc.perform(post("/carrinho/itens").with(csrf()).with(user("admin").roles("ADMIN"))
+                        .param("apresentacaoId", "1"))
+                .andExpect(redirectedUrl("/carrinho"))
+                .andExpect(flash().attribute("erro", "Contas de administrador não fazem compras."));
+        mvc.perform(get("/carrinho/finalizar").with(user("admin").roles("ADMIN")))
+                .andExpect(redirectedUrl("/carrinho"))
+                .andExpect(flash().attribute("erro", "Contas de administrador não fazem compras."));
+
+        verify(carrinhoService, never()).adicionar(any(), any(), org.mockito.ArgumentMatchers.anyInt());
+    }
+
+    @Test
+    @DisplayName("administrador na adição rápida (JSON): 403 com a mensagem, sem redirecionar")
+    void administradorNaoAdicionaPeloJson() throws Exception {
+        mvc.perform(post("/carrinho/itens").with(csrf()).with(user("admin").roles("ADMIN"))
+                        .accept(org.springframework.http.MediaType.APPLICATION_JSON)
+                        .param("apresentacaoId", "1"))
+                .andExpect(status().isForbidden())
+                .andExpect(org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath("$.erro")
+                        .value("Contas de administrador não fazem compras."));
+
+        verify(carrinhoService, never()).adicionar(any(), any(), org.mockito.ArgumentMatchers.anyInt());
     }
 }

@@ -41,7 +41,7 @@ public class AdminProdutoController {
             @RequestParam(required = false) String status,
             @RequestParam(defaultValue = "0") int pagina, Model model) {
         model.addAttribute("pagina", service.buscar(q, status,
-                PageRequest.of(Math.max(pagina, 0), TAMANHO_PAGINA, Sort.by("nome"))));
+                PageRequest.of(Math.max(pagina, 0), TAMANHO_PAGINA, Sort.by("nome", "id"))));
         model.addAttribute("q", q);
         model.addAttribute("status", status);
         return "admin/produtos";

@@ -192,7 +192,7 @@ class MesclagemCarrinhoNoLoginIntegracaoTest {
         MvcResult resultado = entrarComCookie(token);
 
         assertThat(resultado.getRequest().getSession(false).getAttribute(MesclagemCarrinhoNoLogin.AVISO_MANTIDO_NA_SESSAO))
-                .isEqualTo("Você tem 3 itens no seu carrinho.");
+                .isEqualTo("Você tem 3 unidades no seu carrinho.");
     }
 
     @Test
@@ -207,7 +207,7 @@ class MesclagemCarrinhoNoLoginIntegracaoTest {
                 .andReturn();
 
         assertThat(resultado.getRequest().getSession(false).getAttribute(MesclagemCarrinhoNoLogin.AVISO_MANTIDO_NA_SESSAO))
-                .isEqualTo("Você tem 1 item no seu carrinho.");
+                .isEqualTo("Você tem 1 unidade no seu carrinho.");
     }
 
     @Test
@@ -221,5 +221,24 @@ class MesclagemCarrinhoNoLoginIntegracaoTest {
 
         assertThat(resultado.getRequest().getSession(false).getAttribute(MesclagemCarrinhoNoLogin.AVISO_MANTIDO_NA_SESSAO))
                 .isNull();
+    }
+
+    @Test
+    @DisplayName("administrador que entra com cookie de visitante não ganha carrinho: o carrinho do visitante fica no cookie")
+    void administradorNaoMescla() throws Exception {
+        Apresentacao apresentacao = apresentacao(50, 10);
+        UUID token = UUID.randomUUID();
+        carrinhoService.adicionar(DonoCarrinho.deVisitante(token), apresentacao.getId(), 2);
+        Long adminId = usuarioRepository.findByEmailIgnoreCase("admin@farma.com").orElseThrow().getId();
+
+        mvc.perform(post("/login").with(csrf())
+                        .cookie(new Cookie(CarrinhoCookie.NOME, token.toString()))
+                        .param("identificador", "admin@farma.com")
+                        .param("senha", "Farma@123"))
+                .andExpect(redirectedUrl("/admin"))
+                .andExpect(authenticated());
+
+        assertThat(carrinhoService.contarUnidades(DonoCarrinho.deUsuario(adminId))).isZero();
+        assertThat(carrinhoRepository.findByToken(token)).isPresent();
     }
 }

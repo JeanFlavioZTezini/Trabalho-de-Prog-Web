@@ -33,6 +33,10 @@ public class MesclagemCarrinhoNoLogin {
         if (!(evento.getAuthentication().getPrincipal() instanceof UsuarioAutenticado usuario)) {
             return;
         }
+        // Administrador não compra: o carrinho de visitante fica no cookie, sem mesclar e sem aviso.
+        if (evento.getAuthentication().getAuthorities().stream().anyMatch(a -> "ROLE_ADMIN".equals(a.getAuthority()))) {
+            return;
+        }
         if (!(RequestContextHolder.getRequestAttributes() instanceof ServletRequestAttributes atributos)) {
             return;
         }
@@ -61,9 +65,10 @@ public class MesclagemCarrinhoNoLogin {
         try {
             int unidades = carrinhoService.contarUnidades(DonoCarrinho.deUsuario(usuarioId));
             if (unidades > 0) {
+                // Conta unidades, como o número do cabeçalho: 3 caixas do mesmo produto são "3 unidades".
                 request.getSession().setAttribute(AVISO_MANTIDO_NA_SESSAO, unidades == 1
-                        ? "Você tem 1 item no seu carrinho."
-                        : "Você tem " + unidades + " itens no seu carrinho.");
+                        ? "Você tem 1 unidade no seu carrinho."
+                        : "Você tem " + unidades + " unidades no seu carrinho.");
             }
         } catch (RuntimeException erro) {
             log.warn("Não foi possível contar o carrinho do usuário {} no login", usuarioId, erro);

@@ -219,12 +219,27 @@ public class CheckoutService {
         itens.forEach(i -> texto.append(i.apresentacaoId()).append(':').append(i.quantidade()).append(':')
                 .append(i.preco().toPlainString()).append(';'));
         texto.append(total.toPlainString()).append(';').append(form.getTipoEntrega()).append(';')
-                .append(form.getLojaId()).append(';').append(endereco == null ? "" : endereco.getCep()).append(';')
+                .append(form.getLojaId()).append(';').append(form.getEnderecoId()).append(';')
+                .append(enderecoNaConferencia(endereco)).append(';')
                 .append(form.getMetodo()).append(';').append(form.parcelasEfetivas());
         return DigestUtils.md5DigestAsHex(texto.toString().getBytes(StandardCharsets.UTF_8));
     }
 
-    private void reservarEstoque(Carrinho carrinho) {
+    /**
+     * O endereço inteiro entra na conferência, e não só o CEP: se o endereço for editado em outra aba (mesmo CEP, outra
+     * rua) entre o resumo e a confirmação, a conferência muda e o pedido não sai para um endereço que a pessoa não viu.
+     */
+    private static String enderecoNaConferencia(EnderecoEntrega endereco) {
+        if (endereco == null) {
+            return "";
+        }
+        return String.join("|", String.valueOf(endereco.getDestinatario()), String.valueOf(endereco.getCep()),
+                String.valueOf(endereco.getLogradouro()), String.valueOf(endereco.getNumero()),
+                String.valueOf(endereco.getComplemento()), String.valueOf(endereco.getBairro()),
+                String.valueOf(endereco.getCidade()), String.valueOf(endereco.getUf()));
+    }
+
+        private void reservarEstoque(Carrinho carrinho) {
         carrinho.getItens().stream()
                 .sorted(Comparator.comparing((ItemCarrinho i) -> i.getApresentacao().getId()))
                 .forEach(item -> {

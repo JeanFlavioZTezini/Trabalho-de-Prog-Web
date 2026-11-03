@@ -6,6 +6,8 @@
 <body>
 <div id="pagina" class="pagina-texto">
 
+    <nav th:replace="~{fragments/componentes :: migalhasAdmin('Produtos', '/admin/produtos', ${produtoId == null ? 'Novo' : 'Editar'})}"></nav>
+
     <h1 th:text="${produtoId == null} ? 'Novo produto' : 'Editar produto'">Produto</h1>
 
     <div class="alerta alerta--erro" role="alert" th:if="${erros != null}">
@@ -15,6 +17,8 @@
     <form th:action="${produtoId == null} ? @{/admin/produtos} : @{/admin/produtos/{id}(id=${produtoId})}"
           th:object="${produtoForm}" method="post" enctype="multipart/form-data">
 
+        <fieldset class="campo--grupo">
+        <legend>Dados do produto</legend>
         <div class="campo">
             <label for="nome">Nome</label>
             <input type="text" id="nome" th:field="*{nome}" maxlength="200" required
@@ -66,6 +70,10 @@
                    th:aria-describedby="${#fields.hasErrors('registroMs')} ? 'registroMs-erro'">
             <p class="campo__erro" role="alert" id="registroMs-erro" th:if="${#fields.hasErrors('registroMs')}" th:errors="*{registroMs}"></p>
         </div>
+        </fieldset>
+
+        <fieldset class="campo--grupo">
+        <legend>Bula e informações ao cliente</legend>
         <div class="campo">
             <label for="bulaUrl">URL da bula</label>
             <input type="text" id="bulaUrl" th:field="*{bulaUrl}" maxlength="255"
@@ -89,14 +97,14 @@
             <label for="publicoAlvo">Público-alvo</label>
             <textarea id="publicoAlvo" th:field="*{publicoAlvo}" rows="2"></textarea>
         </div>
+        </fieldset>
         <div class="campo">
             <label class="interruptor"><input type="checkbox" role="switch" th:field="*{ativo}"><span class="interruptor__trilho" aria-hidden="true"></span> Ativo</label>
         </div>
 
         <fieldset class="campo--grupo">
             <legend>Categorias (ao menos uma ativa)</legend>
-            <label class="campo__marcador" th:each="c : ${categorias}"
-                   th:style="|padding-left: ${c.nivel * 1.5}rem|">
+            <label th:each="c : ${categorias}" th:class="|campo__marcador nivel nivel-${c.nivel}|">
                 <input type="checkbox" name="categoriaIds" th:value="${c.id}"
                        th:checked="${#lists.contains(produtoForm.categoriaIds, c.id)}">
                 <span th:text="${c.nome + (c.ativa ? '' : ' (inativa)')}">Categoria</span>
@@ -104,7 +112,7 @@
         </fieldset>
 
         <h2>Apresentações</h2>
-        <p>Preencha as linhas em branco para adicionar apresentações. Apresentações não são removidas: desmarque "Ativa".</p>
+        <p class="campo__ajuda">Preencha as linhas em branco para adicionar apresentações. Apresentações não são removidas: desmarque "Ativa".</p>
         <fieldset class="apresentacao" th:each="a, i : *{apresentacoes}">
             <legend th:text="|Apresentação ${i.count}|">Apresentação 1</legend>
             <input type="hidden" th:field="*{apresentacoes[__${i.index}__].id}">
@@ -159,17 +167,20 @@
             <input type="file" id="novasImagens" name="novasImagens" multiple accept=".jpg,.jpeg,.png,.webp">
             <p id="aviso-imagem" role="alert"></p>
             <label for="imagemApresentacaoId">As novas fotos valem para</label>
-            <select id="imagemApresentacaoId" th:field="*{imagemApresentacaoId}">
+            <select id="imagemApresentacaoId" th:field="*{imagemApresentacaoId}"
+                    th:aria-describedby="${produtoId == null} ? 'imagem-apresentacao-ajuda'">
                 <option value="">Todas as apresentações</option>
                 <th:block th:each="a : *{apresentacoes}">
                     <option th:if="${a.id != null}" th:value="${a.id}" th:text="${a.descricao}">20 comprimidos</option>
                 </th:block>
             </select>
-            <p th:if="${produtoId == null}">Para vincular fotos a uma apresentação específica, salve o produto e depois edite-o.</p>
+            <p class="campo__ajuda" id="imagem-apresentacao-ajuda" th:if="${produtoId == null}">Para vincular fotos a uma apresentação específica, salve o produto e depois edite-o.</p>
         </fieldset>
 
-        <button type="submit" class="btn-primario">Salvar</button>
-        <a th:href="@{/admin/produtos}">Cancelar</a>
+        <div class="acoes">
+            <button type="submit" class="btn-primario">Salvar</button>
+            <a class="btn-secundario" th:href="@{/admin/produtos}">Cancelar</a>
+        </div>
     </form>
 
     <script th:src="@{/js/produto-form.js}" defer></script>

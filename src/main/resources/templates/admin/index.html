@@ -9,10 +9,20 @@
     <h1>Painel do administrador</h1>
     <p class="pagina-texto__intro">Área restrita ao papel ADMIN. Gerencie o catálogo, consulte clientes e acompanhe pedidos.</p>
 
-    <p><a th:href="@{/admin/categorias}">Gerenciar categorias</a></p>
-    <p><a th:href="@{/admin/produtos}">Gerenciar produtos</a></p>
-    <p><a th:href="@{/admin/clientes}">Consultar clientes</a></p>
-    <p><a th:href="@{/admin/pedidos}">Gerenciar pedidos</a></p>
+    <ul class="cartoes-painel">
+        <li><a th:href="@{/admin/categorias}">
+            <span class="cartoes-painel__titulo">Categorias</span>
+            <span class="cartoes-painel__descricao">Organize o menu e os filtros do catálogo.</span></a></li>
+        <li><a th:href="@{/admin/produtos}">
+            <span class="cartoes-painel__titulo">Produtos</span>
+            <span class="cartoes-painel__descricao">Cadastre produtos, apresentações, estoque e imagens.</span></a></li>
+        <li><a th:href="@{/admin/pedidos}">
+            <span class="cartoes-painel__titulo">Pedidos</span>
+            <span class="cartoes-painel__descricao">Acompanhe e atualize a situação dos pedidos.</span></a></li>
+        <li><a th:href="@{/admin/clientes}">
+            <span class="cartoes-painel__titulo">Clientes</span>
+            <span class="cartoes-painel__descricao">Consulte cadastros e pedidos, sem editar.</span></a></li>
+    </ul>
 
 </div>
 </body>

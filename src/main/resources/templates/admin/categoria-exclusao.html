@@ -6,6 +6,8 @@
 <body>
 <div id="pagina" class="pagina-texto pagina-texto--estreita">
 
+    <nav th:replace="~{fragments/componentes :: migalhasAdmin('Categorias', '/admin/categorias', 'Excluir')}"></nav>
+
     <h1>Excluir categoria</h1>
 
     <p class="alerta alerta--erro" role="alert" th:if="${erro != null}" th:text="${erro}"></p>
@@ -16,7 +18,7 @@
     <form th:if="${resumo.subcategorias == 0 and resumo.produtos == 0}"
           th:action="@{/admin/categorias/{id}/excluir(id=${resumo.id})}" method="post">
         <p>Sem dependências: a categoria pode ser excluída.</p>
-        <button type="submit" class="btn-primario">Excluir</button>
+        <button type="submit" class="btn-perigo">Excluir</button>
     </form>
 
     <p th:if="${resumo.subcategorias > 0}">
@@ -34,15 +36,14 @@
                         th:text="${'— '.repeat(d.nivel) + d.nome}">Destino</option>
             </select>
         </div>
-        <button type="submit" class="btn-primario">Reatribuir e excluir</button>
+        <button type="submit" class="btn-perigo">Reatribuir e excluir</button>
     </form>
 
     <form th:if="${resumo.ativa}" th:action="@{/admin/categorias/{id}/inativar(id=${resumo.id})}" method="post">
-        <button type="submit">Apenas inativar</button>
+        <button type="submit" class="btn-secundario">Apenas inativar</button>
     </form>
     <p th:unless="${resumo.ativa}">A categoria já está inativa.</p>
 
-    <p><a th:href="@{/admin/categorias}">Voltar</a></p>
 
 </div>
 </body>

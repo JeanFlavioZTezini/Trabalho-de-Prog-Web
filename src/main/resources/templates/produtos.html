@@ -11,8 +11,8 @@
     <form class="filtros-catalogo" th:action="@{/produtos}" method="get">
         <div class="campo filtros-catalogo__termo">
             <label for="q">Buscar produtos</label>
-            <input type="search" id="q" name="q" maxlength="120" th:value="${q}"
-                   aria-describedby="busca-ajuda">
+            <span class="campo-busca"><svg th:replace="~{fragments/componentes :: iconeBusca}"></svg><input type="search" id="q" name="q" maxlength="120" th:value="${q}"
+                   aria-describedby="busca-ajuda"></span>
             <p id="busca-ajuda" class="campo__ajuda">
                 A busca por indicação é apenas informativa e não substitui orientação de um profissional de saúde.
             </p>

@@ -95,8 +95,11 @@ class DetalheProdutoIntegracaoTest {
         assertThat(html).contains("R$ 30,99");
         assertThat(html).contains("20 comprimidos");
         assertThat(html).contains("7891000000021");
-        assertThat(html).contains("Formas de pagamento");
-        assertThat(html).contains("Cartão de crédito", "Cartão de débito", "Pix", "Boleto");
+        // Pagamento numa linha dentro da caixa de compra (depois do botão), e não mais numa seção própria no fim.
+        assertThat(html).containsPattern("(?s)<div class=\"produto-detalhe__compra\">.*?Adicionar ao carrinho.*?"
+                + "<p class=\"produto-detalhe__pagamento\">\\s*<strong>Formas de pagamento:</strong>\\s*"
+                + "<span>Cartão de crédito</span>, <span>Cartão de débito</span>, <span>Pix</span> e <span>Boleto</span>\\.");
+        assertThat(html).doesNotContain("id=\"titulo-pagamento\"");
         assertThat(html).containsPattern("(?s)<input type=\"hidden\" name=\"apresentacaoId\"\\s+value=\"2\">");
         assertThat(html).contains("name=\"quantidade\"", "max=\"10\"", "name=\"_csrf\"");
         assertThat(html).contains("alt=\"Novalgina Dipirona 1g\"");

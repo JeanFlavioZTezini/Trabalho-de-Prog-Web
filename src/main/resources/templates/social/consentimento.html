@@ -25,10 +25,12 @@
         <div th:replace="~{fragments/campo :: campo(id='nome', nome='nome', rotulo='Nome', tipo='text', ajuda=null, erro=null, autocomplete='name')}"></div>
         <div th:replace="~{fragments/campo :: campo(id='email', nome='email', rotulo='E-mail (opcional)', tipo='email', ajuda='Deixe em branco para simular um provedor que não informa e-mail.', erro=null, autocomplete='email')}"></div>
         <div class="campo">
-            <input type="checkbox" id="emailVerificado" name="emailVerificado" value="true" checked
+            <!--/* Desmarcado por padrão: marcado, a conta nasce ativa com um e-mail que ninguém confirmou. */-->
+            <input type="checkbox" id="emailVerificado" name="emailVerificado" value="true"
                    aria-describedby="emailVerificado-ajuda">
             <label for="emailVerificado">O provedor confirma que o e-mail é verificado</label>
-            <p class="campo__ajuda" id="emailVerificado-ajuda">Desmarcado, a conta nova precisa confirmar o e-mail com um código.</p>
+            <p class="campo__ajuda" id="emailVerificado-ajuda">Marque para simular um provedor que já verificou o e-mail.
+                Desmarcado, a conta nova precisa confirmar o e-mail com um código.</p>
         </div>
 
         <!--/* Botão principal primeiro: Enter permite, como na tela real. */-->

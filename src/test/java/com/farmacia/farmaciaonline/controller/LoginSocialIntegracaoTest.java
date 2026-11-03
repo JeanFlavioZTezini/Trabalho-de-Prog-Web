@@ -314,4 +314,19 @@ class LoginSocialIntegracaoTest {
     void provedorDesconhecido() throws Exception {
         mvc.perform(get("/login/social/twitter")).andExpect(status().isNotFound());
     }
+
+    @Test
+    @org.junit.jupiter.api.DisplayName("a tela de consentimento demo abre com \"e-mail verificado\" desmarcado")
+    void consentimentoAbreComEmailVerificadoDesmarcado() throws Exception {
+        MockHttpSession sessao = new MockHttpSession();
+        String consentimento = mvc.perform(get("/login/social/google").session(sessao))
+                .andReturn().getResponse().getRedirectedUrl();
+
+        String html = mvc.perform(get(consentimento).session(sessao)).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+
+        assertThat(html).containsPattern("<input type=\"checkbox\" id=\"emailVerificado\" name=\"emailVerificado\" value=\"true\"\\s+"
+                + "aria-describedby=\"emailVerificado-ajuda\">");
+        assertThat(html).doesNotContainPattern("id=\"emailVerificado\"[^>]*checked");
+    }
 }

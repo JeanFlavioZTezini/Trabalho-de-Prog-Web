@@ -187,7 +187,9 @@ public class ProdutoRepositoryCustomImpl implements ProdutoRepositoryCustom {
         if (ordenacao == OrdenacaoCatalogo.NOME || ordenacao == OrdenacaoCatalogo.NOME_DESC
                 || ordenacao == OrdenacaoCatalogo.RELEVANCIA) {
             var nome = builder.lower(produto.<String>get("nome"));
-            consulta.orderBy(ordenacao == OrdenacaoCatalogo.NOME_DESC ? builder.desc(nome) : builder.asc(nome));
+            // O id desempata nomes iguais: sem ele a ordem entre páginas não é fixa e a paginação repete ou pula produtos.
+            consulta.orderBy(ordenacao == OrdenacaoCatalogo.NOME_DESC ? builder.desc(nome) : builder.asc(nome),
+                    builder.asc(produto.get("id")));
             return;
         }
 

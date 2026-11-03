@@ -53,7 +53,7 @@ public class AdminClienteController {
             Model model) {
         StatusUsuario filtro = statusDe(status);
         PeriodoFiltro periodo = new PeriodoFiltro(de, ate);
-        PageRequest pageable = PageRequest.of(Math.max(pagina, 0), TAMANHO_PAGINA, Sort.by("nome"));
+        PageRequest pageable = PageRequest.of(Math.max(pagina, 0), TAMANHO_PAGINA, Sort.by("nome", "id"));
         String erroFiltro = periodo.erro();
         model.addAttribute("pagina", erroFiltro != null ? Page.empty(pageable)
                 : service.listar(adminId(auth), request.getRemoteAddr(), q, filtro, periodo, pageable));

@@ -2,7 +2,10 @@ package com.farmacia.farmaciaonline.repository;
 
 import static org.assertj.core.api.Assertions.assertThat;
 
+import java.math.BigDecimal;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -170,5 +173,40 @@ class CatalogoRepositoryTest {
         imagem.setArquivo(arquivo);
         imagem.setOrdem(ordem);
         return imagem;
+    }
+
+    @Test
+    @DisplayName("nomes iguais: as páginas de 2 em 2, ordenadas por nome, trazem os 3 produtos sem repetir (id desempata)")
+    void paginacaoComNomesIguaisNaoRepeteNemPula() {
+        for (int i = 1; i <= 3; i++) {
+            Produto produto = new Produto();
+            produto.setNome("Gemeo Desempate");
+            produto.setMarca("Marca");
+            produto = produtoRepository.saveAndFlush(produto);
+            Apresentacao apresentacao = new Apresentacao();
+            apresentacao.setProduto(produto);
+            apresentacao.setDescricao("10 unidades");
+            apresentacao.setSku("GEMEO-" + i);
+            apresentacao.setEan(String.format("%013d", 7_000_000_000_000L + i));
+            apresentacao.setPreco(new BigDecimal("10.00"));
+            apresentacao.setEstoque(5);
+            apresentacaoRepository.saveAndFlush(apresentacao);
+        }
+
+        Set<Long> vistos = new HashSet<>();
+        for (OrdenacaoCatalogo ordem : List.of(OrdenacaoCatalogo.NOME, OrdenacaoCatalogo.NOME_DESC)) {
+            vistos.clear();
+            int total = 0;
+            for (int pagina = 0; pagina < 2; pagina++) {
+                Page<Produto> resultado = produtoRepository.buscarCatalogo("Gemeo Desempate", List.of(), null, null, false,
+                        ordem, PageRequest.of(pagina, 2));
+                for (Produto p : resultado.getContent()) {
+                    vistos.add(p.getId());
+                    total++;
+                }
+            }
+            assertThat(total).as("ordem %s", ordem).isEqualTo(3);
+            assertThat(vistos).as("ordem %s", ordem).hasSize(3);
+        }
     }
 }

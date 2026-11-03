@@ -28,6 +28,11 @@ public interface UsuarioRepository extends JpaRepository<Usuario, Long> {
 
     boolean existsByCpf(String cpf);
 
+    /** Trava a linha da conta até o fim da transação: serializa gravações da mesma pessoa (ex.: endereço principal). */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    @Query("select u from Usuario u where u.id = :id")
+    Optional<Usuario> findByIdParaAtualizar(@Param("id") Long id);
+
     /** Busca a conta sob bloqueio pessimista para não perder incrementos concorrentes de falha de login. */
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select u from Usuario u where lower(u.email) = lower(:email) or (:cpf <> '' and u.cpf = :cpf)")

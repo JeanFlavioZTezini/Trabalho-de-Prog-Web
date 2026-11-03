@@ -33,6 +33,7 @@ public class EnderecoService {
 
     /** F-25: marca o endereço como principal (e só ele). Endereço de outra pessoa: 404. */
     public void definirPrincipal(Long usuarioId, Long id) {
+        travarConta(usuarioId);
         Endereco endereco = buscar(usuarioId, id);
         if (endereco.isPrincipal()) {
             return;
@@ -68,6 +69,7 @@ public class EnderecoService {
     }
 
     public Long salvar(Long usuarioId, Long id, EnderecoForm form) {
+        travarConta(usuarioId);
         Usuario usuario = exigirContaAtiva(usuarioId);
         Endereco endereco;
         if (id == null) {
@@ -140,5 +142,13 @@ public class EnderecoService {
 
     private static String vazioParaNulo(String texto) {
         return texto == null || texto.isBlank() ? null : texto.trim();
+    }
+
+    /**
+     * Trava a conta antes de mexer no principal: duas gravações simultâneas (duplo clique em "Salvar" no primeiro
+     * endereço, ou dois "Tornar principal") passam uma de cada vez em vez de violar o índice ux_endereco_principal.
+     */
+    private void travarConta(Long usuarioId) {
+        usuarioRepository.findByIdParaAtualizar(usuarioId);
     }
 }

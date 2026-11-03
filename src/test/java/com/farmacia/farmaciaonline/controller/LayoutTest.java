@@ -97,6 +97,18 @@ class LayoutTest {
     }
 
     @Test
+    void iconesSaoDecorativosEOTextoContinuaSendoONome() throws Exception {
+        String html = pagina("/");
+
+        // Carrinho, convite do visitante e botão Categorias: ícone escondido do leitor de tela, texto visível ao lado.
+        assertThat(html).containsPattern("(?s)<a class=\"topo__carrinho\" href=\"/carrinho\"><svg class=\"icone\"[^>]*"
+                + "aria-hidden=\"true\".*?</svg>Carrinho");
+        assertThat(html).containsPattern("(?s)<div class=\"usuario usuario--visitante\">\\s*<svg class=\"icone\"[^>]*aria-hidden=\"true\"");
+        assertThat(html).containsPattern("(?s)<span class=\"menu-categorias__rotulo\"><svg class=\"icone\"[^>]*"
+                + "aria-hidden=\"true\".*?</svg>Categorias</span>");
+    }
+
+    @Test
     void visitanteVeConviteParaEntrarECadastrar() throws Exception {
         String html = pagina("/");
 
@@ -111,6 +123,12 @@ class LayoutTest {
         String html = pagina("/");
 
         assertThat(html).contains("aria-label=\"Atalhos da conta\"");
+        // "Olá, Nome" é um botão que abre o menu da conta; os atalhos e o Sair ficam dentro do menu.
+        assertThat(html).containsPattern("(?s)<button type=\"button\" class=\"usuario__toggle\" aria-expanded=\"false\""
+                + " aria-controls=\"menu-usuario\">\\s*<svg class=\"icone\"[^>]*aria-hidden=\"true\".*?</svg>"
+                + "\\s*<span class=\"usuario__nome\">Olá, <strong>");
+        assertThat(html).containsPattern("(?s)<div class=\"usuario__menu\" id=\"menu-usuario\">.*?href=\"/conta\".*?"
+                + "href=\"/pedidos\".*?action=\"/logout\".*?</div>");
         assertThat(html).contains("href=\"/carrinho\"")
                 .contains("href=\"/conta\"")
                 .contains("href=\"/enderecos\"")

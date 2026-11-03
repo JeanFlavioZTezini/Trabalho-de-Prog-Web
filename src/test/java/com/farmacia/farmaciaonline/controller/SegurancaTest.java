@@ -70,6 +70,12 @@ class SegurancaTest {
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
         assertThat(html).contains("Painel do administrador");
+        // Um h1 e quatro cartões de atalho, cada um com título e uma linha de descrição.
+        assertThat(html.split("<h1", -1)).hasSize(2);
+        assertThat(html.split("class=\"cartoes-painel__titulo\"", -1)).hasSize(5);
+        assertThat(html.split("class=\"cartoes-painel__descricao\"", -1)).hasSize(5);
+        assertThat(html).contains("href=\"/admin/categorias\"", "href=\"/admin/produtos\"",
+                "href=\"/admin/pedidos\"", "href=\"/admin/clientes\"");
     }
 
     // ---------- páginas públicas ----------

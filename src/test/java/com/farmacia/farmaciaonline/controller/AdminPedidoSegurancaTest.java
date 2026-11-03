@@ -1,5 +1,6 @@
 package com.farmacia.farmaciaonline.controller;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.isNull;
 import static org.mockito.Mockito.verify;
@@ -82,7 +83,17 @@ class AdminPedidoSegurancaTest {
                 List.of(StatusPedido.CANCELADO)));
 
         mvc.perform(get("/admin/pedidos").with(admin())).andExpect(status().isOk());
-        mvc.perform(get("/admin/pedidos/7").with(admin())).andExpect(status().isOk());
+        String detalhe = mvc.perform(get("/admin/pedidos/7").with(admin())).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(java.nio.charset.StandardCharsets.UTF_8);
+
+        // Migalhas até o pedido, situação em selo e um único "Voltar".
+        assertThat(detalhe).contains("<li><a href=\"/admin/pedidos\">Pedidos</a></li>")
+                .contains("<li aria-current=\"page\">Pedido nº 7</li>")
+                .contains("<span class=\"selo selo--status-AGUARDANDO_PAGAMENTO\">Aguardando pagamento</span>");
+        // O Voltar do topo leva ao nível de cima (a lista), e não há outro "Voltar" no rodapé.
+        assertThat(detalhe.split("Voltar", -1)).hasSize(2);
+        assertThat(detalhe).containsPattern("(?s)<a class=\"topo-admin__voltar\" href=\"/admin/pedidos\">"
+                + ".*?Voltar<span class=\"visually-hidden\"> para Pedidos</span>");
     }
 
     @Test

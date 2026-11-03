@@ -154,11 +154,12 @@ class AdminProdutoTelaTest {
     }
 
     @Test
-    @DisplayName("lista de produtos tem o link 'Voltar ao painel' para /admin")
-    void listaTemVoltarAoPainel() throws Exception {
+    @DisplayName("lista de produtos tem migalhas Painel › Produtos, com o link para /admin")
+    void listaTemMigalhasParaOPainel() throws Exception {
         when(service.buscar(any(), any(), any())).thenReturn(new PageImpl<>(List.of()));
 
-        assertThat(html("/admin/produtos")).containsPattern("<a href=\"/admin\">Voltar ao painel</a>");
+        assertThat(html("/admin/produtos")).containsPattern("(?s)<nav class=\"migalhas\" aria-label=\"Você está em\">\\s*<ol>"
+                + "\\s*<li><a href=\"/admin\">Painel</a></li>\\s*<li aria-current=\"page\">Produtos</li>");
     }
 
     @Test

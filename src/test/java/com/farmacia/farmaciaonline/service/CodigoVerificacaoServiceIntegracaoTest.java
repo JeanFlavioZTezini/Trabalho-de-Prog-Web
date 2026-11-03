@@ -5,6 +5,13 @@ import static org.assertj.core.api.Assertions.assertThat;
 import java.time.Duration;
 import java.time.Instant;
 import java.time.temporal.ChronoUnit;
+import java.util.List;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CountDownLatch;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
+import java.util.concurrent.TimeUnit;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
@@ -262,6 +269,32 @@ class CodigoVerificacaoServiceIntegracaoTest {
             // leitura nova, fora da transação do validar: só passa se o incremento teve commit
             assertThat(ultimoSalvo(usuario, FinalidadeCodigo.CADASTRO).getTentativas()).isEqualTo(1);
         } finally {
+            jdbc.update("DELETE FROM codigo_verificacao WHERE usuario_id = ?", usuario.getId());
+        }
+    }
+
+    @Test
+    @Transactional(propagation = Propagation.NOT_SUPPORTED)
+    @DisplayName("duas validações simultâneas do mesmo código certo: uma vale e a outra já encontra o código usado")
+    void validacaoSimultaneaSoValeUmaVez() throws Exception {
+        Usuario usuario = pendente();
+        ExecutorService threads = Executors.newFixedThreadPool(2);
+        try {
+            enviar(usuario);
+            String codigo = ultimoCodigo(usuario.getEmail());
+            CountDownLatch largada = new CountDownLatch(1);
+            Callable<SituacaoValidacao> tentativa = () -> {
+                largada.await();
+                return validar(usuario, codigo); // cada chamada na própria transação, com commit
+            };
+            Future<SituacaoValidacao> primeira = threads.submit(tentativa);
+            Future<SituacaoValidacao> segunda = threads.submit(tentativa);
+            largada.countDown();
+
+            List<SituacaoValidacao> resultados = List.of(primeira.get(10, TimeUnit.SECONDS), segunda.get(10, TimeUnit.SECONDS));
+            assertThat(resultados).containsExactlyInAnyOrder(SituacaoValidacao.VALIDO, SituacaoValidacao.JA_USADO);
+        } finally {
+            threads.shutdownNow();
             jdbc.update("DELETE FROM codigo_verificacao WHERE usuario_id = ?", usuario.getId());
         }
     }

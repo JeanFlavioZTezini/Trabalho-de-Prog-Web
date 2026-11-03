@@ -127,7 +127,8 @@ public class CodigoVerificacaoService {
      */
     @Transactional
     public ResultadoValidacao validar(Long usuarioId, FinalidadeCodigo finalidade, String digitado) {
-        Optional<CodigoVerificacao> atual = codigos.findFirstByUsuarioIdAndFinalidadeOrderByCriadoEmDesc(usuarioId,
+        // Busca com trava: sem ela, duas requisições com o código certo passariam antes de gravar usado_em.
+        Optional<CodigoVerificacao> atual = codigos.findTopByUsuarioIdAndFinalidadeOrderByCriadoEmDesc(usuarioId,
                 finalidade);
         if (atual.isEmpty() || atual.get().getInvalidadoEm() != null) {
             return new ResultadoValidacao(SituacaoValidacao.INEXISTENTE, 0, null, null);

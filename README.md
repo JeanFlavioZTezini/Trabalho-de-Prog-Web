@@ -662,6 +662,12 @@ carrinho; o dono é o usuário **ou** o token, nunca os dois). Regras em `servic
   o perfil `demo`, que vem ligado no `application.properties` (`spring.profiles.active=demo`). Para desligar, apague a
   linha ou suba com outro perfil (`$env:SPRING_PROFILES_ACTIVE="producao"`): aí `/caixa-demo` dá 404. O código nunca vai
   para log nem para resposta fora dessa página.
+- **Cada navegador vê só a própria caixa:** cada mensagem guarda a "caixa" da sessão que a gerou (um UUID no atributo de
+  sessão `caixaDemo`; é atributo, e não o id da sessão, porque o id muda no login). A `/caixa-demo` mostra só as mensagens
+  dessa caixa; o administrador vê todas, inclusive as geradas fora de requisição (como a expiração de pedidos). Sem isso,
+  qualquer visitante lia o código de recuperação de outra conta.
+- **Código validado uma vez só:** `validar` busca o último código com trava (`SELECT ... FOR UPDATE`), então duas
+  requisições simultâneas com o código certo não passam as duas.
 - **Contrato de envio para outras issues:** `mensagem/EnvioDeMensagem.enviar(canal, destino, assunto, texto)`. O resumo
   do pedido (F-14) usa a mesma interface com o canal `EMAIL`.
 - **Testes:** `ContatoMascaradoTest` e `DemoEnvioAdapterTest` (unitários), `CaixaDemoControllerTest` e
@@ -681,7 +687,8 @@ carrinho; o dono é o usuário **ou** o token, nunca os dois). Regras em `servic
 - **Limites:** o código usa a finalidade `RECUPERAR_SENHA` e as regras da F-05 (`app.codigos.*`: 10 min, 5 tentativas,
   uso único, 60 s entre pedidos, 5 por hora). Além disso, o `LimiteDeSolicitacoes` aplica os mesmos 60 s e 5 por hora
   **por identificador digitado**, exista a conta ou não, para o "aguarde" também não denunciar contas. Esse limite fica
-  na memória e zera quando a aplicação reinicia.
+  na memória e zera quando a aplicação reinicia. Passando de 1000 identificadores, ele varre os que já não pesam em nenhum
+  limite, e cada chave guarda no máximo 150 caracteres: identificadores inventados não fazem a memória crescer sem fim.
 - **Nova senha:** mesma regra do cadastro (`validacao/PoliticaDeSenha`: 8 ou mais, letra e número, até 72 bytes), gravada
   em BCrypt, e precisa ser diferente da atual. Cliente e administrador recuperam do mesmo jeito; o vínculo com Google ou Facebook não é apagado, e conta
   sem senha local passa a ter uma.
@@ -705,6 +712,10 @@ carrinho; o dono é o usuário **ou** o token, nunca os dois). Regras em `servic
 | `GET/POST /conta/editar` | altera **nome, data de nascimento e gênero**; "Cancelar" é um link para `/conta` e não salva nada |
 | `GET/POST /conta/senha` | troca a senha: exige a senha atual, a nova e a confirmação |
 
+- **Limite de tentativas da senha atual:** trocar a senha (e trocar e-mail ou celular, F-21) segue o limite do login
+  (F-18): conta bloqueada é recusada antes de conferir ("Muitas tentativas com a senha errada..."), cada senha errada conta
+  uma falha gravada mesmo com a troca recusada, e a senha certa zera o contador. Cinco erros aqui também bloqueiam o login
+  por 15 minutos.
 - **Mesmas regras do cadastro (F-04/F-06):** nome obrigatório (até 150), nascimento válido (de 1900 até hoje, 18 anos ou
   mais) e gênero obrigatório. A nova senha segue `validacao/PoliticaDeSenha` (8 caracteres ou mais, com letra e número, até
   72 bytes), é gravada em BCrypt com o mesmo `PasswordEncoder` e precisa ser diferente da atual.
@@ -835,6 +846,10 @@ Completa o login da F1-09 sem trocar o que já existia (CPF ou e-mail, conta pen
   login bem-sucedido ou senha recuperada (F-06) zera o contador e o bloqueio. Conta pendente, identificador inexistente, conta já
   bloqueada e falha do sistema (banco fora do ar) não contam. Se o bloqueio já venceu, a próxima senha errada recomeça a contagem.
   A atualização usa lock pessimista para não perder falhas simultâneas. O limite está fixo em `LoginTentativasService`.
+- **Sem revelar se a conta existe:** o identificador que não é de conta ativa (inexistente, por exemplo) é contado na memória
+  (`security/LimiteDeTentativasEmMemoria`, mesmos 5 erros e 15 minutos, varredura das entradas vencidas e chave de até 150
+  caracteres). Assim a sexta tentativa dá "bloqueada" para conta real e para e-mail inventado. A retomada da confirmação
+  (`/confirmar-conta/retomar`) usa o mesmo limitador.
 - **Sessão:** expira após 30 minutos de inatividade (`server.servlet.session.timeout`). O logout é `POST /logout` com CSRF, invalida só a
   sessão que saiu (outras abas da mesma conta, com outra sessão, seguem até o próprio logout ou a revogação da F-06) e as páginas
   protegidas saem com `Cache-Control: no-store`, então "voltar" não as restaura.
@@ -998,6 +1013,19 @@ Fica sob `/admin/**` (só `ADMIN`: visitante vai para `/login`, cliente logado r
   definitiva e só inativação com pedido), `ArmazenamentoImagemTest`, `UploadExcedidoAdviceTest`,
   `AdminProdutoSegurancaTest` (visitante, cliente, administrador da sessão gravado, CSRF) e `AdminProdutoTelaTest` (HTML:
   um único h1, rótulos, erro ligado ao campo por `aria-describedby`, tabela em região rolável).
+
+## Riscos conhecidos
+
+Limites assumidos de propósito neste trabalho acadêmico (não são defeitos a corrigir agora):
+
+- **O perfil `demo` é só para apresentação.** Ele liga a `/caixa-demo`, o provedor social simulado e os botões que deixam o
+  próprio cliente simular a aprovação ou a expiração do pagamento (`CheckoutDemoController`). Em produção, desligue o perfil.
+- **Bloqueio intencional por terceiros:** quem souber o e-mail ou CPF de alguém pode errar a senha cinco vezes e bloquear o
+  login dessa conta por 15 minutos. Não há CAPTCHA nem limite por IP.
+- **Tempo de resposta do bloqueio:** a conta real bloqueada é recusada antes de conferir a senha (sem BCrypt), enquanto o
+  identificador inexistente bloqueado passa pelo hash fictício. A mensagem é a mesma; só o tempo difere.
+- **Contadores na memória:** o limite de recuperação (`LimiteDeSolicitacoes`) e o de tentativas para identificador sem conta
+  (`LimiteDeTentativasEmMemoria`) recomeçam quando a aplicação reinicia e não são compartilhados entre várias instâncias.
 
 ## Como criar uma página nova
 

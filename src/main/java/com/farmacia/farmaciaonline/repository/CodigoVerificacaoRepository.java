@@ -4,7 +4,10 @@ import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
+import jakarta.persistence.LockModeType;
+
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Lock;
 import org.springframework.stereotype.Repository;
 
 import com.farmacia.farmaciaonline.model.CodigoVerificacao;
@@ -14,6 +17,13 @@ import com.farmacia.farmaciaonline.model.enums.FinalidadeCodigo;
 public interface CodigoVerificacaoRepository extends JpaRepository<CodigoVerificacao, Long> {
 
     Optional<CodigoVerificacao> findFirstByUsuarioIdAndFinalidadeOrderByCriadoEmDesc(Long usuarioId, FinalidadeCodigo finalidade);
+
+    /**
+     * O mesmo "último código", mas com a linha travada (SELECT ... FOR UPDATE) até o fim da transação: duas validações
+     * simultâneas do mesmo código passam uma de cada vez, e a segunda já vê o {@code usado_em} da primeira.
+     */
+    @Lock(LockModeType.PESSIMISTIC_WRITE)
+    Optional<CodigoVerificacao> findTopByUsuarioIdAndFinalidadeOrderByCriadoEmDesc(Long usuarioId, FinalidadeCodigo finalidade);
 
     long countByUsuarioIdAndFinalidadeAndCriadoEmAfter(Long usuarioId, FinalidadeCodigo finalidade, Instant criadoEm);
 

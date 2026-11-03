@@ -19,6 +19,9 @@ import org.springframework.stereotype.Component;
 public class LimiteDeSolicitacoes {
 
     private static final Duration JANELA_DO_LIMITE = Duration.ofHours(1);
+    /** Acima disso, a próxima solicitação varre as chaves vencidas: identificadores inventados não acumulam para sempre. */
+    static final int MAXIMO_DE_CHAVES = 1000;
+    static final int TAMANHO_MAXIMO_DA_CHAVE = 150;
 
     private final Map<String, Deque<Instant>> pedidos = new ConcurrentHashMap<>();
     private final Duration intervalo;
@@ -39,7 +42,11 @@ public class LimiteDeSolicitacoes {
     }
 
     synchronized long registrar(String chave, Instant agora) {
-        Deque<Instant> lista = pedidos.computeIfAbsent(chave, c -> new ArrayDeque<>());
+        if (pedidos.size() > MAXIMO_DE_CHAVES) {
+            varrerVencidas(agora);
+        }
+        String limitada = chave.length() > TAMANHO_MAXIMO_DA_CHAVE ? chave.substring(0, TAMANHO_MAXIMO_DA_CHAVE) : chave;
+        Deque<Instant> lista = pedidos.computeIfAbsent(limitada, c -> new ArrayDeque<>());
         while (!lista.isEmpty() && lista.peekFirst().isBefore(agora.minus(JANELA_DO_LIMITE))) {
             lista.pollFirst();
         }
@@ -52,6 +59,17 @@ public class LimiteDeSolicitacoes {
         }
         lista.addLast(agora);
         return 0;
+    }
+
+    /** Tira as chaves cujo último pedido já não pesa em nenhum limite (janela de 1 h, bloqueio e intervalo). */
+    private void varrerVencidas(Instant agora) {
+        Duration maiorEspera = JANELA_DO_LIMITE.compareTo(bloqueio) >= 0 ? JANELA_DO_LIMITE : bloqueio;
+        Instant corte = agora.minus(maiorEspera.compareTo(intervalo) >= 0 ? maiorEspera : intervalo);
+        pedidos.values().removeIf(lista -> lista.isEmpty() || lista.peekLast().isBefore(corte));
+    }
+
+    int quantidadeDeChaves() {
+        return pedidos.size();
     }
 
     /** Esquece todos os pedidos. Os testes usam para não depender da ordem em que rodam. */

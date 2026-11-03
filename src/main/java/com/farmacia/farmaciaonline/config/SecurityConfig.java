@@ -12,6 +12,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.session.HttpSessionEventPublisher;
 
+import com.farmacia.farmaciaonline.security.LimiteDeTentativasEmMemoria;
 import com.farmacia.farmaciaonline.security.LoginFailureHandler;
 import com.farmacia.farmaciaonline.security.LoginSuccessHandler;
 import com.farmacia.farmaciaonline.security.LoginTentativasService;
@@ -40,7 +41,8 @@ public class SecurityConfig {
 
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http, SessionRegistry sessionRegistry,
-            ObjectProvider<LoginTentativasService> tentativasProvider) throws Exception {
+            ObjectProvider<LoginTentativasService> tentativasProvider,
+            ObjectProvider<LimiteDeTentativasEmMemoria> tentativasEmMemoriaProvider) throws Exception {
         // Opcional de propósito: os testes de camada web (@WebMvcTest + SecurityConfig) não carregam o serviço, e os handlers
         // aceitam null (sem contagem de falhas).
         LoginTentativasService loginTentativasService = tentativasProvider.getIfAvailable();
@@ -55,7 +57,7 @@ public class SecurityConfig {
                 .usernameParameter("identificador") // e-mail ou CPF
                 .passwordParameter("senha")
                 .successHandler(new LoginSuccessHandler(loginTentativasService))
-                .failureHandler(new LoginFailureHandler(loginTentativasService))
+                .failureHandler(new LoginFailureHandler(loginTentativasService, tentativasEmMemoriaProvider.getIfAvailable()))
                 .permitAll())
             .logout(logout -> logout
                 .logoutUrl("/logout") // com CSRF ligado, só aceita POST

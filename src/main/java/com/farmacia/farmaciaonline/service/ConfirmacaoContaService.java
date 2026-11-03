@@ -12,6 +12,7 @@ import com.farmacia.farmaciaonline.model.enums.CanalCodigo;
 import com.farmacia.farmaciaonline.model.enums.FinalidadeCodigo;
 import com.farmacia.farmaciaonline.model.enums.StatusUsuario;
 import com.farmacia.farmaciaonline.repository.UsuarioRepository;
+import com.farmacia.farmaciaonline.security.LimiteDeTentativasEmMemoria;
 import com.farmacia.farmaciaonline.service.CodigoVerificacaoService.ResultadoEnvio;
 import com.farmacia.farmaciaonline.service.CodigoVerificacaoService.ResultadoValidacao;
 
@@ -34,11 +35,14 @@ public class ConfirmacaoContaService {
     private final UsuarioRepository usuarios;
     private final CodigoVerificacaoService codigos;
     private final PasswordEncoder encoder;
+    private final LimiteDeTentativasEmMemoria tentativas;
 
-    public ConfirmacaoContaService(UsuarioRepository usuarios, CodigoVerificacaoService codigos, PasswordEncoder encoder) {
+    public ConfirmacaoContaService(UsuarioRepository usuarios, CodigoVerificacaoService codigos, PasswordEncoder encoder,
+            LimiteDeTentativasEmMemoria tentativas) {
         this.usuarios = usuarios;
         this.codigos = codigos;
         this.encoder = encoder;
+        this.tentativas = tentativas;
     }
 
     @Transactional(readOnly = true)
@@ -79,7 +83,9 @@ public class ConfirmacaoContaService {
 
     /**
      * Retomada da confirmação pelo login (conta pendente que saiu da página do código). Só devolve a conta se o e-mail
-     * ou CPF e a senha conferirem: conhecer só o e-mail ou o id de alguém não basta.
+     * ou CPF e a senha conferirem: conhecer só o e-mail ou o id de alguém não basta. Cinco senhas erradas bloqueiam o
+     * identificador por 15 minutos (na memória, porque a conta pendente não entra na contagem do login), exista a conta
+     * ou não; bloqueado, a resposta é a mesma de senha errada e o custo do hash continua igual.
      */
     @Transactional(readOnly = true)
     public Optional<Usuario> retomar(String identificador, String senha) {
@@ -92,7 +98,15 @@ public class ConfirmacaoContaService {
                 : usuarios.findByCpf(valor.replaceAll("\\D", ""));
         String hash = conta.map(Usuario::getSenhaHash).orElse(HASH_FICTICIO);
         boolean senhaConfere = encoder.matches(senha, hash == null ? HASH_FICTICIO : hash);
-        return senhaConfere ? conta : Optional.empty();
+        if (tentativas.bloqueado(valor)) {
+            return Optional.empty();
+        }
+        if (!senhaConfere || conta.isEmpty()) {
+            tentativas.registrarFalha(valor);
+            return Optional.empty();
+        }
+        tentativas.limpar(valor);
+        return conta;
     }
 
     private Usuario pendenteOuFalha(Long usuarioId) {

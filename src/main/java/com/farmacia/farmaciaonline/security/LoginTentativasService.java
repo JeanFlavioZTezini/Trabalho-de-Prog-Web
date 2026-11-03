@@ -29,7 +29,17 @@ public class LoginTentativasService {
 
     @Transactional
     public void registrarFalha(String identificador) {
-        buscarParaAtualizar(identificador).filter(u -> u.getStatus() == StatusUsuario.ATIVA).ifPresent(usuario -> {
+        registrarFalhaEContar(identificador);
+    }
+
+    /**
+     * Igual a {@link #registrarFalha}, e diz se uma conta ativa foi contada. Quando não foi (identificador inexistente
+     * ou conta que não é ativa), quem chama conta na memória, para o bloqueio não revelar se a conta existe.
+     */
+    @Transactional
+    public boolean registrarFalhaEContar(String identificador) {
+        Optional<Usuario> conta = buscarParaAtualizar(identificador).filter(u -> u.getStatus() == StatusUsuario.ATIVA);
+        conta.ifPresent(usuario -> {
             Instant agora = Instant.now();
             // Uma janela de bloqueio vencida inicia uma nova sequência de tentativas.
             if (usuario.getBloqueadoAte() != null && !usuario.getBloqueadoAte().isAfter(agora)) {
@@ -44,6 +54,7 @@ public class LoginTentativasService {
             }
             usuarioRepository.save(usuario);
         });
+        return conta.isPresent();
     }
 
     @Transactional

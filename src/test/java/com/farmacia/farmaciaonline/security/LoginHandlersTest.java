@@ -180,19 +180,37 @@ class LoginHandlersTest {
         handler.onAuthenticationFailure(pedido, new MockHttpServletResponse(),
                 new InternalAuthenticationServiceException("x", new IllegalStateException("banco")));
 
-        org.mockito.Mockito.verify(servico, org.mockito.Mockito.times(1)).registrarFalha("cliente@farma.com");
+        org.mockito.Mockito.verify(servico, org.mockito.Mockito.times(1)).registrarFalhaEContar("cliente@farma.com");
     }
 
     @Test
     void erroAoGravarATentativaNaoDerrubaOLogin() throws Exception {
         var servico = org.mockito.Mockito.mock(LoginTentativasService.class);
         org.mockito.Mockito.doThrow(new org.springframework.dao.DataAccessResourceFailureException("banco"))
-                .when(servico).registrarFalha(org.mockito.ArgumentMatchers.any());
+                .when(servico).registrarFalhaEContar(org.mockito.ArgumentMatchers.any());
         MockHttpServletResponse resposta = new MockHttpServletResponse();
 
         new LoginFailureHandler(servico).onAuthenticationFailure(new MockHttpServletRequest("POST", "/login"),
                 resposta, new BadCredentialsException("x"));
 
         assertThat(resposta.getRedirectedUrl()).isEqualTo("/login?erro=credenciais");
+    }
+
+    @Test
+    void identificadorSemContaAtivaEhBloqueadoNaMemoriaComoAContaReal() throws Exception {
+        var servico = org.mockito.Mockito.mock(LoginTentativasService.class); // devolve false: nenhuma conta contada
+        var handler = new LoginFailureHandler(servico, new LimiteDeTentativasEmMemoria());
+        MockHttpServletRequest pedido = new MockHttpServletRequest("POST", "/login");
+        pedido.setParameter("identificador", "ninguem@exemplo.com");
+
+        for (int tentativa = 1; tentativa <= 5; tentativa++) {
+            MockHttpServletResponse resposta = new MockHttpServletResponse();
+            handler.onAuthenticationFailure(pedido, resposta, new BadCredentialsException("x"));
+            assertThat(resposta.getRedirectedUrl()).as("tentativa %d", tentativa).isEqualTo("/login?erro=credenciais");
+        }
+        MockHttpServletResponse sexta = new MockHttpServletResponse();
+        handler.onAuthenticationFailure(pedido, sexta, new BadCredentialsException("x"));
+
+        assertThat(sexta.getRedirectedUrl()).isEqualTo("/login?erro=bloqueada");
     }
 }

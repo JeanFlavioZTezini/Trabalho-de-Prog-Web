@@ -62,4 +62,37 @@ class LimiteDeSolicitacoesTest {
 
         assertThat(limite.registrar("maria@exemplo.com", INICIO.plusSeconds(1))).isZero();
     }
+
+    @Test
+    void chavesVencidasSaoVarridasQuandoOMapaPassaDoMaximo() {
+        for (int i = 0; i < 1500; i++) {
+            assertThat(limite.registrar("inventado" + i + "@exemplo.com", INICIO)).isZero();
+        }
+        assertThat(limite.quantidadeDeChaves()).isEqualTo(1500);
+
+        // Duas horas depois, um pedido novo varre as 1500 chaves antigas e fica só ele.
+        assertThat(limite.registrar("maria@exemplo.com", INICIO.plus(Duration.ofHours(2)))).isZero();
+        assertThat(limite.quantidadeDeChaves()).isEqualTo(1);
+    }
+
+    @Test
+    void aVarreduraNaoApagaOLimiteDeChaveRecente() {
+        Instant agora = INICIO.plus(Duration.ofHours(2));
+        assertThat(limite.registrar("maria@exemplo.com", agora)).isZero();
+        for (int i = 0; i < 1500; i++) {
+            limite.registrar("inventado" + i + "@exemplo.com", INICIO);
+        }
+
+        // A varredura roda, mas o pedido de 20 s atrás continua valendo.
+        assertThat(limite.registrar("maria@exemplo.com", agora.plusSeconds(20))).isEqualTo(40);
+    }
+
+    @Test
+    void chaveLongaEhCortadaEm150Caracteres() {
+        String longa = "a".repeat(400);
+        assertThat(limite.registrar(longa, INICIO)).isZero();
+
+        // Mesmos 150 primeiros caracteres = mesma chave: o segundo pedido espera o intervalo.
+        assertThat(limite.registrar("a".repeat(150) + "b", INICIO.plusSeconds(1))).isEqualTo(59);
+    }
 }

@@ -6,6 +6,8 @@
 <body>
 <div id="pagina" class="pagina-texto">
 
+    <nav th:replace="~{fragments/componentes :: migalhasAdmin('Categorias', null, null)}"></nav>
+
     <h1>Categorias</h1>
 
     <p class="alerta alerta--sucesso" role="status" th:if="${sucesso != null}" th:text="${sucesso}"></p>
@@ -15,9 +17,12 @@
     <p>A hierarquia aceita até 2 níveis (categoria e subcategoria). Categoria inativa some do menu e dos
         filtros, junto com as suas subcategorias.</p>
 
-    <p th:if="${#lists.isEmpty(linhas)}">Nenhuma categoria cadastrada.</p>
+    <div class="estado-vazio" th:if="${#lists.isEmpty(linhas)}">
+        <p>Nenhuma categoria cadastrada.</p>
+    </div>
 
-    <table class="tabela-admin" th:unless="${#lists.isEmpty(linhas)}">
+    <div class="tabela-rolavel" role="region" aria-label="Lista de categorias" tabindex="0" th:unless="${#lists.isEmpty(linhas)}">
+    <table class="tabela-admin">
         <thead>
             <tr>
                 <th scope="col">Nome</th>
@@ -28,16 +33,27 @@
         </thead>
         <tbody>
             <tr th:each="c : ${linhas}">
-                <td th:style="|padding-left: ${c.nivel * 1.5 + 0.5}rem|" th:text="${c.nome}">Nome</td>
-                <td th:text="${c.ordem}">0</td>
-                <td th:text="${c.ativa} ? 'Ativa' : 'Inativa'">Ativa</td>
+                <td th:class="|nivel nivel-${c.nivel}|" th:text="${c.nome}">Nome</td>
+                <td class="num" th:text="${c.ordem}">0</td>
                 <td>
-                    <a th:href="@{/admin/categorias/{id}/editar(id=${c.id})}">Editar</a>
-                    <a th:href="@{/admin/categorias/{id}/excluir(id=${c.id})}">Excluir</a>
+                    <span class="selo selo--sucesso" th:if="${c.ativa}">Ativa</span>
+                    <span class="selo selo--neutro" th:unless="${c.ativa}">Inativa</span>
+                </td>
+                <td class="acoes-icone">
+                    <a class="acao-icone" th:href="@{/admin/categorias/{id}/editar(id=${c.id})}" th:title="|Editar ${c.nome}|">
+                        <svg th:replace="~{fragments/componentes :: iconeEditar}"></svg>
+                        <span class="visually-hidden" th:text="|Editar ${c.nome}|">Editar</span>
+                    </a>
+                    <a class="acao-icone acao-icone--perigo" th:href="@{/admin/categorias/{id}/excluir(id=${c.id})}"
+                       th:title="|Excluir ${c.nome}|">
+                        <svg th:replace="~{fragments/componentes :: iconeExcluir}"></svg>
+                        <span class="visually-hidden" th:text="|Excluir ${c.nome}|">Excluir</span>
+                    </a>
                 </td>
             </tr>
         </tbody>
     </table>
+    </div>
 
 </div>
 </body>

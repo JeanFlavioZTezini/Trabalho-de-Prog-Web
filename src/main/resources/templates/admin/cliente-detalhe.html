@@ -6,6 +6,8 @@
 <body>
 <div id="pagina" class="pagina-texto">
 
+    <nav th:replace="~{fragments/componentes :: migalhasAdmin('Clientes', '/admin/clientes', ${cliente.nome})}"></nav>
+
     <h1 th:text="${cliente.nome}">Nome do cliente</h1>
 
     <p class="pagina-texto__intro">Consulta somente leitura, registrada na auditoria.</p>
@@ -24,7 +26,7 @@
             <dt>Celular</dt>
             <dd th:text="${cliente.celularFormatado != null} ? |${cliente.celularFormatado} (${cliente.celularConfirmado ? 'confirmado' : 'não confirmado'})| : 'Não informado'">(11) 98765-4321 (confirmado)</dd>
             <dt>Status da conta</dt>
-            <dd th:text="${cliente.statusRotulo}">Ativa</dd>
+            <dd><span th:replace="~{fragments/componentes :: situacaoConta(${cliente.status}, ${cliente.statusRotulo})}"></span></dd>
             <dt>Cadastro em</dt>
             <dd th:text="${#temporals.format(cliente.criadoEm, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</dd>
         </dl>
@@ -32,7 +34,9 @@
 
     <section class="conta__secao" aria-labelledby="titulo-pedidos">
         <h2 id="titulo-pedidos">Pedidos recentes</h2>
-        <p th:if="${#lists.isEmpty(cliente.pedidosRecentes)}">Nenhum pedido ainda.</p>
+        <div class="estado-vazio" th:if="${#lists.isEmpty(cliente.pedidosRecentes)}">
+            <p>Nenhum pedido ainda.</p>
+        </div>
         <div class="tabela-rolavel" role="region" aria-label="Pedidos recentes do cliente" tabindex="0"
              th:unless="${#lists.isEmpty(cliente.pedidosRecentes)}">
             <table class="tabela-admin">
@@ -40,15 +44,15 @@
                     <tr>
                         <th scope="col">Pedido</th>
                         <th scope="col">Data</th>
-                        <th scope="col">Total</th>
-                        <th scope="col">Status</th>
+                        <th scope="col" class="num">Total</th>
+                        <th scope="col">Situação</th>
                     </tr>
                 </thead>
                 <tbody>
                     <tr th:each="p : ${cliente.pedidosRecentes}">
-                        <td th:text="${p.id}">1</td>
+                        <td><a th:href="@{/admin/pedidos/{id}(id=${p.id})}" th:text="|Pedido nº ${p.id}|">Pedido nº 1</a></td>
                         <td th:text="${#temporals.format(p.criadoEm, 'dd/MM/yyyy HH:mm')}">01/01/2026 10:00</td>
-                        <td th:text="${#numbers.formatCurrency(p.total)}">R$ 10,00</td>
+                        <td class="num" th:text="${#numbers.formatCurrency(p.total)}">R$ 10,00</td>
                         <td th:text="${p.statusRotulo}">Pagamento aprovado</td>
                     </tr>
                 </tbody>
@@ -56,7 +60,6 @@
         </div>
     </section>
 
-    <p><a th:href="@{/admin/clientes}">Voltar à lista</a></p>
 
 </div>
 </body>

@@ -6,14 +6,16 @@
 <body>
 <div id="pagina" class="pagina-texto">
 
+    <nav th:replace="~{fragments/componentes :: migalhasAdmin('Clientes', null, null)}"></nav>
+
     <h1>Clientes</h1>
 
     <p class="pagina-texto__intro">Consulta somente leitura. Cada consulta fica registrada na auditoria.</p>
 
-    <form th:action="@{/admin/clientes}" method="get">
+    <form class="filtros" th:action="@{/admin/clientes}" method="get">
         <div class="campo">
             <label for="q">Buscar por nome, CPF ou e-mail</label>
-            <input type="search" id="q" name="q" th:value="${q}">
+            <span class="campo-busca"><svg th:replace="~{fragments/componentes :: iconeBusca}"></svg><input type="search" id="q" name="q" th:value="${q}"></span>
         </div>
         <div class="campo">
             <label for="status">Status</label>
@@ -36,16 +38,20 @@
         </div>
         <p id="erro-filtro" class="alerta alerta--erro" role="alert" th:if="${erroFiltro != null}"
            th:text="${erroFiltro}">A data inicial não pode ser depois da data final.</p>
-        <button type="submit" class="btn-primario">Filtrar</button>
-        <a th:href="@{/admin/clientes}">Limpar filtros</a>
+        <div class="filtros__acoes">
+            <button type="submit" class="btn-primario">Filtrar</button>
+            <a class="btn-secundario" th:href="@{/admin/clientes}">Limpar filtros</a>
+        </div>
     </form>
 
     <p th:if="${erroFiltro == null}">
-        <a th:href="@{/admin/clientes/exportar.csv(q=${q}, status=${status}, de=${de}, ate=${ate})}">Exportar CSV
+        <a class="btn-secundario" th:href="@{/admin/clientes/exportar.csv(q=${q}, status=${status}, de=${de}, ate=${ate})}">Exportar CSV
             <span class="visually-hidden">dos clientes filtrados (dados pessoais mascarados)</span></a>
     </p>
 
-    <p th:if="${pagina.empty}">Nenhum cliente encontrado.</p>
+    <div class="estado-vazio" th:if="${pagina.empty}">
+        <p>Nenhum cliente encontrado.</p>
+    </div>
 
     <div class="tabela-rolavel" role="region" aria-label="Lista de clientes" tabindex="0" th:unless="${pagina.empty}">
         <table class="tabela-admin">
@@ -56,7 +62,7 @@
                     <th scope="col">E-mail</th>
                     <th scope="col">Status</th>
                     <th scope="col">Cadastro</th>
-                    <th scope="col">Detalhes</th>
+                    <th scope="col"><span class="visually-hidden">Ações</span></th>
                 </tr>
             </thead>
             <tbody>
@@ -64,26 +70,26 @@
                     <td th:text="${c.nome}">Nome</td>
                     <td th:text="${c.cpfMascarado}">***.000.000-**</td>
                     <td th:text="${c.email}">email@exemplo.com</td>
-                    <td th:text="${c.statusRotulo}">Ativa</td>
+                    <td><span th:replace="~{fragments/componentes :: situacaoConta(${c.status}, ${c.statusRotulo})}"></span></td>
                     <td th:text="${#temporals.format(c.criadoEm, 'dd/MM/yyyy')}">01/01/2026</td>
-                    <td>
-                        <a th:href="@{/admin/clientes/{id}(id=${c.id})}">Ver<span class="visually-hidden"
-                           th:text="| ${c.nome}|"> cliente</span></a>
+                    <td class="acoes-icone">
+                        <a class="acao-icone" th:href="@{/admin/clientes/{id}(id=${c.id})}" th:title="|Ver ${c.nome}|">
+                            <svg th:replace="~{fragments/componentes :: iconeVer}"></svg>
+                            <span class="visually-hidden" th:text="|Ver ${c.nome}|">Ver cliente</span>
+                        </a>
                     </td>
                 </tr>
             </tbody>
         </table>
     </div>
 
-    <p th:if="${pagina.totalPages > 1}">
+    <nav class="paginacao" aria-label="Paginação de clientes" th:if="${pagina.totalPages > 1}">
         <a th:if="${pagina.hasPrevious()}"
            th:href="@{/admin/clientes(q=${q}, status=${status}, de=${de}, ate=${ate}, pagina=${pagina.number - 1})}">Anterior</a>
         <span th:text="|Página ${pagina.number + 1} de ${pagina.totalPages}|">Página 1 de 1</span>
         <a th:if="${pagina.hasNext()}"
            th:href="@{/admin/clientes(q=${q}, status=${status}, de=${de}, ate=${ate}, pagina=${pagina.number + 1})}">Próxima</a>
-    </p>
-
-    <p><a th:href="@{/admin}">Voltar ao painel</a></p>
+    </nav>
 
 </div>
 </body>

@@ -5,52 +5,67 @@
 </head>
 <body>
 <div id="pagina" class="pagina-texto">
-    <p><a th:href="@{/admin/pedidos}">Voltar à lista de pedidos</a></p>
+    <nav th:replace="~{fragments/componentes :: migalhasAdmin('Pedidos', '/admin/pedidos', ${'Pedido nº ' + pedido.id})}"></nav>
     <h1 th:text="|Pedido nº ${pedido.id}|">Pedido nº 1001</h1>
     <p class="alerta alerta--sucesso" role="status" th:if="${sucesso}" th:text="${sucesso}">Atualizado.</p>
     <p class="alerta alerta--erro" role="alert" th:if="${erro}" th:text="${erro}">Não foi possível concluir.</p>
 
-    <p><strong>Status atual:</strong> <span th:text="${pedido.status.rotulo}">Aguardando pagamento</span></p>
-    <p><strong>Data do pedido:</strong> <span th:text="${pedido.criadoEmFormatado}">01/01/2026 às 12:00</span></p>
-    <p><strong>Modalidade:</strong> <span th:text="${pedido.tipoEntrega.name() == 'RETIRADA' ? 'Retirada na loja' : 'Entrega'}">Entrega</span></p>
-    <p><strong>Cliente:</strong> <span th:text="${pedido.cliente}">Nome do cliente</span> (<span th:text="${pedido.email}">cliente@exemplo.com</span>)</p>
-    <p><strong>Local/endereço registrado no pedido:</strong> <span th:text="${pedido.local}">Endereço</span></p>
+    <dl class="conta__dados">
+        <dt>Situação</dt>
+        <dd><span th:replace="~{fragments/componentes :: situacao(${pedido.status})}"></span></dd>
+        <dt>Data do pedido</dt>
+        <dd th:text="${pedido.criadoEmFormatado}">01/01/2026 às 12:00</dd>
+        <dt>Modalidade</dt>
+        <dd th:text="${pedido.tipoEntrega.name() == 'RETIRADA' ? 'Retirada na loja' : 'Entrega'}">Entrega</dd>
+        <dt>Cliente</dt>
+        <dd><span th:text="${pedido.cliente}">Nome do cliente</span> (<span th:text="${pedido.email}">cliente@exemplo.com</span>)</dd>
+        <dt>Local ou endereço registrado</dt>
+        <dd th:text="${pedido.local}">Endereço</dd>
+    </dl>
 
     <section aria-labelledby="itens-titulo">
         <h2 id="itens-titulo">Itens do pedido</h2>
         <div class="tabela-rolavel" role="region" aria-label="Itens do pedido" tabindex="0" th:if="${!#lists.isEmpty(pedido.itens)}">
             <table class="tabela-admin">
-                <thead><tr><th scope="col">Produto</th><th scope="col">Apresentação</th><th scope="col">SKU</th><th scope="col">Quantidade</th><th scope="col">Preço</th><th scope="col">Subtotal</th><th scope="col">Receita</th></tr></thead>
+                <thead><tr><th scope="col">Produto</th><th scope="col">Apresentação</th><th scope="col">SKU</th><th scope="col" class="num">Quantidade</th><th scope="col" class="num">Preço</th><th scope="col" class="num">Subtotal</th><th scope="col">Receita</th></tr></thead>
                 <tbody>
                 <tr th:each="i : ${pedido.itens}">
                     <td th:text="${i.nome}">Produto</td>
                     <td th:text="${i.apresentacao}">Apresentação</td>
                     <td th:text="${i.sku}">SKU</td>
-                    <td th:text="${i.quantidade}">1</td>
-                    <td th:text="|R$ ${#numbers.formatDecimal(i.precoUnitario, 1, 'POINT', 2, 'COMMA')}|">R$ 0,00</td>
-                    <td th:text="|R$ ${#numbers.formatDecimal(i.subtotal, 1, 'POINT', 2, 'COMMA')}|">R$ 0,00</td>
+                    <td class="num" th:text="${i.quantidade}">1</td>
+                    <td class="num" th:text="${#numbers.formatCurrency(i.precoUnitario)}">R$ 0,00</td>
+                    <td class="num" th:text="${#numbers.formatCurrency(i.subtotal)}">R$ 0,00</td>
                     <td th:text="${i.exigeReceita ? 'Sim' : 'Não'}">Não</td>
                 </tr>
                 </tbody>
             </table>
         </div>
-        <p><strong>Subtotal:</strong> <span th:text="|R$ ${#numbers.formatDecimal(pedido.subtotal, 1, 'POINT', 2, 'COMMA')}|">R$ 0,00</span> ·
-            <strong>Frete:</strong> <span th:text="|R$ ${#numbers.formatDecimal(pedido.frete, 1, 'POINT', 2, 'COMMA')}|">R$ 0,00</span> ·
-            <strong>Total:</strong> <span th:text="|R$ ${#numbers.formatDecimal(pedido.total, 1, 'POINT', 2, 'COMMA')}|">R$ 0,00</span></p>
+        <dl class="checkout-totais">
+            <dt>Subtotal</dt><dd th:text="${#numbers.formatCurrency(pedido.subtotal)}">R$ 0,00</dd>
+            <dt>Frete</dt><dd th:text="${#numbers.formatCurrency(pedido.frete)}">R$ 0,00</dd>
+            <dt>Total</dt><dd class="checkout-totais__total" th:text="${#numbers.formatCurrency(pedido.total)}">R$ 0,00</dd>
+        </dl>
     </section>
 
     <section aria-labelledby="pagamentos-titulo">
         <h2 id="pagamentos-titulo">Pagamentos</h2>
         <p th:if="${#lists.isEmpty(pedido.pagamentos)}">Nenhuma tentativa de pagamento registrada.</p>
-        <ul th:unless="${#lists.isEmpty(pedido.pagamentos)}">
-            <li th:each="p : ${pedido.pagamentos}">
-                <span th:text="${p.metodo}">Cartão de crédito</span> —
-                <span th:text="${p.status == 'APROVADO' ? 'Aprovado' : (p.status == 'PENDENTE' ? 'Pendente' : (p.status == 'RECUSADO' ? 'Recusado' : 'Expirado'))}">Aprovado</span> —
-                <span th:text="|R$ ${#numbers.formatDecimal(p.valor, 1, 'POINT', 2, 'COMMA')}|">R$ 0,00</span>
-                <span th:if="${p.cartaoMascarado != null}" th:text="| — ${p.cartaoMascarado}|"> — Visa final 1234</span>
-                <span th:text="| — ${p.criadoEm}|"> — horário</span>
-            </li>
-        </ul>
+        <div class="tabela-rolavel" role="region" aria-label="Pagamentos do pedido" tabindex="0"
+             th:unless="${#lists.isEmpty(pedido.pagamentos)}">
+            <table class="tabela-admin">
+                <thead><tr><th scope="col">Forma</th><th scope="col">Situação</th><th scope="col" class="num">Valor</th><th scope="col">Cartão</th><th scope="col">Quando</th></tr></thead>
+                <tbody>
+                <tr th:each="p : ${pedido.pagamentos}">
+                    <td th:text="${p.metodo}">Cartão de crédito</td>
+                    <td th:text="${p.status == 'APROVADO' ? 'Aprovado' : (p.status == 'PENDENTE' ? 'Pendente' : (p.status == 'RECUSADO' ? 'Recusado' : 'Expirado'))}">Aprovado</td>
+                    <td class="num" th:text="${#numbers.formatCurrency(p.valor)}">R$ 0,00</td>
+                    <td th:text="${p.cartaoMascarado} ?: '—'">Visa final 1234</td>
+                    <td th:text="${p.criadoEm}">horário</td>
+                </tr>
+                </tbody>
+            </table>
+        </div>
         <p class="alerta alerta--erro" role="status" th:if="${pedido.estornoPendente}">
             Estorno pendente de processamento pelo gateway. O sistema ainda não recebeu confirmação de estorno.
         </p>
@@ -67,8 +82,10 @@
             <form th:action="@{/admin/pedidos/{id}/conferencia-receita(id=${pedido.id})}" method="post">
                 <input type="hidden" name="versao" th:value="${pedido.versao}">
                 <div class="campo">
-                    <input type="checkbox" id="confirmado" name="confirmado" value="true" required>
-                    <label for="confirmado">Confirmo que conferi presencialmente a receita física correspondente a este pedido.</label>
+                    <label class="campo__marcador" for="confirmado">
+                        <input type="checkbox" id="confirmado" name="confirmado" value="true" required>
+                        Confirmo que conferi presencialmente a receita física correspondente a este pedido.
+                    </label>
                 </div>
                 <button type="submit" class="btn-primario">Registrar conferência presencial</button>
             </form>
@@ -81,28 +98,27 @@
     <section aria-labelledby="historico-titulo">
         <h2 id="historico-titulo">Linha do tempo</h2>
         <p th:if="${#lists.isEmpty(pedido.historico)}">Nenhuma mudança de status registrada.</p>
-        <ol th:unless="${#lists.isEmpty(pedido.historico)}">
-            <li th:each="e : ${pedido.historico}">
-                <strong th:text="${e.anterior == null ? 'Criação' : e.anterior.rotulo}">Origem</strong>
-                <span aria-hidden="true"> → </span>
-                <strong th:text="${e.status.rotulo}">Destino</strong>
-                — <span th:text="${e.criadoEm}">01/01/2026 às 12:00</span>
-                — por <span th:text="${e.autor}">Sistema</span>
-                <p th:if="${e.observacao != null and !e.observacao.isBlank()}" th:text="${e.observacao}">Observação</p>
+        <ol class="linha-do-tempo" th:unless="${#lists.isEmpty(pedido.historico)}">
+            <li th:each="e, estado : ${pedido.historico}" th:classappend="${estado.last} ? 'linha-do-tempo__atual'">
+                <span th:replace="~{fragments/componentes :: situacao(${e.status})}"></span>
+                <span th:text="${e.anterior == null ? 'Criação do pedido' : 'Antes: ' + e.anterior.rotulo}">Criação</span>
+                <span th:text="|${e.criadoEm}, por ${e.autor}|">01/01/2026 às 12:00, por Sistema</span>
+                <span th:if="${e.observacao != null and !e.observacao.isBlank()}" th:text="|Observação: ${e.observacao}|">Observação</span>
             </li>
         </ol>
     </section>
 
     <section aria-labelledby="atualizar-titulo" th:if="${!#lists.isEmpty(pedido.proximosStatus)}">
-        <h2 id="atualizar-titulo">Atualizar status</h2>
+        <h2 id="atualizar-titulo">Atualizar situação</h2>
         <form th:action="@{/admin/pedidos/{id}/status(id=${pedido.id})}" method="post">
             <input type="hidden" name="versao" th:value="${pedido.versao}">
             <div class="campo">
-                <label for="novoStatus">Próximo status permitido</label>
-                <select id="novoStatus" name="novoStatus" required>
+                <label for="novoStatus">Próxima situação permitida</label>
+                <select id="novoStatus" name="novoStatus" required aria-describedby="novoStatus-ajuda">
                     <option value="">Selecione</option>
                     <option th:each="s : ${pedido.proximosStatus}" th:value="${s.name()}" th:text="${s.rotulo}">Próximo status</option>
                 </select>
+                <p class="campo__ajuda" id="novoStatus-ajuda">Pedidos cancelados ou entregues são estados finais. A aprovação de pagamento não pode ser feita manualmente.</p>
             </div>
             <div class="campo">
                 <label for="observacao">Observação (opcional)</label>
@@ -110,12 +126,10 @@
             </div>
             <button type="submit" class="btn-primario">Salvar mudança</button>
         </form>
-        <p>Pedidos cancelados ou entregues são estados finais. A aprovação de pagamento não pode ser feita manualmente.</p>
     </section>
     <p th:if="${#lists.isEmpty(pedido.proximosStatus) and pedido.status.name() != 'CANCELADO' and pedido.status.name() != 'ENTREGUE'}">
         Nenhuma mudança está disponível até que a condição de conferência presencial seja atendida.
     </p>
-    <p><a th:href="@{/admin}">Voltar ao painel</a></p>
 </div>
 </body>
 </html>

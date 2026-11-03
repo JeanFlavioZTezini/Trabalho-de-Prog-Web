@@ -6,6 +6,8 @@
 <body>
 <div id="pagina" class="pagina-texto pagina-texto--estreita">
 
+    <nav th:replace="~{fragments/componentes :: migalhasAdmin('Categorias', '/admin/categorias', ${categoriaId == null ? 'Nova' : 'Editar'})}"></nav>
+
     <h1 th:text="${categoriaId == null} ? 'Nova categoria' : 'Editar categoria'">Categoria</h1>
 
     <p class="alerta alerta--erro" role="alert" th:if="${erro != null}" th:text="${erro}"></p>
@@ -26,12 +28,12 @@
 
         <div class="campo">
             <label for="paiId">Categoria pai</label>
-            <select id="paiId" th:field="*{paiId}">
+            <select id="paiId" th:field="*{paiId}" aria-describedby="paiId-ajuda">
                 <option value="">(nenhuma - categoria raiz)</option>
                 <option th:each="o : ${opcoesPai}" th:value="${o.id}"
                         th:text="${o.nome + (o.ativa ? '' : ' (inativa)')}">Pai</option>
             </select>
-            <p>Limite de 2 níveis: só categorias raiz podem ser pai.</p>
+            <p class="campo__ajuda" id="paiId-ajuda">Limite de 2 níveis: só categorias raiz podem ser pai.</p>
         </div>
 
         <div class="campo">
@@ -44,8 +46,10 @@
             <label class="campo__marcador"><input type="checkbox" th:field="*{ativa}"> Ativa</label>
         </div>
 
-        <button type="submit" class="btn-primario">Salvar</button>
-        <a th:href="@{/admin/categorias}">Cancelar</a>
+        <div class="acoes">
+            <button type="submit" class="btn-primario">Salvar</button>
+            <a class="btn-secundario" th:href="@{/admin/categorias}">Cancelar</a>
+        </div>
     </form>
 
 </div>

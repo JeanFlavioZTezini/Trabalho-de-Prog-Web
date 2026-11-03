@@ -170,6 +170,10 @@ summary:focus-visible,
 
 .usuario__saudacao { display: block; }
 
+/* Ícone de pessoa ao lado do convite (visitante) e do "Olá" (logado). */
+.usuario--visitante { display: flex; align-items: center; gap: var(--esp-2); }
+.usuario .icone { flex-shrink: 0; }
+
 .usuario a {
   color: var(--cor-branco);
   font-weight: 600;
@@ -182,52 +186,87 @@ summary:focus-visible,
 .usuario a:focus-visible { outline-color: var(--cor-branco); }
 
 .usuario--logado {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.75rem;
-  padding-top: 0.625rem;
-  padding-bottom: 0.625rem;
-  font-size: 0.875rem;
+  position: relative;
+  padding: 0;
 }
 
-/* Só o nome corta com reticências; o contêiner não pode ter overflow:hidden
-   senão o contorno de foco do botão "Sair" seria cortado. */
+/* "Olá, Nome ▾": abre o menu da conta. Só o nome corta com reticências. */
+.usuario__toggle {
+  display: flex;
+  align-items: center;
+  gap: var(--esp-2);
+  width: 100%;
+  min-height: 2.75rem;
+  padding: var(--esp-2) var(--esp-4);
+  border: none;
+  border-radius: var(--raio);
+  background: none;
+  color: var(--cor-branco);
+  font: inherit;
+  font-size: var(--fonte-sm);
+  text-align: left;
+  cursor: pointer;
+}
+.usuario__toggle:focus-visible { outline-color: var(--cor-branco); }
 .usuario__nome {
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+.usuario__seta { flex-shrink: 0; transition: transform 0.15s; }
+.usuario__toggle[aria-expanded="true"] .usuario__seta { transform: rotate(180deg); }
 
+/* Menu da conta: caixa branca sob o botão. Sem JS (sem a classe .js) ele fica sempre visível, dentro da caixa azul. */
+.usuario__menu {
+  padding: 0 var(--esp-4) var(--esp-3);
+}
+.js .usuario__menu {
+  display: none;
+  position: absolute;
+  top: calc(100% + var(--esp-1));
+  right: 0;
+  z-index: var(--z-topo);
+  min-width: 13rem;
+  padding: var(--esp-2) 0;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  background-color: var(--cor-branco);
+  box-shadow: var(--sombra-2);
+}
+.js .usuario__menu.is-open { display: block; }
+
+.usuario__atalhos { display: flex; flex-direction: column; }
 .usuario__sair { margin: 0; }
 
-.usuario__atalhos {
-  display: flex;
-  flex: 1 1 100%;
-  flex-wrap: wrap;
-  gap: 0.25rem 0.75rem;
-}
-
-.usuario__atalhos a { white-space: normal; }
-
-/* Botão "Sair" com cara de link (o logout é POST, então precisa ser <button>). */
+/* Itens do menu: link e o botão Sair (o logout é POST, então precisa ser <button>) com a mesma cara. */
+.usuario__menu a,
 .usuario__sair-botao {
-  padding: 0;
+  display: block;
+  width: 100%;
+  padding: var(--esp-2) 0;
   border: none;
   background: none;
   color: var(--cor-branco);
   font: inherit;
   font-weight: 600;
+  text-align: left;
   text-decoration: underline;
   text-underline-offset: 2px;
   cursor: pointer;
 }
-
-.usuario__sair-botao:hover { text-decoration-thickness: 2px; }
-
-/* O contorno padrão é azul, invisível sobre o fundo azul da área do usuário. */
 .usuario__sair-botao:focus-visible { outline-color: var(--cor-branco); }
+.js .usuario__menu a,
+.js .usuario__sair-botao {
+  padding: var(--esp-2) var(--esp-4);
+  color: var(--cor-texto);
+  text-decoration: none;
+}
+.js .usuario__menu a:hover,
+.js .usuario__sair-botao:hover { background-color: var(--cor-azul-suave); color: var(--cor-azul); }
+.js .usuario__menu a:focus-visible,
+.js .usuario__sair-botao:focus-visible { outline-color: var(--cor-azul); outline-offset: -2px; }
+.js .usuario__sair { margin-top: var(--esp-1); padding-top: var(--esp-1); border-top: 1px solid var(--cor-borda); }
 
 /* Menu de categorias */
 .menu-categorias {
@@ -340,6 +379,8 @@ summary:focus-visible,
   cursor: pointer;
 }
 
+.menu-categorias__rotulo { display: inline-flex; align-items: center; gap: var(--esp-2); }
+
 .menu-categorias__toggle::after {
   content: "";
   width: 0.5rem;
@@ -374,6 +415,10 @@ summary:focus-visible,
 }
 
 .beneficio {
+  /* Centraliza ícone e texto na altura do cartão, mesmo quando o vizinho quebra em duas linhas. */
+  display: flex;
+  align-items: center;
+  gap: var(--esp-3);
   background-color: var(--cor-azul-suave);
   border-radius: var(--raio);
   padding: 1.125rem;
@@ -381,6 +426,31 @@ summary:focus-visible,
   font-weight: 600;
   color: var(--cor-azul);
 }
+
+.beneficio__icone {
+  display: inline-flex;
+  flex-shrink: 0;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  border-radius: 50%;
+  background-color: var(--cor-branco);
+  color: var(--cor-azul);
+}
+
+/* Campo de busca dos filtros (catálogo e admin): lupa desenhada dentro do campo, como na busca do cabeçalho. */
+.campo-busca { position: relative; display: block; }
+.campo-busca .icone {
+  position: absolute;
+  top: 50%;
+  left: var(--esp-3);
+  transform: translateY(-50%);
+  color: var(--cor-texto-hint);
+  pointer-events: none;
+}
+/* .campo .campo-busca: vence o padding das regras gerais de .campo input. */
+.campo .campo-busca input { width: 100%; padding-left: 2.5rem; }
 
 /* ---------- Seções de produto ---------- */
 .secao { margin-bottom: 2.5rem; }
@@ -472,7 +542,7 @@ summary:focus-visible,
 .filtros .alerta,
 .filtros-pedidos .alerta { grid-column: 1 / -1; margin: 0; }
 .filtros__acoes,
-.filtros-pedidos__acoes { display: flex; align-items: center; flex-wrap: wrap; gap: var(--esp-4); }
+.filtros-pedidos__acoes { display: flex; grid-column: 1 / -1; align-items: center; flex-wrap: wrap; gap: var(--esp-4); }
 
 .paginacao {
   display: flex;
@@ -895,13 +965,42 @@ a.btn-perigo { background-color: var(--cor-erro); color: var(--cor-branco); }
 .tabela-admin .num,
 .carrinho__tabela .num { text-align: right; white-space: nowrap; }
 
+/* Árvore de categorias (admin): recuo pelo nível, 0 = raiz. Sem style inline nas telas. */
+.nivel-1 { --nivel: 1; }
+.nivel-2 { --nivel: 2; }
+.nivel-3 { --nivel: 3; }
+.tabela-admin td.nivel { padding-left: calc(var(--esp-3) + var(--nivel, 0) * 1.5rem); }
+.campo__marcador.nivel { padding-left: calc(var(--nivel, 0) * 1.5rem); }
+
 /* ---------- Migalhas (breadcrumb) ---------- */
 /* <nav class="migalhas" aria-label="Você está em"><ol><li><a>…</a></li>…<li aria-current="page">…</li></ol></nav> */
 .migalhas { margin: var(--esp-4) 0 0; font-size: var(--fonte-sm); }
 .migalhas ol { display: flex; flex-wrap: wrap; margin: 0; padding: 0; list-style: none; }
-.migalhas li { display: flex; align-items: center; color: var(--cor-texto-hint); }
+/* margin: 0 anula a margem de .pagina-texto li, que desalinhava as migalhas do "‹ Voltar". */
+.migalhas li { display: flex; align-items: center; margin: 0; color: var(--cor-texto-hint); }
 .migalhas li + li::before { content: "›"; margin: 0 var(--esp-2); color: var(--cor-texto-hint); }
 .migalhas [aria-current="page"] { color: var(--cor-texto); font-weight: 600; }
+
+/* Topo das telas do admin: Voltar ao lado das migalhas. No celular some, porque o aparelho já tem o voltar. */
+/* Respiro abaixo para o título não grudar na linha de navegação. */
+.topo-admin { display: flex; flex-wrap: wrap; align-items: center; gap: var(--esp-2) var(--esp-3); margin: 0 0 var(--esp-6); }
+.topo-admin .migalhas { margin: 0; }
+/* "‹ Voltar │ Painel › …": link compacto, do tamanho das migalhas, separado por um traço. */
+.topo-admin__voltar {
+  display: none;
+  align-items: center;
+  gap: var(--esp-1);
+  padding-right: var(--esp-3);
+  border-right: 1px solid var(--cor-borda-controle);
+  color: var(--cor-azul);
+  font-size: var(--fonte-sm);
+  font-weight: 600;
+  text-decoration: none;
+}
+.topo-admin__voltar:hover { text-decoration: underline; }
+@media (min-width: 768px) {
+  .topo-admin__voltar { display: inline-flex; }
+}
 
 /* ---------- Etapas (checkout) ---------- */
 /* <ol class="etapas"><li><span class="etapas__numero">1</span> <span class="etapas__rotulo">Carrinho</span></li>…
@@ -916,7 +1015,7 @@ a.btn-perigo { background-color: var(--cor-erro); color: var(--cor-branco); }
   font-size: var(--fonte-sm);
   counter-reset: none;
 }
-.etapas li { display: flex; align-items: center; gap: var(--esp-2); color: var(--cor-texto-hint); }
+.etapas li { display: flex; align-items: center; gap: var(--esp-2); margin: 0; color: var(--cor-texto-hint); }
 .etapas__numero {
   display: inline-flex;
   align-items: center;
@@ -1026,7 +1125,9 @@ a.btn-perigo { background-color: var(--cor-erro); color: var(--cor-branco); }
   /* Linha 1: logo + usuário. Linha 2: busca sozinha. */
   .logo    { order: 1; font-size: 1.125rem; }
   .usuario { order: 2; margin-left: auto; padding: 0.375rem 0.75rem; font-size: 0.75rem; }
-  .usuario--logado { padding-top: 0.625rem; padding-bottom: 0.625rem; font-size: 0.8125rem; }
+  /* Logado: o próprio botão "Olá, Nome" dá a altura; sem o padding da caixa de visitante. */
+  .usuario--logado { padding: 0; }
+  .usuario__toggle { padding: var(--esp-2) var(--esp-3); }
   .busca   { order: 3; flex: 1 1 100%; }
 
   .banner { padding: 2rem 1.25rem; }
@@ -1089,7 +1190,6 @@ a.btn-perigo { background-color: var(--cor-erro); color: var(--cor-branco); }
 }
 
 /* ---------- F-11: endereços ---------- */
-.usuario--logado { max-width: 32rem; }
 
 /* Tabela larga: rola dentro da própria caixa, a página não rola para o lado. O "position: relative" mantém
    dentro da caixa os textos escondidos (.visually-hidden), que são absolutos e senão escapam do corte.
@@ -1146,6 +1246,9 @@ input[type="date"]:focus-within {
 
 /* F-10: carrinho */
 .topo__carrinho {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--esp-1);
   color: var(--cor-azul);
   font-weight: 600;
   text-underline-offset: 2px;
@@ -1167,8 +1270,17 @@ input[type="date"]:focus-within {
   padding-bottom: 2rem;
 }
 
+/* A marca é subtítulo do nome: sem as margens padrão entre o h1 e o parágrafo. */
+.produto-detalhe h1 { margin-bottom: var(--esp-1); }
+.produto-detalhe__marca { margin-top: 0; }
+
 .produto-detalhe__marca,
 .produto-detalhe__ean { color: var(--cor-texto-hint); }
+/* Formas de pagamento: uma linha discreta abaixo do botão de compra. */
+/* margin-top: auto prende a linha no pé da caixa, alinhada ao fim da foto. */
+.produto-detalhe__compra > .produto-detalhe__pagamento { margin-top: auto; padding-top: var(--esp-4); border-top: 1px solid var(--cor-borda); }
+.produto-detalhe__pagamento { color: var(--cor-texto-hint); font-size: var(--fonte-sm); }
+.produto-detalhe__pagamento strong { color: var(--cor-texto); }
 .produto-detalhe__ean { font-size: var(--fonte-sm); }
 
 .produto-detalhe__grade {
@@ -1197,17 +1309,21 @@ input[type="date"]:focus-within {
 }
 
 .produto-detalhe__compra {
-  display: grid;
-  align-content: start;
-  gap: 1rem;
-  padding: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: var(--esp-4);
+  padding: var(--esp-5);
   border: 1px solid var(--cor-borda);
   border-radius: var(--raio);
   background-color: var(--cor-branco);
 }
 
-/* Na grade da coluna de compra o selo esticaria na largura toda. */
-.produto-detalhe__compra .selo { justify-self: start; margin: 0; }
+/* Um espaçamento só (o gap): sem as margens próprias dos parágrafos e formulários. */
+.produto-detalhe__compra > * { margin: 0; }
+/* O EAN é detalhe do preço: fica colado nele. */
+.produto-detalhe__compra > .produto-detalhe__preco + .produto-detalhe__ean { margin-top: calc(var(--esp-3) * -1); }
+/* Na coluna o selo esticaria na largura toda. */
+.produto-detalhe__compra .selo { align-self: flex-start; }
 
 .produto-detalhe__selecao .campo,
 .produto-detalhe__adicionar .campo { margin-bottom: 0; }
@@ -1266,6 +1382,10 @@ input[type="date"]:focus-within {
 
 @media (min-width: 768px) {
   .produto-detalhe__grade { grid-template-columns: minmax(0, 1.4fr) minmax(18rem, 0.8fr); }
+  /* Uma foto só: a coluna da imagem não impõe altura (contain: size) e acompanha a caixa de compra,
+     então as duas terminam na mesma linha. Com várias fotos, a galeria segue em grade. */
+  .produto-detalhe__galeria:has(> img:only-child) { display: block; contain: size; min-height: 22rem; }
+  .produto-detalhe__galeria:has(> img:only-child) img { height: 100%; max-height: none; aspect-ratio: auto; }
   .produto-detalhe__dados { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 

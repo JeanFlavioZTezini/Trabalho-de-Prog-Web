@@ -250,6 +250,35 @@ class AdminProdutoTelaTest {
     }
 
     @Test
+    @DisplayName("excluir pede confirmação numa janela da página (data-confirmar), não no confirm() do navegador")
+    void exclusaoConfirmadaNaPropriaPagina() throws Exception {
+        com.farmacia.farmaciaonline.model.Produto p = new com.farmacia.farmaciaonline.model.Produto();
+        p.setId(5L);
+        p.setNome("Dipirona");
+        when(service.buscar(any(), any(), any())).thenReturn(new PageImpl<>(List.of(p)));
+
+        String html = html("/admin/produtos");
+
+        assertThat(html).contains("data-confirmar=\"Excluir Dipirona? Se houver pedidos, ele será apenas inativado.\"")
+                .doesNotContain("onsubmit").doesNotContain("confirm(")
+                .contains("src=\"/js/confirmar.js\"");
+    }
+
+    @Test
+    @DisplayName("mensagens de sucesso e erro da lista viram toast (data-toast), e a página inclui o toast.js")
+    void mensagensViramToast() throws Exception {
+        when(service.buscar(any(), any(), any())).thenReturn(new PageImpl<>(List.of()));
+
+        String html = conteudo(mvc.perform(get("/admin/produtos").with(admin())
+                        .flashAttr("sucesso", "Produto salvo.").flashAttr("erro", "Não foi possível excluir."))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+
+        assertThat(html).contains("<p class=\"alerta alerta--sucesso\" role=\"status\" data-toast>Produto salvo.</p>")
+                .contains("<p class=\"alerta alerta--erro\" role=\"alert\" data-toast>Não foi possível excluir.</p>")
+                .contains("src=\"/js/toast.js\"");
+    }
+
+    @Test
     @DisplayName("a lista pagina por nome e desempata pelo id (nomes iguais não repetem nem pulam entre páginas)")
     void paginacaoDesempataPeloId() throws Exception {
         when(service.buscar(any(), any(), any())).thenReturn(new PageImpl<>(List.of()));

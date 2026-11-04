@@ -7,8 +7,8 @@
 <div id="pagina" class="pagina-texto">
     <nav th:replace="~{fragments/componentes :: migalhasAdmin('Pedidos', '/admin/pedidos', ${'Pedido nº ' + pedido.id})}"></nav>
     <h1 th:text="|Pedido nº ${pedido.id}|">Pedido nº 1001</h1>
-    <p class="alerta alerta--sucesso" role="status" th:if="${sucesso}" th:text="${sucesso}">Atualizado.</p>
-    <p class="alerta alerta--erro" role="alert" th:if="${erro}" th:text="${erro}">Não foi possível concluir.</p>
+    <p class="alerta alerta--sucesso" role="status" data-toast th:if="${sucesso}" th:text="${sucesso}">Atualizado.</p>
+    <p class="alerta alerta--erro" role="alert" data-toast th:if="${erro}" th:text="${erro}">Não foi possível concluir.</p>
 
     <dl class="conta__dados">
         <dt>Situação</dt>
@@ -130,6 +130,8 @@
     <p th:if="${#lists.isEmpty(pedido.proximosStatus) and pedido.status.name() != 'CANCELADO' and pedido.status.name() != 'ENTREGUE'}">
         Nenhuma mudança está disponível até que a condição de conferência presencial seja atendida.
     </p>
+
+    <script th:src="@{/js/toast.js}" defer></script>
 </div>
 </body>
 </html>

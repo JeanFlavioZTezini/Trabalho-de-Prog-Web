@@ -1613,9 +1613,66 @@ label.remover-foto {
   cursor: pointer;
 }
 .acao-icone:hover { background-color: var(--cor-azul-suave); }
-.acao-icone--perigo { color: var(--cor-erro); }
+/* A lixeira das categorias é um <a>: sem o "a." a regra ".pagina-texto a" a deixava azul. */
+.acao-icone--perigo,
+.pagina-texto a.acao-icone--perigo { color: var(--cor-erro); }
+.acao-icone--perigo:hover { background-color: var(--cor-erro-fundo); }
 
 /* F-20: login social simulado. */
 .login-social { margin-top: 1.5rem; padding-top: 1rem; border-top: 1px solid var(--cor-borda); }
 .login-social h2 { font-size: 1rem; }
 .login-social__botoes { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+/* Confirmação na própria página (confirmar.js): um <dialog> no lugar do confirm() do navegador. */
+.dialogo {
+  width: min(28rem, calc(100vw - 2rem));
+  padding: 1.5rem;
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio-lg);
+  background-color: var(--cor-branco);
+  color: var(--cor-texto);
+  box-shadow: var(--sombra-2);
+}
+.dialogo::backdrop { background-color: rgba(31, 41, 55, 0.5); }
+.dialogo__titulo { margin: 0 0 0.75rem; font-size: 1.25rem; }
+.dialogo p { margin: 0; }
+.dialogo__acoes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }
+
+/* Mensagens do admin como toast (toast.js): canto inferior direito, verde no sucesso e vermelho no erro. */
+.toasts {
+  position: fixed;
+  right: 1rem;
+  bottom: 1rem;
+  z-index: var(--z-painel);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  width: min(24rem, calc(100vw - 2rem));
+}
+.alerta.toast {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  margin: 0;
+  border: 0;
+  color: var(--cor-branco);
+  font-size: 0.9375rem;
+  box-shadow: var(--sombra-2);
+  animation: toast-entra 0.2s ease-out;
+}
+.alerta.toast--sucesso { background-color: var(--cor-sucesso); }
+.alerta.toast--erro { background-color: var(--cor-erro); }
+.toast__fechar {
+  flex: none;
+  margin-left: auto;
+  padding: 0 0.25rem;
+  border: 0;
+  background: none;
+  color: inherit;
+  font-size: 1.25rem;
+  line-height: 1;
+  cursor: pointer;
+}
+.toast__fechar:focus-visible { outline: 2px solid var(--cor-branco); outline-offset: 2px; }
+@keyframes toast-entra { from { opacity: 0; transform: translateY(0.5rem); } }
+@media (prefers-reduced-motion: reduce) { .alerta.toast { animation: none; } }

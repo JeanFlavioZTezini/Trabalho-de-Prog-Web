@@ -76,6 +76,8 @@ public class AdminPedidoController {
             redirect.addFlashAttribute("sucesso", "Status do pedido atualizado.");
         } catch (ConflitoPedidoException | AcaoPedidoInvalidaException e) {
             redirect.addFlashAttribute("erro", e.getMessage());
+            redirect.addFlashAttribute("observacao", observacao);
+            redirect.addFlashAttribute("novoStatusEscolhido", novoStatus.name());
         }
         return REDIRECT_DETALHE;
     }

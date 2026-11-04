@@ -110,6 +110,38 @@ class AdminProdutoTelaTest {
     }
 
     @Test
+    @DisplayName("interruptor de situação no topo: antes do nome, com rótulo, ajuda ligada e o estado atual em texto")
+    void interruptorDeSituacaoNoTopo() throws Exception {
+        ProdutoForm inativo = new ProdutoForm();
+        inativo.setAtivo(false);
+        when(service.formDe(1L)).thenReturn(inativo);
+
+        String html = html("/admin/produtos/1/editar");
+
+        assertThat(html.indexOf("id=\"ativo\"")).isPositive().isLessThan(html.indexOf("id=\"nome\""));
+        assertThat(html).contains("<legend>Situação do produto</legend>")
+                .contains("<label class=\"interruptor\" for=\"ativo\">")
+                .contains("Produto ativo (aparece no catálogo e pode ser comprado)")
+                .contains("id=\"ativo-ajuda\"").contains("<strong>Inativo</strong>");
+        Matcher campo = Pattern.compile("<input[^>]*id=\"ativo\"[^>]*>").matcher(html);
+        assertThat(campo.find()).isTrue();
+        assertThat(campo.group()).contains("role=\"switch\"").contains("aria-describedby=\"ativo-ajuda\"")
+                .doesNotContain("checked");
+        assertThat(ocorrencias(html, "id=\"ativo\"")).isEqualTo(1);
+    }
+
+    @Test
+    @DisplayName("salvar com o interruptor desligado grava ativo=false")
+    void salvarDesligadoGravaInativo() throws Exception {
+        mvc.perform(post("/admin/produtos/1").with(admin()).with(csrf())
+                .param("nome", "Produto").param("marca", "Marca").param("tarja", "SEM_TARJA").param("_ativo", "on"));
+
+        org.mockito.ArgumentCaptor<ProdutoForm> form = org.mockito.ArgumentCaptor.forClass(ProdutoForm.class);
+        org.mockito.Mockito.verify(service).salvar(org.mockito.ArgumentMatchers.eq(1L), form.capture(), any());
+        assertThat(form.getValue().isAtivo()).isFalse();
+    }
+
+    @Test
     @DisplayName("regra de negócio violada volta ao formulário com as mensagens no alerta de erro")
     void erroDeNegocioApareceNoAlerta() throws Exception {
         doThrow(new ProdutoException(List.of("Selecione ao menos uma categoria ativa.", "SKU já cadastrado.")))
@@ -183,7 +215,7 @@ class AdminProdutoTelaTest {
             }
         }
         assertThat(html).containsPattern("(?s)<label class=\"interruptor\" for=\"apr-ativa-0\">\\s*<input type=\"checkbox\" role=\"switch\"");
-        assertThat(html).containsPattern("<label class=\"interruptor\"><input type=\"checkbox\" role=\"switch\"[^>]*id=\"ativo\\d*\"")
+        assertThat(html).containsPattern("<label class=\"interruptor\" for=\"ativo\"><input type=\"checkbox\" role=\"switch\"[^>]*id=\"ativo\"")
                 .containsPattern("<label class=\"campo__marcador\"><input type=\"checkbox\"[^>]*id=\"exigeReceita\\d*\"");
     }
 

@@ -572,6 +572,12 @@ carrinho."), como o número do cabeçalho. Regras em `service/CarrinhoService`, 
 - **Revalidação a cada operação e a cada exibição:** produto ativo, apresentação ativa, estoque e limite por pedido.
   Passou do limite ou do estoque ao adicionar: o servidor ajusta e avisa. Item que ficou indisponível depois fica
   destacado, fora do total, e **bloqueia** o "Finalizar" até ser corrigido ou removido.
+- **Produto desativado ou excluído pela farmácia:** o item desativado continua no carrinho, fora do total, e o topo do
+  `/carrinho` lista "Estes itens não estão mais à venda". O produto apagado de vez (sem pedido) sai do carrinho em cascata
+  (`item_carrinho` com `ON DELETE CASCADE`); por isso o `ProdutoService#excluir` anota, depois do commit, os nomes por
+  carrinho em `service/AvisosDeItensRemovidos`, e o `/carrinho` mostra uma vez "Estes itens saíram do catálogo e foram
+  tirados do seu carrinho" (para conta e visitante). Testes: `ProdutoInativoNoCarrinhoIntegracaoTest` (desativar pelo
+  formulário, excluir com e sem pedido, com o item em carrinhos) e `AvisosDeItensRemovidosTest`.
 - **Login:** `security/MesclagemCarrinhoNoLogin` ouve o evento de login bem-sucedido (publicado antes do
   `LoginSuccessHandler`, que **não foi alterado**, para não conflitar com a F-18). Une por apresentação, soma
   respeitando limite e estoque, guarda os avisos na sessão (aparecem em `/carrinho`), apaga o carrinho do visitante e o
@@ -1017,7 +1023,13 @@ Fica sob `/admin/**` (só `ADMIN`: visitante vai para `/login`, cliente logado r
 - **Quem e quando:** `atualizado_por` (o administrador da sessão, nunca um campo do formulário) e `atualizado_em`.
 - **Exclusão:** produto com pedido (`item_pedido`) só é **inativado**, e o histórico fica intacto; sem pedido, é apagado de
   vez (imagens e apresentações primeiro, porque o mapeamento não tem cascade). Se surgir um vínculo no meio do caminho, a
-  tela pede para inativar. Produto inativado sai do catálogo (F-01/F-02).
+  tela pede para inativar. Produto inativado sai do catálogo (F-01/F-02); no carrinho de quem já o tinha, ver F-10.
+  A lixeira pede confirmação numa janela da própria página (`static/js/confirmar.js`: `<form data-confirmar="...">` abre
+  um `<dialog>`; o foco abre em "Cancelar" e Esc fecha), no lugar do `confirm()` do navegador.
+- **Situação do produto:** o interruptor "Produto ativo" fica no topo do formulário, com a situação atual em texto.
+- **Mensagens do admin:** sucesso e erro de produtos, categorias e pedidos aparecem como toast no canto da tela
+  (`static/js/toast.js`, alertas com `data-toast`), verde ou vermelho, que some em cerca de 6 segundos (pausa com o mouse
+  em cima ou o foco dentro) e tem "Fechar". Sem JavaScript, o alerta fica no topo, como antes.
 - **Fotos:** JPG, PNG ou WebP de até 2 MB, conferidas pela extensão, pelo tipo enviado **e** pelo conteúdo do arquivo. O nome
   gravado é um UUID (o nome enviado nunca vira caminho). Ficam em `app.uploads.dir` (padrão `uploads/`, fora do JAR) e são
   servidas em `/uploads/produtos/**` (rota pública, só leitura). A foto nova vale para todas as apresentações ou para uma
@@ -1045,8 +1057,9 @@ Limites assumidos de propósito neste trabalho acadêmico (não são defeitos a 
 - **Provedor social demo e e-mail verificado:** na tela do provedor simulado, quem marca "e-mail verificado" cria uma
   conta ATIVA com um e-mail que ninguém confirmou (desde que ainda não esteja cadastrado). Se o dono real recuperar a senha
   depois, a identidade social de quem criou a conta continua vinculada. A opção vem desmarcada; o fluxo real não muda.
-- **Contadores na memória:** o limite de recuperação (`LimiteDeSolicitacoes`) e o de tentativas para identificador sem conta
-  (`LimiteDeTentativasEmMemoria`) recomeçam quando a aplicação reinicia e não são compartilhados entre várias instâncias.
+- **Contadores na memória:** o limite de recuperação (`LimiteDeSolicitacoes`), o de tentativas para identificador sem conta
+  (`LimiteDeTentativasEmMemoria`) e o aviso de item excluído do carrinho (`AvisosDeItensRemovidos`) recomeçam quando a
+  aplicação reinicia e não são compartilhados entre várias instâncias: se reiniciar antes da visita, o aviso se perde.
 
 ## Como criar uma página nova
 

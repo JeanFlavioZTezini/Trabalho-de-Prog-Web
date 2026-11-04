@@ -766,6 +766,11 @@ summary:focus-visible,
   font-weight: 600;
 }
 
+/* Resultado da busca automática do CEP (cep.js); vazio não ocupa espaço. */
+.cep-status { margin: 0.25rem 0; font-size: 0.8125rem; color: var(--cor-sucesso); }
+.cep-status:empty { margin: 0; }
+.cep-status--erro { color: var(--cor-erro); font-weight: 600; }
+
 .campo input,
 .campo select,
 .campo textarea {

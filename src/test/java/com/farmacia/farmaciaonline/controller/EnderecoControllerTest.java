@@ -12,6 +12,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -367,6 +368,60 @@ class EnderecoControllerTest {
 
         assertThat(html).contains("Informe um CEP com 8 números");
         verify(consultaCep, never()).consultar(any());
+    }
+
+    @Test
+    void buscaAutomaticaDevolveOEnderecoEmJson() throws Exception {
+        when(consultaCep.consultar("79002336")).thenReturn(java.util.Optional.of(
+                new EnderecoCep("79002336", "Rua Quatorze de Julho", "Centro", "Campo Grande", "MS")));
+
+        mvc.perform(get("/enderecos/cep").param("cep", "79002-336").with(cliente(CLIENTE)))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.encontrado").value(true))
+                .andExpect(jsonPath("$.logradouro").value("Rua Quatorze de Julho"))
+                .andExpect(jsonPath("$.bairro").value("Centro"))
+                .andExpect(jsonPath("$.cidade").value("Campo Grande"))
+                .andExpect(jsonPath("$.uf").value("MS"))
+                .andExpect(jsonPath("$.mensagem").value("Endereço preenchido pelo CEP. Confira os dados e informe o número."));
+    }
+
+    @Test
+    void buscaAutomaticaDeCepGeralDaCidadePedeLogradouro() throws Exception {
+        when(consultaCep.consultar("79950000")).thenReturn(java.util.Optional.of(
+                new EnderecoCep("79950000", "", "", "Naviraí", "MS")));
+
+        mvc.perform(get("/enderecos/cep").param("cep", "79950000").with(cliente(CLIENTE)))
+                .andExpect(jsonPath("$.encontrado").value(true))
+                .andExpect(jsonPath("$.mensagem").value("CEP de Naviraí/MS. Preencha o logradouro, o número e o bairro."));
+    }
+
+    @Test
+    void buscaAutomaticaSemResultadoOuComFalhaPedePreenchimentoManual() throws Exception {
+        when(consultaCep.consultar("99999999")).thenThrow(new CepIndisponivelException("fora do ar"));
+
+        mvc.perform(get("/enderecos/cep").param("cep", "12345-678").with(cliente(CLIENTE)))
+                .andExpect(jsonPath("$.encontrado").value(false))
+                .andExpect(jsonPath("$.mensagem").value("CEP não localizado. Preencha o endereço à mão."));
+        mvc.perform(get("/enderecos/cep").param("cep", "99999-999").with(cliente(CLIENTE)))
+                .andExpect(jsonPath("$.encontrado").value(false))
+                .andExpect(jsonPath("$.mensagem").value("Não foi possível consultar o CEP agora. Preencha o endereço à mão."));
+        mvc.perform(get("/enderecos/cep").param("cep", "790").with(cliente(CLIENTE)))
+                .andExpect(jsonPath("$.encontrado").value(false));
+        verify(consultaCep, never()).consultar("790");
+    }
+
+    @Test
+    void buscaAutomaticaExigeLogin() throws Exception {
+        mvc.perform(get("/enderecos/cep").param("cep", "79002336")).andExpect(status().is3xxRedirection());
+        verify(consultaCep, never()).consultar(any());
+    }
+
+    @Test
+    void formularioLigaABuscaAutomatica() throws Exception {
+        String html = html(get("/enderecos/novo").with(cliente(CLIENTE)));
+
+        assertThat(html).contains("data-consulta=\"/enderecos/cep\"").contains("id=\"cep-status\" role=\"status\"")
+                .contains("/js/cep.js");
     }
 
     @Test

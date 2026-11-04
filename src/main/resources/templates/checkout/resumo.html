@@ -13,6 +13,10 @@
     <div class="alerta alerta--erro" role="alert" th:if="${erros != null}">
         <ul><li th:each="e : ${erros}" th:text="${e}">Erro</li></ul>
     </div>
+    <div class="alerta alerta--erro" th:if="${errosCartao != null}">
+        <p>Confira os dados do cartão: os campos com problema estão marcados abaixo. Por segurança, o número e o código
+           de segurança precisam ser digitados de novo.</p>
+    </div>
 
     <div class="alerta alerta--erro" role="alert" th:unless="${#lists.isEmpty(resumo.problemas)}">
         <p>Antes de confirmar, resolva:</p>
@@ -106,6 +110,7 @@
 
     <p class="pagina-texto__rodape-form"><a th:href="@{/checkout}">Alterar as escolhas</a></p>
 
+    <script th:src="@{/js/checkout-cartao.js}" defer></script>
 </div>
 </body>
 </html>

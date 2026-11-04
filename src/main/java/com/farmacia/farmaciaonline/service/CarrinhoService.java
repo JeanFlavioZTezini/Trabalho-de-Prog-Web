@@ -28,9 +28,14 @@ import lombok.RequiredArgsConstructor;
 @Service
 @RequiredArgsConstructor
 public class CarrinhoService {
+
+    /** Texto da linha de um item cujo produto ou apresentação foi desativado. */
+    public static final String PROBLEMA_INDISPONIVEL = "Este produto não está mais disponível. Remova-o para continuar.";
+
     private final CarrinhoRepository carrinhoRepository;
     private final ApresentacaoRepository apresentacaoRepository;
     private final UsuarioRepository usuarioRepository;
+    private final AvisosDeItensRemovidos avisosDeRemovidos;
 
     @Transactional(readOnly = true)
     public ResumoCarrinho resumo(DonoCarrinho dono) {
@@ -38,6 +43,15 @@ public class CarrinhoService {
             return ResumoCarrinho.vazio();
         }
         return buscar(dono).map(this::montarResumo).orElseGet(ResumoCarrinho::vazio);
+    }
+
+    /** Itens que saíram do carrinho porque o produto foi excluído; cada aviso aparece uma vez. */
+    @Transactional(readOnly = true)
+    public List<String> consumirAvisosDeRemocao(DonoCarrinho dono) {
+        if (dono == null) {
+            return List.of();
+        }
+        return buscar(dono).map(carrinho -> avisosDeRemovidos.consumir(carrinho.getId())).orElse(List.of());
     }
 
     /** Unidades no carrinho do dono (o número do cabeçalho). Sem carrinho ou sem dono, zero. */
@@ -294,7 +308,7 @@ public class CarrinhoService {
 
     private static String problemaDoItem(Apresentacao apresentacao, int quantidade) {
         if (!produtoAtivo(apresentacao) || !apresentacao.isAtiva()) {
-            return "Este produto não está mais disponível. Remova-o para continuar.";
+            return PROBLEMA_INDISPONIVEL;
         }
         int estoque = apresentacao.getEstoque();
         if (estoque <= 0) {

@@ -8,8 +8,8 @@
     <nav th:replace="~{fragments/componentes :: migalhasAdmin('Pedidos', null, null)}"></nav>
     <h1>Pedidos</h1>
     <p class="pagina-texto__intro">Consulte e atualize pedidos. Aprovação de pagamento é recebida exclusivamente pelo gateway.</p>
-    <p class="alerta alerta--sucesso" role="status" th:if="${sucesso}" th:text="${sucesso}">Atualizado.</p>
-    <p class="alerta alerta--erro" role="alert" th:if="${erro}" th:text="${erro}">Não foi possível concluir.</p>
+    <p class="alerta alerta--sucesso" role="status" data-toast th:if="${sucesso}" th:text="${sucesso}">Atualizado.</p>
+    <p class="alerta alerta--erro" role="alert" data-toast th:if="${erro}" th:text="${erro}">Não foi possível concluir.</p>
 
     <form class="filtros" th:action="@{/admin/pedidos}" method="get">
         <div class="campo">
@@ -86,6 +86,8 @@
         <span th:text="|Página ${pagina.number + 1} de ${pagina.totalPages}|">Página 1 de 1</span>
         <a th:if="${pagina.hasNext()}" th:href="@{/admin/pedidos(numero=${numero}, status=${status}, cliente=${cliente}, de=${de}, ate=${ate}, pagina=${pagina.number + 1})}">Próxima</a>
     </nav>
+
+    <script th:src="@{/js/toast.js}" defer></script>
 </div>
 </body>
 </html>

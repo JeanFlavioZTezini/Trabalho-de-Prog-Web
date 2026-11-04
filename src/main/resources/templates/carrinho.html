@@ -27,6 +27,21 @@
         </ul>
     </div>
 
+    <div class="alerta" role="status" th:if="${removidos != null}">
+        <p class="carrinho__aviso-titulo">Estes itens saíram do catálogo e foram tirados do seu carrinho:</p>
+        <ul>
+            <li th:each="nome : ${removidos}" th:text="${nome}">Produto</li>
+        </ul>
+    </div>
+
+    <div class="alerta" role="status" th:unless="${#lists.isEmpty(resumo.indisponiveis)}">
+        <p class="carrinho__aviso-titulo">Estes itens não estão mais à venda e ficaram fora do total:</p>
+        <ul>
+            <li th:each="nome : ${resumo.indisponiveis}" th:text="${nome}">Produto</li>
+        </ul>
+        <p>Remova-os para finalizar a compra.</p>
+    </div>
+
     <p class="alerta" role="status" th:if="${resumo.temPrecoAlterado}">
         O preço de algum item mudou desde que você o adicionou. O total abaixo já usa o preço atual.
     </p>

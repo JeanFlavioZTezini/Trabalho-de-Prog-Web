@@ -10,9 +10,9 @@
 
     <h1>Produtos</h1>
 
-    <p class="alerta alerta--sucesso" role="status" th:if="${sucesso != null}" th:text="${sucesso}"></p>
+    <p class="alerta alerta--sucesso" role="status" data-toast th:if="${sucesso != null}" th:text="${sucesso}"></p>
 
-    <p class="alerta alerta--erro" role="alert" th:if="${erro != null}" th:text="${erro}"></p>
+    <p class="alerta alerta--erro" role="alert" data-toast th:if="${erro != null}" th:text="${erro}"></p>
 
     <p><a class="btn-primario" th:href="@{/admin/produtos/novo}">Novo produto</a></p>
 
@@ -68,7 +68,7 @@
                             <span class="visually-hidden" th:text="|Editar ${p.nome}|">Editar</span>
                         </a>
                         <form th:action="@{/admin/produtos/{id}/excluir(id=${p.id})}" method="post"
-                              onsubmit="return confirm('Excluir este produto? Se houver pedidos, ele será apenas inativado.')">
+                              th:data-confirmar="|Excluir ${p.nome}? Se houver pedidos, ele será apenas inativado.|">
                             <button type="submit" class="acao-icone acao-icone--perigo" th:title="|Excluir ${p.nome}|">
                                 <svg th:replace="~{fragments/componentes :: iconeExcluir}"></svg>
                                 <span class="visually-hidden" th:text="|Excluir ${p.nome}|">Excluir</span>
@@ -88,6 +88,9 @@
            th:href="@{/admin/produtos(q=${q}, status=${status}, pagina=${pagina.number + 1})}">Próxima</a>
     </nav>
 
+
+    <script th:src="@{/js/confirmar.js}" defer></script>
+    <script th:src="@{/js/toast.js}" defer></script>
 </div>
 </body>
 </html>

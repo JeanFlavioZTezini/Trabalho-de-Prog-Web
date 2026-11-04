@@ -17,6 +17,19 @@
     <form th:action="${produtoId == null} ? @{/admin/produtos} : @{/admin/produtos/{id}(id=${produtoId})}"
           th:object="${produtoForm}" method="post" enctype="multipart/form-data">
 
+        <!--/* A situação vem primeiro: é o que o admin mais procura ao abrir um produto. */-->
+        <fieldset class="campo--grupo">
+            <legend>Situação do produto</legend>
+            <div class="campo">
+                <label class="interruptor" for="ativo"><input type="checkbox" role="switch" id="ativo" th:field="*{ativo}"
+                       aria-describedby="ativo-ajuda"><span class="interruptor__trilho" aria-hidden="true"></span>
+                    Produto ativo (aparece no catálogo e pode ser comprado)</label>
+                <p class="campo__ajuda" id="ativo-ajuda">Situação atual:
+                    <strong th:text="${produtoForm.ativo} ? 'Ativo' : 'Inativo'">Ativo</strong>. Desativado, o produto some
+                    do catálogo e da busca; quem já tem no carrinho vê como indisponível; os pedidos antigos não mudam.</p>
+            </div>
+        </fieldset>
+
         <fieldset class="campo--grupo">
         <legend>Dados do produto</legend>
         <div class="campo">
@@ -98,9 +111,6 @@
             <textarea id="publicoAlvo" th:field="*{publicoAlvo}" rows="2"></textarea>
         </div>
         </fieldset>
-        <div class="campo">
-            <label class="interruptor"><input type="checkbox" role="switch" th:field="*{ativo}"><span class="interruptor__trilho" aria-hidden="true"></span> Ativo</label>
-        </div>
 
         <fieldset class="campo--grupo">
             <legend>Categorias (ao menos uma ativa)</legend>

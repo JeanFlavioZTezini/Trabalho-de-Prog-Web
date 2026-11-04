@@ -10,8 +10,8 @@
 
     <h1>Categorias</h1>
 
-    <p class="alerta alerta--sucesso" role="status" th:if="${sucesso != null}" th:text="${sucesso}"></p>
-    <p class="alerta alerta--erro" role="alert" th:if="${erro != null}" th:text="${erro}"></p>
+    <p class="alerta alerta--sucesso" role="status" data-toast th:if="${sucesso != null}" th:text="${sucesso}"></p>
+    <p class="alerta alerta--erro" role="alert" data-toast th:if="${erro != null}" th:text="${erro}"></p>
 
     <p><a class="btn-primario" th:href="@{/admin/categorias/nova}">Nova categoria</a></p>
     <p>A hierarquia aceita até 2 níveis (categoria e subcategoria). Categoria inativa some do menu e dos
@@ -55,6 +55,8 @@
     </table>
     </div>
 
+
+    <script th:src="@{/js/toast.js}" defer></script>
 </div>
 </body>
 </html>

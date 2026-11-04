@@ -49,7 +49,12 @@ public class CarrinhoController {
 
     @GetMapping
     public String ver(HttpServletRequest request, Authentication autenticacao, Model model) {
-        model.addAttribute("resumo", carrinhoService.resumo(donoParaLeitura(request, autenticacao)));
+        DonoCarrinho dono = donoParaLeitura(request, autenticacao);
+        model.addAttribute("resumo", carrinhoService.resumo(dono));
+        List<String> removidos = carrinhoService.consumirAvisosDeRemocao(dono);
+        if (!removidos.isEmpty()) {
+            model.addAttribute("removidos", removidos);
+        }
 
         List<String> avisosDoLogin = consumirAvisosDoLogin(request);
         if (!avisosDoLogin.isEmpty()) {

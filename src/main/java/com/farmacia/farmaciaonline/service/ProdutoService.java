@@ -30,6 +30,7 @@ import com.farmacia.farmaciaonline.model.ProdutoForm;
 import com.farmacia.farmaciaonline.model.ProdutoForm.ApresentacaoForm;
 import com.farmacia.farmaciaonline.model.enums.Tarja;
 import com.farmacia.farmaciaonline.repository.ApresentacaoRepository;
+import com.farmacia.farmaciaonline.repository.CarrinhoRepository;
 import com.farmacia.farmaciaonline.repository.CategoriaRepository;
 import com.farmacia.farmaciaonline.repository.ImagemProdutoRepository;
 import com.farmacia.farmaciaonline.repository.ItemPedidoRepository;
@@ -53,6 +54,8 @@ public class ProdutoService {
     private final ImagemProdutoRepository imagemRepository;
     private final ItemPedidoRepository itemPedidoRepository;
     private final ArmazenamentoImagem armazenamento;
+    private final CarrinhoRepository carrinhoRepository;
+    private final AvisosDeItensRemovidos avisosDeRemovidos;
 
     /** @param status "ativos", "inativos" ou qualquer outro valor para todos */
     @Transactional(readOnly = true)
@@ -209,6 +212,8 @@ public class ProdutoService {
             return false;
         }
         List<ImagemProduto> imagens = imagemRepository.findByProdutoIdOrderByOrdemAsc(id);
+        List<Object[]> nosCarrinhos = carrinhoRepository.itensDoProduto(id);
+        String nome = produto.getNome();
         try {
             imagemRepository.deleteAll(imagens);
             apresentacaoRepository.deleteAll(apresentacaoRepository.findByProdutoId(id));
@@ -219,7 +224,21 @@ public class ProdutoService {
             throw new ProdutoException("Não foi possível excluir: o produto está vinculado a outros registros (por exemplo, um pedido feito agora). Inative-o.");
         }
         apagarArquivosAposCommit(imagens);
+        avisarCarrinhosAposCommit(nome, nosCarrinhos);
         return true;
+    }
+
+    /** O banco tira o item dos carrinhos em cascata; o aviso só é anotado se a exclusão for mesmo gravada. */
+    private void avisarCarrinhosAposCommit(String nomeProduto, List<Object[]> nosCarrinhos) {
+        if (nosCarrinhos.isEmpty()) {
+            return;
+        }
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                nosCarrinhos.forEach(item -> avisosDeRemovidos.anotar((Long) item[0], nomeProduto + " " + item[1]));
+            }
+        });
     }
 
     private Apresentacao validarImagens(Produto produto, ProdutoForm form, List<MultipartFile> novas,

@@ -1,5 +1,6 @@
 package com.farmacia.farmaciaonline.repository;
 
+import java.util.List;
 import java.util.Optional;
 import java.util.UUID;
 
@@ -26,4 +27,8 @@ public interface CarrinhoRepository extends JpaRepository<Carrinho, Long> {
     @Lock(LockModeType.PESSIMISTIC_WRITE)
     @Query("select c from Carrinho c where c.usuario.id = :usuarioId")
     Optional<Carrinho> buscarTravadoPorUsuario(@Param("usuarioId") Long usuarioId);
+
+    /** Pares (id do carrinho, descrição da apresentação) dos itens de um produto: usados para avisar antes de excluí-lo. */
+    @Query("select i.carrinho.id, i.apresentacao.descricao from ItemCarrinho i where i.apresentacao.produto.id = :produtoId")
+    List<Object[]> itensDoProduto(@Param("produtoId") Long produtoId);
 }

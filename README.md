@@ -1036,7 +1036,9 @@ Fica sob `/admin/**` (só `ADMIN`: visitante vai para `/login`, cliente logado r
   delas, e a apresentação escolhida precisa ser do mesmo produto. Sem foto, o site usa a imagem padrão. Se a gravação
   falha, os arquivos já escritos são apagados; arquivos de fotos removidas são apagados só depois do commit.
 - **Limites de envio:** `spring.servlet.multipart.max-file-size=10MB` e `max-request-size=30MB` (o limite de 2 MB por
-  foto é do serviço); passar do limite do servidor mostra a mensagem de `UploadExcedidoAdvice`.
+  foto é do serviço); passar do limite do servidor mostra a mensagem de `UploadExcedidoAdvice`. Cada campo do multipart
+  conta como uma parte, e o formulário passa de 50 (o padrão do Spring Boot 3.5) só com as linhas de apresentação; por
+  isso `server.tomcat.max-part-count=120` (`FormularioProdutoServidorRealTest` envia 60 partes pelo Tomcat de verdade).
 - **Bula:** a URL é opcional, mas, se informada, precisa ser um endereço `http://` ou `https://` válido (mesma regra da página do produto, F-02, que continua tratando URL inválida já gravada).
 - **Testes:** `ProdutoServiceIntegracaoTest` (PostgreSQL real: cadastro aparece no catálogo e grava o administrador,
   violações com mensagem, estoque alterado por compra não é sobrescrito, foto vinculada à apresentação certa, exclusão

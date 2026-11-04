@@ -1,7 +1,10 @@
 package com.farmacia.farmaciaonline.model;
 
+import java.io.Serializable;
 import java.util.ArrayList;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import lombok.Getter;
 import lombok.Setter;
@@ -26,26 +29,43 @@ public class CartaoForm {
     }
 
     public List<String> errosDeFormato() {
-        List<String> erros = new ArrayList<>();
+        return new ArrayList<>(errosPorCampo().values());
+    }
+
+    /** Mesmas regras de {@link #errosDeFormato()}, com o nome do campo, para a mensagem aparecer embaixo dele. */
+    public Map<String, String> errosPorCampo() {
+        Map<String, String> erros = new LinkedHashMap<>();
         if (isUsaCartaoSalvo()) {
             // Com cartão salvo só o código de segurança é digitado de novo; o resto fica com o gateway.
             if (cvv == null || !cvv.trim().matches("\\d{3,4}")) {
-                erros.add("Informe o código de segurança do cartão, com 3 ou 4 números.");
+                erros.put("cvv", "Informe o código de segurança do cartão, com 3 ou 4 números.");
             }
             return erros;
         }
         if (numeroCartao == null || !numeroCartao.replaceAll("[\\s-]", "").matches("\\d{13,19}")) {
-            erros.add("Informe o número do cartão, com 13 a 19 números.");
+            erros.put("numeroCartao", "Informe o número do cartão, com 13 a 19 números.");
         }
         if (validadeCartao == null || !validadeCartao.trim().matches("(0[1-9]|1[0-2])/\\d{2}")) {
-            erros.add("Informe a validade do cartão no formato MM/AA.");
+            erros.put("validadeCartao", "Informe a validade do cartão no formato MM/AA.");
         }
         if (cvv == null || !cvv.trim().matches("\\d{3,4}")) {
-            erros.add("Informe o código de segurança do cartão, com 3 ou 4 números.");
+            erros.put("cvv", "Informe o código de segurança do cartão, com 3 ou 4 números.");
         }
         if (nomeImpresso == null || nomeImpresso.isBlank()) {
-            erros.add("Informe o nome impresso no cartão.");
+            erros.put("nomeImpresso", "Informe o nome impresso no cartão.");
         }
         return erros;
+    }
+
+    /**
+     * O que volta preenchido quando a tela reabre (erro de formato ou pagamento recusado). Número e código de
+     * segurança ficam de fora de propósito: não passam pela sessão nem voltam no HTML.
+     */
+    public CartaoDigitado digitado() {
+        return new CartaoDigitado(cartaoSalvoId, validadeCartao, nomeImpresso, salvarCartao);
+    }
+
+    public record CartaoDigitado(Long cartaoSalvoId, String validadeCartao, String nomeImpresso, boolean salvarCartao)
+            implements Serializable {
     }
 }

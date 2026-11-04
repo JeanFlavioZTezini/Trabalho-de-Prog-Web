@@ -15,15 +15,15 @@
 
     <form th:action="@{/recuperar-senha}" method="post">
         <div th:replace="~{fragments/campo :: campo(id='identificador', nome='identificador', rotulo='E-mail ou CPF',
-                 tipo='text', ajuda='Se usar o CPF, pode digitar com ou sem pontos e traço.', erro=null, autocomplete='username')}"></div>
+                 tipo='text', ajuda='Se usar o CPF, pode digitar com ou sem pontos e traço.', erro=null, autocomplete='username', valor=${identificador})}"></div>
 
         <fieldset class="campo campo--opcoes">
             <legend>Prefiro receber o código por</legend>
             <label for="canal-email">
-                <input type="radio" id="canal-email" name="canal" value="EMAIL" checked> E-mail
+                <input type="radio" id="canal-email" name="canal" value="EMAIL" th:checked="${canal != 'SMS'}"> E-mail
             </label>
             <label for="canal-sms">
-                <input type="radio" id="canal-sms" name="canal" value="SMS"> SMS
+                <input type="radio" id="canal-sms" name="canal" value="SMS" th:checked="${canal == 'SMS'}"> SMS
             </label>
         </fieldset>
 

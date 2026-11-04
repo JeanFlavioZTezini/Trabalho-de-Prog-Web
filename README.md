@@ -490,6 +490,11 @@ depois de aceitar o preço novo.
 - **Resumo por e-mail** (`ResumoPedidoService`): sai pelo `EnvioDeMensagem` depois do commit, quando o pedido é aceito
   (aprovado, ou Pix/boleto gerado). Se falhar, o pedido continua valendo e a tela oferece **Reenviar resumo**. No perfil demo,
   a mensagem aparece em `/caixa-demo`.
+- **Erro no cartão não apaga o formulário:** `checkout-cartao.js` confere o formato antes de enviar (mesmas regras do
+  `CartaoForm`), com a mensagem embaixo de cada campo. Se o erro vier do servidor (formato ou recusa do gateway), voltam a
+  validade, o nome impresso, o cartão salvo escolhido, "salvar cartão", a forma de pagamento e as parcelas
+  (`CartaoForm#digitado`, por flash). Número e código de segurança nunca voltam: não passam pela sessão nem pelo HTML.
+  Teste: `CheckoutMantemDadosIntegracaoTest`.
 
 **Para testar na demonstração:** os cartões fictícios `4111 1111 1111 1111` (aprova) e `4111 1111 1111 1210` (recusa), com
 validade futura. Pix e boleto mostram os botões **Simular pagamento aprovado** e **Simular expiração**. Como o gateway demo
@@ -690,6 +695,7 @@ carrinho."), como o número do cabeçalho. Regras em `service/CarrinhoService`, 
 - **Contrato de envio para outras issues:** `mensagem/EnvioDeMensagem.enviar(canal, destino, assunto, texto)`, com a
   variante `enviar(..., contaId)` que diz de qual conta é a mensagem (o adaptador demo usa para a caixa; a variante
   padrão chama a de quatro argumentos). Os códigos e o resumo do pedido (F-14) usam a variante com a conta.
+- **Retomada recusada** volta com o e-mail ou CPF digitado; a senha volta vazia.
 - **Testes:** `ContatoMascaradoTest` e `DemoEnvioAdapterTest` (unitários), `CaixaDemoControllerTest` e
   `CaixaDemoSemPerfilTest` (camada web, com e sem o perfil demo), `CodigoVerificacaoServiceIntegracaoTest` (expirado,
   incorreto, uso repetido, finalidade errada, bloqueio por tentativas, reenvio, limite por hora, código fora do log e
@@ -719,6 +725,7 @@ carrinho."), como o número do cabeçalho. Regras em `service/CarrinhoService`, 
   A `SecurityConfig` registra as sessões (`SessionRegistry`, sem limite de sessões por pessoa); a sessão encerrada é
   barrada na próxima requisição e vai para `/login?expirada`. A troca de senha logado (F-12) e o login (F-18) podem
   reaproveitar o mesmo `RevogacaoDeSessoes`.
+- **"Aguarde" para pedir outro código** volta com o e-mail ou CPF e o canal escolhidos.
 - **Testes:** `LimiteDeSolicitacoesTest` e `RevogacaoDeSessoesTest` (unitários), `RecuperacaoSenhaServiceIntegracaoTest`
   (elegibilidade, resposta igual, limite por identificador, canal confirmado, troca, reutilização, administrador, conta
   social, sessões) e `RecuperacaoSenhaIntegracaoTest` (fluxo completo, código reutilizado, mensagens iguais, aguardar,
@@ -881,6 +888,9 @@ Completa o login da F1-09 sem trocar o que já existia (CPF ou e-mail, conta pen
 - **Volta ao carrinho/checkout:** quem se cadastrou a partir do carrinho ou do checkout (`retornoCadastro` na sessão, F-04) volta para
   lá depois do login; qualquer outro valor é ignorado e apagado. Admin vai sempre para `/admin`.
 - **Rotas:** conferidas contra `ROTAS_PUBLICAS`; `/conta/**`, `/enderecos/**`, `/checkout/**` e `/admin/**` exigem login.
+- **Erro mantém o e-mail ou CPF:** o `LoginFailureHandler` guarda o que foi digitado na sessão (nunca na URL) e o
+  `LoginController` devolve no campo uma única vez; a senha volta vazia (`FormulariosMantemDadosIntegracaoTest`, que
+  também cobre a retomada da F-05 e a recuperação da F-06).
 - **Testes:** `LoginProtecaoIntegracaoTest` (contagem, bloqueio vencido, campos proibidos, sessão, logout, cache, rotas, retorno),
   acréscimos em `LoginIntegracaoTest`, `LoginHandlersTest` e `RecuperacaoSenhaServiceIntegracaoTest`. Os testes que mexem no cliente do seed
   limpam falhas e bloqueio antes e depois, porque o banco é compartilhado entre as classes.

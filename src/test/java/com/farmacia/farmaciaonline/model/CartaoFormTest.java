@@ -53,6 +53,30 @@ class CartaoFormTest {
     }
 
     @Test
+    @DisplayName("cada erro fica ligado ao seu campo; com cartão salvo, só o código de segurança")
+    void errosPorCampo() {
+        assertThat(new CartaoForm().errosPorCampo())
+                .containsOnlyKeys("numeroCartao", "validadeCartao", "cvv", "nomeImpresso");
+        CartaoForm salvo = new CartaoForm();
+        salvo.setCartaoSalvoId(9L);
+        assertThat(salvo.errosPorCampo()).containsOnlyKeys("cvv");
+    }
+
+    @Test
+    @DisplayName("o que volta para a tela não leva o número nem o código de segurança")
+    void digitadoSemNumeroNemCodigo() {
+        CartaoForm form = valido();
+        form.setSalvarCartao(true);
+
+        CartaoForm.CartaoDigitado digitado = form.digitado();
+
+        assertThat(digitado.validadeCartao()).isEqualTo("12/30");
+        assertThat(digitado.nomeImpresso()).isEqualTo("CLIENTE TESTE");
+        assertThat(digitado.salvarCartao()).isTrue();
+        assertThat(digitado.toString()).doesNotContain("4111").doesNotContain("123");
+    }
+
+    @Test
     @DisplayName("o toString do formulário não mostra o número nem o código de segurança")
     void toStringNaoVazaDados() {
         assertThat(valido().toString()).doesNotContain("4111").doesNotContain("123");

@@ -31,6 +31,8 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
     public static final String MOTIVO_PENDENTE = "pendente";
     public static final String MOTIVO_BLOQUEADA = "bloqueada";
     public static final String MOTIVO_INDISPONIVEL = "indisponivel";
+    /** O que foi digitado em "E-mail ou CPF", para a tela de login voltar preenchida (na sessão, nunca na URL). */
+    public static final String SESSAO_IDENTIFICADOR = "loginIdentificador";
 
     private static final Logger log = LoggerFactory.getLogger(LoginFailureHandler.class);
     private final RedirectStrategy redirectStrategy = new DefaultRedirectStrategy();
@@ -70,6 +72,9 @@ public class LoginFailureHandler implements AuthenticationFailureHandler {
                 // A falha de persistência não deve ser convertida em uma tentativa de senha incorreta.
                 log.warn("Não foi possível registrar a tentativa de login", erro);
             }
+        }
+        if (identificador != null && identificador.length() <= 255) {
+            request.getSession().setAttribute(SESSAO_IDENTIFICADOR, identificador);
         }
         redirectStrategy.sendRedirect(request, response, "/login?erro=" + motivo);
     }

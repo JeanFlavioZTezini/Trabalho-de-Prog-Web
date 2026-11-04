@@ -11,7 +11,8 @@
     <input type="hidden" name="parcelas" th:if="${form.parcelas != null}" th:value="${form.parcelas}">
 </th:block>
 
-<!--/* Dados do cartão: nunca vêm preenchidos, o servidor não os guarda. */-->
+<!--/* Dados do cartão: depois de um erro, voltam só a validade, o nome, o cartão escolhido e "salvar cartão"
+     (cartaoDigitado). Número e código de segurança nunca voltam: o servidor não os guarda. */-->
 <th:block th:fragment="cartao(demo)">
     <p class="alerta" role="note" th:if="${demo}">
         Pagamento de demonstração: nenhum valor é cobrado. Use um número fictício:
@@ -22,20 +23,23 @@
     <fieldset class="campo--opcoes" th:if="${cartoesSalvos != null and !#lists.isEmpty(cartoesSalvos)}">
         <legend>Qual cartão usar?</legend>
         <label th:each="c, estado : ${cartoesSalvos}">
-            <input type="radio" name="cartaoSalvoId" th:value="${c.id}" th:checked="${estado.first}">
+            <input type="radio" name="cartaoSalvoId" th:value="${c.id}"
+                   th:checked="${cartaoDigitado == null ? estado.first : cartaoDigitado.cartaoSalvoId() == c.id}">
             <span th:text="|${c.bandeira} final ${c.ultimos4} (validade ${#numbers.formatInteger(c.validadeMes, 2)}/${c.validadeAno})|">VISA final 1111</span>
         </label>
         <label>
-            <input type="radio" name="cartaoSalvoId" value="">
+            <input type="radio" name="cartaoSalvoId" value=""
+                   th:checked="${cartaoDigitado != null and cartaoDigitado.cartaoSalvoId() == null}">
             Outro cartão (preencha os dados abaixo)
         </label>
     </fieldset>
-    <div th:replace="~{fragments/campo :: campo(id='numeroCartao', nome='numeroCartao', rotulo='Número do cartão', tipo='text', ajuda=null, erro=null, autocomplete='cc-number')}"></div>
-    <div th:replace="~{fragments/campo :: campo(id='validadeCartao', nome='validadeCartao', rotulo='Validade', tipo='text', ajuda='Mês e ano, ex.: 12/30', erro=null, autocomplete='cc-exp')}"></div>
-    <div th:replace="~{fragments/campo :: campo(id='cvv', nome='cvv', rotulo='Código de segurança', tipo='text', ajuda='Pedido sempre, também para cartão salvo.', erro=null, autocomplete='cc-csc')}"></div>
-    <div th:replace="~{fragments/campo :: campo(id='nomeImpresso', nome='nomeImpresso', rotulo='Nome impresso no cartão', tipo='text', ajuda=null, erro=null, autocomplete='cc-name')}"></div>
+    <div th:replace="~{fragments/campo :: campo(id='numeroCartao', nome='numeroCartao', rotulo='Número do cartão', tipo='text', ajuda=null, erro=${errosCartao?.get('numeroCartao')}, autocomplete='cc-number', valor=null)}"></div>
+    <div th:replace="~{fragments/campo :: campo(id='validadeCartao', nome='validadeCartao', rotulo='Validade', tipo='text', ajuda='Mês e ano, ex.: 12/30', erro=${errosCartao?.get('validadeCartao')}, autocomplete='cc-exp', valor=${cartaoDigitado?.validadeCartao()})}"></div>
+    <div th:replace="~{fragments/campo :: campo(id='cvv', nome='cvv', rotulo='Código de segurança', tipo='text', ajuda='Pedido sempre, também para cartão salvo.', erro=${errosCartao?.get('cvv')}, autocomplete='cc-csc', valor=null)}"></div>
+    <div th:replace="~{fragments/campo :: campo(id='nomeImpresso', nome='nomeImpresso', rotulo='Nome impresso no cartão', tipo='text', ajuda=null, erro=${errosCartao?.get('nomeImpresso')}, autocomplete='cc-name', valor=${cartaoDigitado?.nomeImpresso()})}"></div>
     <div class="campo">
-        <input type="checkbox" id="salvarCartao" name="salvarCartao" value="true" aria-describedby="salvarCartao-ajuda">
+        <input type="checkbox" id="salvarCartao" name="salvarCartao" value="true" aria-describedby="salvarCartao-ajuda"
+               th:checked="${cartaoDigitado != null and cartaoDigitado.salvarCartao()}">
         <label for="salvarCartao">Salvar este cartão para as próximas compras</label>
         <p id="salvarCartao-ajuda" class="campo__ajuda">
             Guardamos só um código do gateway, a bandeira e os 4 últimos números. Nunca o número completo nem o código de segurança.

@@ -59,6 +59,8 @@ public class RecuperacaoSenhaController {
         Solicitacao resultado = service.solicitar(identificador, canal);
         if (resultado.esperaSegundos() > 0) {
             flash.addFlashAttribute("erro", "Aguarde " + tempo(resultado.esperaSegundos()) + " para pedir outro código.");
+            flash.addFlashAttribute("identificador", identificador);
+            flash.addFlashAttribute("canal", canal == null ? null : canal.name());
             return "redirect:/recuperar-senha";
         }
         sessao.setAttribute(SESSAO_SOLICITADA, true);

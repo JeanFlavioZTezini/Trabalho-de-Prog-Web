@@ -116,13 +116,14 @@
                 <label for="novoStatus">Próxima situação permitida</label>
                 <select id="novoStatus" name="novoStatus" required aria-describedby="novoStatus-ajuda">
                     <option value="">Selecione</option>
-                    <option th:each="s : ${pedido.proximosStatus}" th:value="${s.name()}" th:text="${s.rotulo}">Próximo status</option>
+                    <option th:each="s : ${pedido.proximosStatus}" th:value="${s.name()}" th:text="${s.rotulo}"
+                            th:selected="${s.name() == novoStatusEscolhido}">Próximo status</option>
                 </select>
                 <p class="campo__ajuda" id="novoStatus-ajuda">Pedidos cancelados ou entregues são estados finais. A aprovação de pagamento não pode ser feita manualmente.</p>
             </div>
             <div class="campo">
                 <label for="observacao">Observação (opcional)</label>
-                <textarea id="observacao" name="observacao" maxlength="255" rows="3"></textarea>
+                <textarea id="observacao" name="observacao" maxlength="255" rows="3" th:text="${observacao}"></textarea>
             </div>
             <button type="submit" class="btn-primario">Salvar mudança</button>
         </form>

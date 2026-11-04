@@ -17,7 +17,7 @@
     <section aria-labelledby="titulo-senha">
         <h2 id="titulo-senha">Com a senha da conta</h2>
         <form th:action="@{/login/social/vincular/senha}" method="post">
-            <div th:replace="~{fragments/campo :: campo(id='senha', nome='senha', rotulo='Senha', tipo='password', ajuda=null, erro=null, autocomplete='current-password')}"></div>
+            <div th:replace="~{fragments/campo :: campo(id='senha', nome='senha', rotulo='Senha', tipo='password', ajuda=null, erro=null, autocomplete='current-password', valor=null)}"></div>
             <button type="submit" class="btn-primario btn-primario--bloco">Vincular com a senha</button>
         </form>
     </section>
@@ -26,7 +26,7 @@
         <h2 id="titulo-codigo">Com um código no e-mail da conta</h2>
         <p>O código vai para <strong th:text="${emailMascarado}">m***@exemplo.com</strong>, o e-mail cadastrado na conta.</p>
         <form th:action="@{/login/social/vincular/codigo}" method="post">
-            <div th:replace="~{fragments/campo :: campo(id='codigo', nome='codigo', rotulo='Código recebido', tipo='text', ajuda=null, erro=null, autocomplete='one-time-code')}"></div>
+            <div th:replace="~{fragments/campo :: campo(id='codigo', nome='codigo', rotulo='Código recebido', tipo='text', ajuda=null, erro=null, autocomplete='one-time-code', valor=null)}"></div>
             <button type="submit" class="btn-primario btn-primario--bloco">Vincular com o código</button>
         </form>
         <form th:action="@{/login/social/vincular/codigo/enviar}" method="post">

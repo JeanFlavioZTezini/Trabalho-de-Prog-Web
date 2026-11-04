@@ -8,6 +8,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 import com.farmacia.farmaciaonline.security.LoginFailureHandler;
 
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.servlet.http.HttpSession;
 
 /**
  * Mostra a página de login. Quem processa o POST /login é o Spring Security (ver SecurityConfig).
@@ -32,6 +33,14 @@ public class LoginController {
             request.getSession().setAttribute(CadastroController.SESSAO_RETORNO, retorno);
         }
         model.addAttribute("erroLogin", mensagemDeErro(erro));
+        HttpSession sessao = request.getSession(false);
+        if (sessao != null) {
+            Object digitado = sessao.getAttribute(LoginFailureHandler.SESSAO_IDENTIFICADOR);
+            sessao.removeAttribute(LoginFailureHandler.SESSAO_IDENTIFICADOR);
+            if (erro != null) {
+                model.addAttribute("identificador", digitado);
+            }
+        }
         model.addAttribute("contaPendente", LoginFailureHandler.MOTIVO_PENDENTE.equals(erro));
         model.addAttribute("saiu", logout != null);
         model.addAttribute("contaConfirmada", confirmada != null);

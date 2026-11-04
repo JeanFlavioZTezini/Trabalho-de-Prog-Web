@@ -15,9 +15,9 @@
 
     <form th:action="@{/confirmar-conta/retomar}" method="post">
         <div th:replace="~{fragments/campo :: campo(id='identificador', nome='identificador', rotulo='E-mail ou CPF',
-                 tipo='text', ajuda=null, erro=null, autocomplete='username')}"></div>
+                 tipo='text', ajuda=null, erro=null, autocomplete='username', valor=${identificador})}"></div>
         <div th:replace="~{fragments/campo :: campo(id='senha', nome='senha', rotulo='Senha',
-                 tipo='password', ajuda=null, erro=null, autocomplete='current-password')}"></div>
+                 tipo='password', ajuda=null, erro=null, autocomplete='current-password', valor=null)}"></div>
         <button type="submit" class="btn-primario btn-primario--bloco">Continuar</button>
     </form>
 

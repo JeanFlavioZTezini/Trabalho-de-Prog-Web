@@ -85,8 +85,9 @@ public class CheckoutController {
             BindingResult ignorado, CartaoForm cartaoForm, @RequestParam String conferencia, @RequestParam UUID chave,
             RedirectAttributes ra) {
         Long usuarioId = idDe(usuario);
-        if (checkoutForm.isPagoComCartao() && !cartaoForm.errosDeFormato().isEmpty()) {
-            ra.addFlashAttribute("erros", cartaoForm.errosDeFormato());
+        lembrarEscolhas(checkoutForm, cartaoForm, ra);
+        if (checkoutForm.isPagoComCartao() && !cartaoForm.errosPorCampo().isEmpty()) {
+            ra.addFlashAttribute("errosCartao", cartaoForm.errosPorCampo());
             return voltarAoResumo(checkoutForm, ra);
         }
         try {
@@ -111,10 +112,11 @@ public class CheckoutController {
             CheckoutForm checkoutForm, BindingResult ignorado, CartaoForm cartaoForm, @RequestParam UUID chave,
             RedirectAttributes ra) {
         Long usuarioId = idDe(usuario);
+        lembrarEscolhas(checkoutForm, cartaoForm, ra);
         if (checkoutForm.getMetodo() == null) {
             ra.addFlashAttribute("erros", List.of("Escolha a forma de pagamento."));
-        } else if (checkoutForm.isPagoComCartao() && !cartaoForm.errosDeFormato().isEmpty()) {
-            ra.addFlashAttribute("erros", cartaoForm.errosDeFormato());
+        } else if (checkoutForm.isPagoComCartao() && !cartaoForm.errosPorCampo().isEmpty()) {
+            ra.addFlashAttribute("errosCartao", cartaoForm.errosPorCampo());
         } else {
             pagamentos.pagar(usuarioId, id, chave, checkoutForm.getMetodo(), checkoutForm.parcelasEfetivas(), cartaoForm);
         }
@@ -136,6 +138,20 @@ public class CheckoutController {
             ra.addFlashAttribute("erros", List.of("Não foi possível enviar o resumo agora. Seu pedido continua registrado; tente de novo em instantes."));
         }
         return "redirect:/checkout/pedidos/" + id;
+    }
+
+    /**
+     * O que a tela seguinte (resumo com erro ou pedido com pagamento recusado) mostra de novo, para a pessoa não
+     * redigitar tudo. Do cartão, só o que {@link CartaoForm#digitado()} deixa passar.
+     */
+    private static void lembrarEscolhas(CheckoutForm form, CartaoForm cartao, RedirectAttributes ra) {
+        if (form.getMetodo() != null) {
+            ra.addFlashAttribute("metodoEscolhido", form.getMetodo().name());
+            ra.addFlashAttribute("parcelasEscolhidas", form.parcelasEfetivas());
+        }
+        if (form.isPagoComCartao()) {
+            ra.addFlashAttribute("cartaoDigitado", cartao.digitado());
+        }
     }
 
     private static String voltarAoResumo(CheckoutForm form, RedirectAttributes ra) {

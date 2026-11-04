@@ -22,8 +22,8 @@
             <input type="text" id="idExterno" name="idExterno" maxlength="100" th:value="${idSugerido}"
                    aria-describedby="idExterno-ajuda">
         </div>
-        <div th:replace="~{fragments/campo :: campo(id='nome', nome='nome', rotulo='Nome', tipo='text', ajuda=null, erro=null, autocomplete='name')}"></div>
-        <div th:replace="~{fragments/campo :: campo(id='email', nome='email', rotulo='E-mail (opcional)', tipo='email', ajuda='Deixe em branco para simular um provedor que não informa e-mail.', erro=null, autocomplete='email')}"></div>
+        <div th:replace="~{fragments/campo :: campo(id='nome', nome='nome', rotulo='Nome', tipo='text', ajuda=null, erro=null, autocomplete='name', valor=null)}"></div>
+        <div th:replace="~{fragments/campo :: campo(id='email', nome='email', rotulo='E-mail (opcional)', tipo='email', ajuda='Deixe em branco para simular um provedor que não informa e-mail.', erro=null, autocomplete='email', valor=null)}"></div>
         <div class="campo">
             <!--/* Desmarcado por padrão: marcado, a conta nasce ativa com um e-mail que ninguém confirmou. */-->
             <input type="checkbox" id="emailVerificado" name="emailVerificado" value="true"

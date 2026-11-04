@@ -14,6 +14,10 @@
     <div class="alerta alerta--erro" role="alert" th:if="${erros != null}">
         <ul><li th:each="e : ${erros}" th:text="${e}">Erro</li></ul>
     </div>
+    <div class="alerta alerta--erro" th:if="${errosCartao != null}">
+        <p>Confira os dados do cartão: os campos com problema estão marcados abaixo. Por segurança, o número e o código
+           de segurança precisam ser digitados de novo.</p>
+    </div>
 
     <p>Situação: <span th:replace="~{fragments/componentes :: situacao(${pedido.status})}"></span></p>
 
@@ -71,11 +75,12 @@
         <fieldset class="campo--opcoes">
             <legend>Forma de pagamento</legend>
             <label th:each="m, estado : ${tela.metodos}">
-                <input type="radio" name="metodo" th:value="${m}" th:checked="${estado.first}"> <span th:text="${m.rotulo}">Pix</span>
+                <input type="radio" name="metodo" th:value="${m}"
+                       th:checked="${metodoEscolhido == null ? estado.first : metodoEscolhido == m.name()}"> <span th:text="${m.rotulo}">Pix</span>
             </label>
         </fieldset>
         <th:block th:if="${tela.pedeCartao}">
-            <div th:replace="~{checkout/fragmentos :: parcelas(selecionada=1)}"></div>
+            <div th:replace="~{checkout/fragmentos :: parcelas(selecionada=${parcelasEscolhidas ?: 1})}"></div>
             <p>Preencha os dados abaixo só se for pagar com cartão.</p>
             <th:block th:replace="~{checkout/fragmentos :: cartao(demo=${demo})}"></th:block>
         </th:block>
@@ -150,6 +155,7 @@
        · <a th:href="@{/pedidos}">Meus pedidos</a>
        · <a th:href="@{/}">Voltar à página inicial</a></p>
 
+    <script th:src="@{/js/checkout-cartao.js}" defer></script>
 </div>
 </body>
 </html>

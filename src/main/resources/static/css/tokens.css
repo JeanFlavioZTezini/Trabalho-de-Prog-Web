@@ -42,6 +42,7 @@
   /* Sombras: derivadas da cor do texto. */
   --sombra-1: 0 0.25rem 0.75rem rgba(31, 41, 55, 0.1);
   --sombra-2: 0 0.5rem 1rem rgba(31, 41, 55, 0.16);
+  --cor-veu: rgba(31, 41, 55, 0.5); /* fundo escurecido atrás de uma janela (dialog::backdrop) */
 
   /* Camadas (z-index). */
   --z-submenu: 20;

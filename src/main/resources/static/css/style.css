@@ -1633,7 +1633,7 @@ label.remover-foto {
   color: var(--cor-texto);
   box-shadow: var(--sombra-2);
 }
-.dialogo::backdrop { background-color: rgba(31, 41, 55, 0.5); }
+.dialogo::backdrop { background-color: var(--cor-veu); }
 .dialogo__titulo { margin: 0 0 0.75rem; font-size: 1.25rem; }
 .dialogo p { margin: 0; }
 .dialogo__acoes { display: flex; flex-wrap: wrap; justify-content: flex-end; gap: 0.75rem; margin-top: 1.5rem; }

@@ -125,6 +125,7 @@ public class ConfirmacaoContaController {
             return "redirect:/login?confirmada";
         }
         model.addAttribute("erro", "Não encontramos uma conta pendente com esses dados. Confira o e-mail ou CPF e a senha.");
+        model.addAttribute("identificador", identificador);
         return "confirmar-conta-retomar";
     }
 

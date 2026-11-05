@@ -14,6 +14,7 @@
 
     <form th:action="${categoriaId == null} ? @{/admin/categorias} : @{/admin/categorias/{id}(id=${categoriaId})}"
           th:object="${categoriaForm}" method="post">
+        <input type="hidden" th:field="*{versao}">
 
         <div class="campo">
             <label for="nome">Nome</label>

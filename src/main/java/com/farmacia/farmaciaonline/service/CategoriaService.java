@@ -4,8 +4,10 @@ import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.dao.OptimisticLockingFailureException;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -26,6 +28,9 @@ public class CategoriaService {
 
     /** Limite de níveis adotado: categoria raiz + subcategoria (é o que o menu do site exibe). */
     public static final int MAX_NIVEIS = 2;
+
+    static final String MENSAGEM_ALTERADA = "Esta categoria foi alterada por outra pessoa enquanto você editava. "
+            + "Recarregue o formulário e refaça a alteração.";
 
     private final CategoriaRepository repository;
     private final ProdutoRepository produtoRepository;
@@ -87,6 +92,7 @@ public class CategoriaService {
         form.setPaiId(c.getCategoriaPai() == null ? null : c.getCategoriaPai().getId());
         form.setOrdem(c.getOrdem());
         form.setAtiva(c.isAtiva());
+        form.setVersao(c.getVersao());
         return form;
     }
 
@@ -129,6 +135,10 @@ public class CategoriaService {
             throw new CategoriaException("Já existe uma categoria com esse nome na mesma categoria pai.");
         }
 
+        if (id != null && !Objects.equals(form.getVersao(), categoria.getVersao())) {
+            throw new CategoriaException(MENSAGEM_ALTERADA);
+        }
+
         boolean inativando = categoria.getId() != null && categoria.isAtiva() && !form.isAtiva();
         categoria.setNome(nome);
         categoria.setDescricao(form.getDescricao() == null || form.getDescricao().isBlank()
@@ -140,6 +150,8 @@ public class CategoriaService {
             repository.saveAndFlush(categoria);
         } catch (DataIntegrityViolationException e) {
             throw new CategoriaException("Já existe uma categoria com esse nome na mesma categoria pai.");
+        } catch (OptimisticLockingFailureException e) {
+            throw new CategoriaException(MENSAGEM_ALTERADA);
         }
         if (inativando) {
             inativarDescendentes(categoria);

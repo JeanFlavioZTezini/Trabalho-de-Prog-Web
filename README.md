@@ -1,1192 +1,170 @@
-# Farmácia On-line
+# Farmácia On-line (Farma++)
 
 [![CI](https://github.com/JeanFlavioZTezini/Trabalho-de-Prog-Web/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/JeanFlavioZTezini/Trabalho-de-Prog-Web/actions/workflows/ci.yml)
 
-Aplicação web de vendas de farmácia, desenvolvida como Trabalho Prático de
-Programação Web (ProgWeb 2026/2), usando Spring Boot + Thymeleaf.
+Loja virtual de farmácia feita como Trabalho Prático de Programação Web (ProgWeb 2026/2), com Spring Boot e Thymeleaf.
+É um ambiente de demonstração acadêmica: a farmácia é fictícia e nenhuma compra, pagamento ou entrega é real.
+
+- **Detalhes de cada funcionalidade** (regras, limites, rotas): [`docs/funcionalidades.md`](docs/funcionalidades.md)
+- **Para quem vai mexer no código** (migrations, testes, convenções, página nova): [`docs/desenvolvimento.md`](docs/desenvolvimento.md)
+- **Acessibilidade** (contraste, checklist de PR): [`docs/acessibilidade.md`](docs/acessibilidade.md)
+
+## Funcionalidades
+
+| Área | O que tem | Issues |
+|---|---|---|
+| Catálogo | Home com mais vendidos e mais vistos, menu de categorias, busca sem acento e com "Você quis dizer", filtros, ordenação e detalhe do produto com apresentações | F-01, F-02, F-22 |
+| Conta | Cadastro com conta pendente, confirmação por código (e-mail ou SMS simulados), login por e-mail ou CPF com bloqueio após 5 erros, recuperação de senha, dados pessoais, troca de senha, e-mail e celular, login social simulado e exclusão da conta | F-04, F-05, F-06, F-12, F-18, F-20, F-21, F-24 |
+| Compra | Carrinho de visitante juntado ao da conta no login, endereços com CEP, checkout com entrega ou retirada, cartão, Pix e boleto simulados, estoque reservado, cartão salvo e "comprar novamente" | F-10, F-11, F-13, F-14, F-25 |
+| Pedidos | Histórico e detalhe para o cliente, filtros por situação e período | F-15, F-16, F-23 |
+| Administração | Categorias, produtos (apresentações, estoque, fotos), clientes com auditoria e CSV, pedidos com mudança de status e conferência de receita | F-07, F-08, F-09, F-17, F-23 |
 
 ## Stack
 
-- **Linguagem:** Java 17
-- **Framework:** Spring Boot 3.5.16
-- **Arquitetura:** MVC server-side rendering (Spring MVC + Thymeleaf) — Opção A do enunciado
-- **Persistência:** Spring Data JPA + Hibernate
-- **Banco de dados:** PostgreSQL (via Docker)
-- **Migrações:** Flyway
-- **Segurança:** Spring Security (login + roles)
-- **Build:** Maven
+Java 17, Spring Boot 3.5.16 (Spring MVC + Thymeleaf, renderização no servidor: opção A do enunciado), Spring Security,
+Spring Data JPA, PostgreSQL 16 (Docker), Flyway, Lombok e Maven. Testes com JUnit 5, MockMvc e Testcontainers. CSS e
+JavaScript sem framework.
 
-## Pré-requisitos
+## Como rodar
 
-- [JDK 17](https://adoptium.net/) instalado
-- [Docker](https://www.docker.com/) e Docker Compose instalados — o Docker precisa estar **ligado** também para rodar os testes (ver [Testes e integração contínua](#testes-e-integração-contínua))
-- Maven (ou usar o `mvnw`/`mvnw.cmd` incluído no projeto — não precisa instalar Maven à parte)
+**Pré-requisitos:** [JDK 17](https://adoptium.net/) e [Docker](https://www.docker.com/) ligado. O Maven não precisa
+ser instalado: o projeto traz o `mvnw`.
 
-## Como rodar o projeto localmente
+```bash
+git clone https://github.com/JeanFlavioZTezini/Trabalho-de-Prog-Web.git
+cd Trabalho-de-Prog-Web
+docker compose up -d              # PostgreSQL em localhost:5433, com volume persistente
+.\mvnw.cmd spring-boot:run        # Windows; no Linux/Mac: ./mvnw spring-boot:run
+```
 
-1. Clonar o repositório:
-   ```bash
-   git clone https://github.com/JeanFlavioZTezini/Trabalho-de-Prog-Web.git
-   cd Trabalho-de-Prog-Web
-   ```
+Abra [http://localhost:8080](http://localhost:8080) quando o log mostrar `Started FarmaciaOnlineApplication` (a primeira
+vez baixa as dependências e demora alguns minutos). Na primeira subida, o Flyway cria as tabelas e os dados de
+demonstração.
 
-2. Subir o banco de dados PostgreSQL via Docker (com o Docker ligado):
-   ```bash
-   docker compose up -d
-   docker ps
-   ```
-   O `docker ps` deve mostrar `0.0.0.0:5433->5432/tcp`: é o Postgres em `localhost:5433`, com um volume
-   persistente (os dados não se perdem ao reiniciar o container). Esse endereço não é uma página: o navegador
-   não abre o banco.
-
-3. Rodar a aplicação (a primeira vez baixa as dependências e demora alguns minutos):
-   ```bash
-   ./mvnw spring-boot:run          # Linux/Mac
-   .\mvnw.cmd spring-boot:run      # Windows (PowerShell)
-   ```
-   Ou, pela IDE, rodar a classe principal `FarmaciaOnlineApplication`. Está pronto quando o log mostrar
-   `Started FarmaciaOnlineApplication`.
-
-4. Acessar [http://localhost:8080](http://localhost:8080). Para entrar como administrador, abra
-   [http://localhost:8080/login](http://localhost:8080/login) e use `admin@farma.com` com a senha `Farma@123`:
-   o login leva ao painel em `/admin`. Para entrar como cliente, use `cliente@farma.com` com a mesma senha.
-   Todos os usuários de teste estão em [Dados de demonstração](#dados-de-demonstração).
-
-5. Para parar a aplicação, `Ctrl+C` (no Windows, responda `S`). Para parar o banco:
-   ```bash
-   docker compose down
-   ```
-   (os dados continuam salvos no volume; só sobem de novo com `docker compose up -d`)
-
-Os testes têm passo próprio: ver [Testes e integração contínua](#testes-e-integração-contínua).
+- **Parar:** `Ctrl+C` na aplicação e `docker compose down` no banco (os dados continuam no volume).
+- **Zerar o banco** (volta ao seed; apaga cadastros, carrinhos e pedidos feitos depois):
+  `docker compose down -v`, `docker compose up -d` e suba a aplicação de novo.
+- **Atualizar um banco que já existe:** basta subir a aplicação; o Flyway aplica só as migrações novas e mantém os dados.
 
 ## Dados de demonstração
 
-Num banco novo, o Flyway aplica `V1__init.sql` (tabelas), `V2__seed.sql` (categorias, produtos,
-lojas e usuários de teste) e as migrações seguintes. Quem subir o banco do zero recebe os mesmos dados.
+Todas as contas usam a senha `Farma@123`:
 
-| E-mail | Perfil | Status | Senha |
-|---|---|---|---|
-| `admin@farma.com` | ADMIN | ATIVA | `Farma@123` |
-| `cliente@farma.com` | CLIENTE | ATIVA | `Farma@123` |
-| `pendente@farma.com` | CLIENTE | PENDENTE (para testar a confirmação de conta) | `Farma@123` |
-
-Essas contas existem só para desenvolvimento e demonstração.
-
-- **Recomeçar do zero:** ver [Como zerar o banco para a demonstração](#como-zerar-o-banco-para-a-demonstração).
-  Quem aplicou uma versão antiga do `V2` localmente precisa disso.
-- **Atualizar um banco que já existe:** basta subir a aplicação. O Flyway aplica só as migrações novas e mantém os
-  dados (`MigracaoUpgradeIntegracaoTest` prova isso partindo de um banco na `V2`). Apagar o banco não é a solução para
-  uma migração em conflito: renumere a migração da branch antes do merge.
-- **Não edite uma migração que já está na `main`:** o Flyway guarda o checksum e a aplicação deixa de
-  subir em quem já a aplicou. Para mudar dados, crie uma migração nova com o próximo número livre (hoje, `V14`).
-- **Numeração das migrações:** duas branches com o mesmo número quebram o Flyway no merge. Antes de abrir PR com
-  migração, confira a `main` e as branches abertas e avise o grupo do número escolhido.
-
-  | Versão | Conteúdo | Issue |
-  |---|---|---|
-  | `V1` | schema | fundação |
-  | `V2` | seed de demonstração | fundação |
-  | `V3` | `usuario.email_confirmado_em` e `celular_confirmado_em` | F-05 |
-  | `V4` | checkout: `pedido.versao`, chave de idempotência, cópia da loja (`retirada_*`), índices de pagamento | F-14 |
-  | `V5` | `historico_status_pedido.status_anterior` | F-15 |
-  | `V6` | conferência da receita e estorno pendente no pedido | F-17 |
-  | `V7` | fotos dos produtos do seed, no lugar do placeholder | F-08 |
-  | `V8` | extensões `unaccent` e `pg_trgm` da busca tolerante | F-22 |
-  | `V9` | `endereco.principal` (endereço principal) | F-25 |
-  | `V10` | fotos da Neo Dipirona e da Loratadina (marca da Loratadina passa a Cimed) | revisão visual |
-  | `V11` | lojas de retirada em Campo Grande/MS (Centro e Jardim dos Estados) | |
-  | `V12` | `produto.versao` e `categoria.versao` (edição simultânea no admin) | polimento |
-  | `V13` | fotos de Omeprazol, Amoxicilina e Clonazepam; marcas passam a Avivia, Mintlab e Milab | polimento |
-- **Textos com várias linhas no seed:** use `E'linha 1\nlinha 2'`. Quebrar a linha dentro das aspas
-  grava um fim de linha diferente no Windows e no Linux.
-- **Imagens de produto:** ficam em `src/main/resources/static/images/produtos/`, em WebP de até 800 px,
-  com nome descritivo em minúsculas e hífens (ex.: `dipirona-monoidratada-500mg-20-comprimidos.webp`).
-  A coluna `imagem_produto.arquivo` guarda o caminho a partir da raiz do site (`/images/produtos/...`).
-  Produto sem foto usa `placeholder.svg`. O texto alternativo (`alt`) vem do nome do produto.
-  Até a V13, medicamento sob prescrição ficava no `placeholder.svg` (as farmácias mostram imagem ilustrativa, RDC
-  96/2008); desde a V13 o catálogo de demonstração mostra a caixa de todos, com a marca da caixa fotografada.
-  As fotos do seed vêm de lojas e fabricantes, e servem só para a demonstração acadêmica.
-
-## Como zerar o banco para a demonstração
-
-Antes de apresentar, ou sempre que quiser o banco como no seed:
-```bash
-docker compose down -v
-docker compose up -d
-```
-(Se o seu terminal aceitar `&&`, dá para juntar: `docker compose down -v && docker compose up -d`.)
-Depois, suba a aplicação: o Flyway recria as tabelas (`V1`) e os dados de demonstração (`V2`).
-
-O `-v` apaga o volume: cadastros, carrinhos e pedidos feitos nos testes somem. Sem o `-v`, o banco só é desligado
-e os dados continuam lá.
-
-## Entrega e percurso completo (F-19)
-
-**Versão estável para a apresentação:** a tag `v1.0-entrega` (a `main` com todas as issues, F-01 a F-25). A branch
-`apresentacao-sem-opcionais` guarda a versão anterior às opcionais (F-20 a F-25), caso o grupo prefira apresentar sem elas.
-
-**Reproduzir do zero** (Docker ligado):
-```bash
-docker compose up -d
-.\mvnw.cmd -B verify            # Windows; no Linux/Mac: ./mvnw -B verify
-.\mvnw.cmd spring-boot:run      # http://localhost:8080
-```
-O `verify` sobe um PostgreSQL próprio (Testcontainers) e não toca no banco do `docker compose`. Resultado esperado: **925
-testes, 0 falhas**. O CI roda o mesmo comando em todo PR e em todo push na `main`.
-
-**Perfil `demo`** (ligado no `application.properties`): libera `/caixa-demo` (e-mails e SMS enviados), os botões
-"Simular pagamento aprovado/expiração" do pedido, o provedor de login social simulado e o aviso de projeto acadêmico no
-rodapé. Sem ele, essas telas respondem 404 e os botões somem.
-
-**Só o CEP é integração real.** Cada serviço externo é uma interface com um adaptador; os outros são de demonstração:
-
-| Serviço | Adaptador | Como se comporta |
+| E-mail | Perfil | Situação |
 |---|---|---|
-| E-mail e SMS (códigos, resumo do pedido) | `mensagem/demo/DemoEnvioAdapter` | guarda as últimas 50 mensagens na memória; ver em `/caixa-demo` |
-| CEP | `cep/viacep/ViaCepAdapter` (API pública do ViaCEP) | precisa de internet; fora do ar ou lento (4 s), a tela pede o endereço à mão. Offline: `app.cep.provedor=demo` liga o `cep/demo/DemoCepAdapter` (endereços fixos; `99999-999` simula falha) |
-| Pagamento (cartão, Pix, boleto) | `gateway/demo/DemoGatewayAdapter` | `4111 1111 1111 1111` aprova, `4111 1111 1111 1210` recusa; Pix e boleto ficam pendentes até o botão demo |
-| Login com Google/Facebook | `social/demo/DemoProvedorIdentidade` | tela "Provedor simulado"; sem OAuth real |
-| Frete | tabela demo | entrega só para MS (CEP e UF precisam combinar) |
+| `admin@farma.com` | ADMIN | ativa (vai para o painel `/admin`) |
+| `cliente@farma.com` | CLIENTE | ativa |
+| `pendente@farma.com` | CLIENTE | pendente (para testar a confirmação da conta) |
 
-**Cenários de aceite da entrega e onde são testados** (PostgreSQL real):
+O perfil `demo` vem ligado no `application.properties`. Com ele, os serviços externos são simulados, exceto o CEP:
+
+| Serviço | Na demonstração |
+|---|---|
+| E-mail e SMS (códigos, resumo do pedido) | As mensagens ficam em [`/caixa-demo`](http://localhost:8080/caixa-demo) (as últimas 50, na memória). Cada conta vê as próprias; os códigos de recuperação de senha e de vínculo social só aparecem para o admin |
+| Pagamento | Cartão `4111 1111 1111 1111` aprova e `4111 1111 1111 1210` recusa (validade futura, qualquer código de segurança). Pix e boleto ficam pendentes até os botões "Simular pagamento aprovado" ou "Simular expiração" do pedido |
+| CEP | API pública do ViaCEP (precisa de internet; se falhar, a tela pede o endereço à mão). Sem internet: `app.cep.provedor=demo` usa CEPs fixos, como `79002-000`; `99999-999` simula falha |
+| Frete | Só Mato Grosso do Sul: Campo Grande (79000-000 a 79129-999) R$ 9,90 em 2 dias; demais cidades R$ 14,90 em 3 dias. Retirada é grátis, nas duas lojas de Campo Grande |
+| Login com Google ou Facebook | Tela "Provedor simulado", sem OAuth real |
+
+Sem o perfil `demo`, a `/caixa-demo`, os botões de simulação e o login social respondem 404. Remédio que exige receita
+obriga a retirada em loja, e o produto "Termômetro Digital" está sem estoque de propósito, para mostrar o selo
+"Indisponível".
+
+**Roteiro curto da demonstração:**
+1. Visitante busca `dipirna` (com erro de digitação), abre o produto e adiciona ao carrinho.
+2. "Criar conta" com um CPF fora do seed, código em `/caixa-demo`, confirma e entra: o carrinho veio junto.
+3. Checkout com entrega (CEP `79002-336`) e cartão `4111 1111 1111 1111`: pedido aprovado e resumo em `/caixa-demo`.
+4. Como `admin@farma.com`, abre o pedido e o passa para "Em separação" e "Enviado"; o cliente vê o mesmo em "Meus pedidos".
+5. No admin, edita o estoque de um produto e consulta um cliente (CPF mascarado na lista, consulta auditada).
+6. O cliente tenta abrir `/admin` (403), sai da conta, e "Meus pedidos" pede login de novo.
+
+## Testes
+
+```bash
+.\mvnw.cmd verify      # Windows; no Linux/Mac: ./mvnw verify
+```
+
+Precisa do Docker ligado: o [Testcontainers](https://java.testcontainers.org/) sobe um PostgreSQL 16 descartável a cada
+execução, aplica as migrações e roda os testes contra ele, sem tocar no banco do `docker compose`. O CI
+(`.github/workflows/ci.yml`) roda o mesmo comando em todo PR e em todo push na `main`.
+
+Cenários de aceite da entrega e onde são testados:
 
 | Cenário | Testes |
 |---|---|
-| 1. Visitante busca, escolhe apresentação e quantidade, adiciona; o login mescla o carrinho | `PercursoCompletoIntegracaoTest.visitanteAteEntrega`, `MesclagemCarrinhoNoLoginIntegracaoTest`, `DetalheProdutoIntegracaoTest`, `CatalogoIntegracaoTest` |
-| 2. Cadastro, código no canal demo, confirmação, login e compra | `PercursoCompletoIntegracaoTest.cadastroAteCompra`, `ConfirmacaoContaIntegracaoTest` |
-| 3. Entrega com endereço próprio, frete, pagamento aprovado, pedido e estoque | `PercursoCompletoIntegracaoTest.visitanteAteEntrega`, `CheckoutFluxoWebIntegracaoTest.percursoPix`, `CheckoutServiceIntegracaoTest` |
-| 4. Controlado: retirada obrigatória; admin separa, sinaliza pronto e só entrega após a conferência | `PercursoCompletoIntegracaoTest.controladoAteEntregue`, `AdminPedidosServiceTest`, `EstadoPedidoAdministrativoTest` |
-| 5. Pix/boleto expira e libera o estoque uma vez; recusa permite retomar | `PagamentoPedidoIntegracaoTest`, `CheckoutFluxoWebIntegracaoTest.expiracaoDemo` (boleto) e `.dadosDoCartaoNaoVazam` (recusa e nova tentativa) |
-| 6. Duas compras da última unidade; duplo clique não duplica | `CheckoutServiceIntegracaoTest` ("duas compras da última unidade", "duplo clique de verdade"), `PagamentoPedidoIntegracaoTest` |
-| 7. Admin mexe em produto/categoria, consulta cliente com auditoria e move o pedido; o cliente vê o mesmo status | `PercursoCompletoIntegracaoTest.controladoAteEntregue`, `ProdutoServiceIntegracaoTest`, `CategoriaServiceIntegracaoTest`, `ClienteAdminServiceIntegracaoTest` |
-| 8. Cliente A no endereço/pedido de B (404); cliente em POST administrativo (403) | `AcessoEntreContasIntegracaoTest`, `PedidosClienteIntegracaoTest`, `EnderecoServiceIntegracaoTest`, `CheckoutFluxoWebIntegracaoTest.pedidoAlheio` |
-| 9. Recuperação invalida código e sessões; logout mantém dados e fecha a área protegida | `RecuperacaoSenhaIntegracaoTest`, `AcessoEntreContasIntegracaoTest.logoutPreservaDadosDaConta`, `LoginProtecaoIntegracaoTest` |
+| Visitante busca, escolhe a apresentação, adiciona; o login junta o carrinho | `PercursoCompletoIntegracaoTest.visitanteAteEntrega`, `MesclagemCarrinhoNoLoginIntegracaoTest` |
+| Cadastro, código no canal demo, confirmação, login e compra | `PercursoCompletoIntegracaoTest.cadastroAteCompra`, `ConfirmacaoContaIntegracaoTest` |
+| Entrega com frete, pagamento aprovado, pedido e estoque | `CheckoutFluxoWebIntegracaoTest`, `CheckoutServiceIntegracaoTest` |
+| Remédio controlado: retirada obrigatória e entrega só após conferir a receita | `PercursoCompletoIntegracaoTest.controladoAteEntregue`, `AdminPedidosServiceTest` |
+| Pix ou boleto expira e devolve o estoque uma vez; recusa permite tentar de novo | `PagamentoPedidoIntegracaoTest`, `CheckoutFluxoWebIntegracaoTest` |
+| Duas compras da última unidade; duplo clique não duplica o pedido | `CheckoutServiceIntegracaoTest`, `PagamentoPedidoIntegracaoTest` |
+| Admin mexe em produto e categoria, consulta cliente com auditoria e move o pedido | `ProdutoServiceIntegracaoTest`, `CategoriaServiceIntegracaoTest`, `ClienteAdminServiceIntegracaoTest` |
+| Endereço ou pedido de outra pessoa dá 404; cliente em rota de admin dá 403 | `AcessoEntreContasIntegracaoTest`, `PedidosClienteIntegracaoTest` |
+| Recuperação invalida o código e as sessões; logout fecha a área protegida | `RecuperacaoSenhaIntegracaoTest`, `LoginProtecaoIntegracaoTest` |
 
-Upgrade do banco: `MigracaoUpgradeIntegracaoTest` parte de um banco na `V2` (seed + endereço e pedido) e aplica todas as
-migrações sem perder dados.
+Lighthouse e axe não rodam no CI. A acessibilidade é coberta por testes de HTML (um `h1`, rótulos, erro ligado ao campo)
+e pelo `ContrasteTokensTest`.
 
-**O que não foi verificado** (fica declarado, não implícito):
-- Lighthouse e axe não foram rodados como parte do CI; a acessibilidade está coberta por testes de HTML (um `h1`,
-  rótulos, erro ligado ao campo) e pelo `ContrasteTokensTest`.
-- Os serviços externos são simulados (tabela acima); não há publicação externa do site.
+## Arquitetura
 
-**Roteiro curto da demonstração (5 a 8 min)**, com o seed (senha `Farma@123`):
-1. Visitante busca `dipirona`, abre o produto, escolhe a apresentação e adiciona ao carrinho.
-2. "Criar conta" com um CPF fora do seed; pega o código em `/caixa-demo`; confirma e entra: o carrinho veio junto.
-3. Checkout com entrega (CEP `79002-000`), cartão `4111 1111 1111 1111`: pedido aprovado e resumo em `/caixa-demo`.
-4. Como `admin@farma.com`: abre o pedido, passa para "Em separação" e depois "Enviado"; o cliente vê o mesmo status
-   em "Meus pedidos".
-5. Admin: edita o estoque de um produto e consulta um cliente (CPF mascarado, auditoria gravada).
-6. Cliente tenta abrir `/admin`: 403. Sai da conta e mostra que "Meus pedidos" pede login de novo.
-
-## Segurança e papéis
-
-Spring Security com dois papéis, `CLIENTE` e `ADMIN` (coluna `usuario.perfil`; viram `ROLE_CLIENTE` e
-`ROLE_ADMIN`). As regras ficam em `config/SecurityConfig.java`:
-
-| Rota | Quem acessa |
-|---|---|
-| `/`, `/produtos/**`, `/carrinho/**`, `/login`, `/cadastro/**`, `/confirmar-conta/**`, `/institucional/**`, `/css/**`, `/images/**`, `/js/**`, `/robots.txt`, `/error` | Qualquer pessoa (visitante inclusive) |
-| `/admin/**` | Só `ADMIN`. Visitante é mandado para `/login`; cliente logado recebe a página 403 |
-| Todo o resto | Qualquer usuário logado |
-
-**Login:** o campo aceita **e-mail ou CPF** (com ou sem pontos e traço). Se, ao tirar tudo que não é dígito,
-sobrarem 11 dígitos, é CPF; texto com `@` é sempre e-mail. Contas `PENDENTE` e `EXCLUIDA` não entram, e conta
-com `bloqueado_ate` no futuro também não. Depois de entrar, o `ADMIN` vai para `/admin` e o cliente volta para a
-página que tentou abrir (ou `/`). O cabeçalho mostra o primeiro nome e um botão **Sair**.
-
-**CSRF está ligado.** Todo formulário `POST` precisa do token, e o Thymeleaf o coloca sozinho **se o formulário
-usar `th:action`** (nunca `action="..."` escrito à mão). Formulário sem token recebe 403. O logout é um `POST` pelo
-mesmo motivo (o botão **Sair** do cabeçalho já é um formulário). Quem fizer `fetch`/AJAX com `POST` precisa enviar
-o token no cabeçalho `X-CSRF-TOKEN`.
-
-**Formulário para visitante (sem sessão):** o token CSRF cria a sessão na hora em que o formulário é montado. Se o
-Thymeleaf já tiver enviado parte da página ao navegador, a sessão não pode mais ser criada e o `/login` quebra para
-quem abre numa aba anônima (`Cannot create a session after the response has been committed`). Por isso o
-`application.properties` tem `spring.thymeleaf.servlet.produce-partial-output-while-processing=false`: a página só é
-enviada depois de pronta. Não remova essa linha. O `LoginAnonimoTest` abre o `/login` num servidor de verdade, sem sessão.
-
-**Rota nova pública?** Qualquer URL que não esteja na tabela acima exige login. Se a sua página for aberta a
-visitantes (ex.: uma nova página institucional), acrescente o caminho em `ROTAS_PUBLICAS` no `SecurityConfig`.
-Rota de administração: coloque sob `/admin/**`.
-
-**Classes:** `security/UsuarioDetailsService` (busca por e-mail ou CPF e recusa contas que não podem entrar),
-`security/UsuarioAutenticado` (o principal na sessão: id, nome, perfil), `security/LoginSuccessHandler` e
-`security/LoginFailureHandler` (para onde ir depois do login, e qual mensagem mostrar quando falha).
-
-**Para a apresentação:** o enunciado descreve o usuário comum como "somente listagem/visualização", mas aqui o
-sistema é uma loja virtual: o papel `CLIENTE` também mexe no **próprio** carrinho e nos **próprios** pedidos
-(sem isso não existiria compra). O que é exclusivo do `ADMIN` é todo CRUD de catálogo e a moderação.
-
-Depois da fundação vieram a recuperação de senha (F-06), o bloqueio automático após várias senhas erradas (F-18), o login
-social simulado (F-20) e a exclusão da própria conta (F-24).
-
-## Home e menu de categorias
-
-Tudo vem do banco; nada é fixo na tela.
-
-- **Menu:** `NavegacaoAdvice` coloca `menuCategorias` (categorias raiz ativas e suas filhas, por `ordem`) no modelo de
-  toda página renderizada por controller, e o `fragments/layout.html` monta o `<nav>`. Categoria nova ou inativada
-  muda o menu no próximo carregamento. Quem tem subcategorias ganha um botão (`aria-expanded`) que abre com
-  Enter ou clique e fecha com Esc ou clicando fora (`static/js/menu.js`).
-- **Home:** `HomeController` envia `maisComprados` (por `qtdVendida`) e `maisVistos` (por `visualizacoes`), só com
-  `ativo = true` e no máximo 8. O card mostra a primeira imagem (ou o `placeholder.svg`, se o produto não tiver
-  nenhuma), o nome, a apresentação padrão com o preço em reais (`spring.web.locale=pt_BR` e
-  `#numbers.formatCurrency`) e os selos "Indisponível" e "Exige receita".
-- **Consultas:** `Produto.apresentacoes` e `Produto.imagens` usam `@BatchSize`, então a home não faz uma consulta por
-  produto. O log do SQL vem desligado; para conferir, ligue-o só nesta execução (PowerShell):
-  `$env:SPRING_JPA_SHOW_SQL="true"; .\mvnw.cmd spring-boot:run`, abra a home e conte as consultas.
-- **Testes:** `FarmaciaOnlineApplicationTests` confere a home com o seed (Novalgina, preço, selos, menu) e
-  `HomeIntegracaoTest` cobre produto sem imagem e categoria inativa.
-
-## Testes e integração contínua
-
-```bash
-./mvnw verify          # Linux/Mac
-.\mvnw.cmd verify      # Windows (PowerShell)
-```
-
-**Os testes precisam do Docker ligado** (Docker Desktop aberto no Windows/Mac). Eles usam o
-[Testcontainers](https://java.testcontainers.org/): a cada execução sobe um PostgreSQL 16
-descartável, aplica as migrações do Flyway e roda o `validate` do Hibernate. Ou seja, os testes
-rodam contra um Postgres de verdade, **sem depender do banco do `docker compose`** (pode estar
-desligado) e sem tocar nos seus dados. Na primeira vez o Docker baixa a imagem `postgres:16`.
-
-- `FarmaciaOnlineApplicationTests.contextLoads` é a primeira barreira: falha se uma
-  entidade JPA não bater com as tabelas criadas pelas migrações.
-- Segurança (F1-09): `SegurancaTest`, `LoginPageTest`, `UsuarioDetailsServiceTest` e `LoginHandlersTest` não
-  precisam de Docker. `LoginIntegracaoTest` faz o login de verdade contra o seed e precisa.
-- Teste que precisa de banco: use `@Import(TestcontainersConfiguration.class)` (com `@SpringBootTest`,
-  ou com `@DataJpaTest` + `@AutoConfigureTestDatabase(replace = Replace.NONE)`). Teste de
-  tela/controller usa `@WebMvcTest` e não precisa de Docker. Não use H2: o schema usa recursos
-  que ele não tem (`CHECK` com `~`, índices em expressão).
-
-Se o teste falhar com `Could not find a valid Docker environment`, o Docker não está rodando.
-Se aparecer `client version ... is too old` ou `too new`, atualize o Docker Desktop.
-
-O **CI** (`.github/workflows/ci.yml`) roda `./mvnw -B verify` em todo PR e em todo push na `main`.
-O resultado aparece no PR e na aba **Actions**; em caso de falha, os relatórios do Surefire ficam
-disponíveis como artefato da execução.
-
-## Configuração do IDE
-
-### IntelliJ IDEA
-- O suporte a Lombok já vem embutido nas versões recentes; se não reconhecer as
-  anotações, instalar o plugin **Lombok** em `Settings → Plugins` e habilitar
-  `Settings → Build, Execution, Deployment → Compiler → Annotation Processors →
-  Enable annotation processing`.
-
-### VS Code
-- Instalar a extensão **Extension Pack for Java** (Microsoft) — o suporte a
-  Lombok já vem embutido a partir da versão 1.9 da Language Server, não precisa
-  de extensão separada.
-- Se o Lombok não for reconhecido de primeira, rodar `Java: Clean Java Language
-  Server Workspace` na paleta de comandos (`Ctrl+Shift+P`).
-
-## Estrutura de pastas
+MVC no servidor: o controller só orquestra, as regras ficam nos services e cada tela recebe um `*Form` com Bean
+Validation (nunca a entidade). Cada integração externa é uma interface com um adaptador de demonstração em `demo/`.
 
 ```
 com.farmacia.farmaciaonline
-├── cep              (ConsultaCep: porta de consulta de CEP; viacep/ViaCepAdapter e demo/DemoCepAdapter)
-├── config           (SecurityConfig, WebConfig, etc.)
-├── controller       (Controllers Thymeleaf; UsuarioLogadoAdvice entrega o primeiro nome ao cabeçalho)
-├── model            (Entidades JPA)
-├── repository       (Interfaces Spring Data JPA)
-├── security         (UsuarioDetailsService, UsuarioAutenticado, handlers de login)
-├── service          (Regras de negócio)
-├── validacao        (CpfValido: validação do CPF pelos dígitos verificadores)
-├── mensagem         (EnvioDeMensagem: envio de e-mail e SMS; demo/DemoEnvioAdapter guarda na memória)
-└── FarmaciaOnlineApplication.java
+├── config        SecurityConfig, uploads, cache
+├── controller    telas Thymeleaf e advices do layout (menu, carrinho, usuário)
+├── service       regras de negócio (checkout, estoque, códigos, contas...)
+├── repository    Spring Data JPA
+├── model         entidades JPA, forms e enums
+├── security      login, tentativas, revogação de sessões, carrinho no login
+├── validacao     CPF e política de senha
+├── cep           ConsultaCep: viacep/ e demo/
+├── gateway       GatewayDePagamento: demo/
+├── mensagem      EnvioDeMensagem: demo/ (caixa-demo)
+└── social        ProvedorIdentidade: demo/
 
 src/main/resources
-├── db/migration       (scripts Flyway: V1__init.sql, V2__seed.sql, V3 a V5...)
-├── static
-│   ├── css            (tokens.css = cores; style.css = estilos globais — carregar nessa ordem)
-│   ├── images         (logo.png; produtos/ com as fotos e o placeholder.svg)
-│   └── js             (menu.js: menu de categorias no mobile)
-├── templates
-│   ├── fragments      (layout.html: cabeçalho, rodapé e "Pular para o conteúdo" compartilhados;
-│   │                   campo.html: campo de formulário acessível com rótulo, ajuda e erro)
-│   ├── institucional  (páginas de texto, ex.: boas-praticas.html)
-│   ├── admin          (painel do administrador, provisório)
-│   ├── enderecos      (lista, formulário e exclusão dos endereços do cliente)
-│   ├── checkout       (escolha, resumo e tela do pedido)
-│   ├── error          (403, 404, 4xx e 5xx.html: o Spring Boot escolhe pelo status; 4xx cobre 400 e 405)
-│   ├── login.html
-│   └── index.html
-└── application.properties
-
-docs
-└── acessibilidade.md  (tabela de contraste, checklist de acessibilidade para PRs e como testar)
-
-src/test/java/com/farmacia/farmaciaonline
-├── controller/                            (LayoutTest, SegurancaTest, LoginPageTest: camada web, sem Docker)
-├── security/                              (testes de login: service, handlers e integração com o seed)
-├── TestcontainersConfiguration.java       (PostgreSQL 16 descartável via Docker, para testes com banco)
-├── FarmaciaOnlineApplicationTests.java    (contextLoads: Flyway + validate do Hibernate num Postgres real)
-├── SeedDemonstracaoTest.java              (confere o V2: usuários, catálogo, EAN-13, sequences)
-├── MapeamentoDasTabelasTest.java          (toda tabela da V1 tem uma entidade JPA: pega entidade que sumiu)
-├── model/                                 (testes unitários puros, sem Spring nem banco)
-└── repository/                            (testes de integração com @DataJpaTest contra o Postgres real:
-                                            use CatalogoRepositoryTest e CompraRepositoryTest como modelo)
-
-.github/workflows
-└── ci.yml             (CI: ./mvnw -B verify em PR e push na main)
+├── db/migration  Flyway (V1 schema, V2 seed, V3 em diante)
+├── static        css (tokens.css + style.css), js, images
+└── templates     fragments/layout.html (layout único) e uma pasta por área
 ```
 
-## Modelo do catálogo
-
-Entidades em `model` (`Categoria`, `Produto`, `Apresentacao`, `ImagemProduto`); o schema vem da `V1__init.sql`.
-
-- **Preço, SKU, EAN e estoque ficam na `Apresentacao`** (10, 20 ou 30 comprimidos), nunca no `Produto`.
-  O nome completo exibido ao cliente é `produto.nome + " " + apresentacao.descricao`.
-- `Produto#getApresentacaoPadrao()` devolve a de menor `ordem` (sem olhar estoque nem se está ativa;
-  `null` se o produto não tem apresentações). `Apresentacao#isDisponivel()` é "ativa e estoque > 0".
-  `Produto#isIndisponivel()` é "nenhuma apresentação disponível" (sem apresentações também é indisponível).
-- A vitrine e `GET /produtos` exibem o preço da primeira apresentação ativa por ordem
-  (`Produto#getApresentacaoReferenciaAtiva()`). Produtos sem estoque continuam no catálogo, a menos
-  que o filtro "Somente disponíveis" seja selecionado. A listagem aceita termo (`q`), categoria,
-  preço mínimo/máximo, disponibilidade, ordenação por nome/preço e paginação; os links de página
-  preservam os filtros. A busca também consulta a indicação cadastrada, mas isso não é diagnóstico
-  nem substitui orientação profissional. Sem termo, a listagem mostra o catálogo ativo sem busca textual.
-  A busca ignora acento e caixa e há filtros por marca, princípio ativo, tipo, forma e receita (F-22, abaixo).
-- `ImagemProduto.apresentacao` nula significa que a imagem vale para todas as apresentações do produto.
-- `Apresentacao.versao` (`@Version`) protege a edição do produto no admin: quem abriu a tela antes de uma compra não
-  sobrescreve o estoque. O checkout não depende dela para disputar estoque: usa atualização condicional
-  (`ApresentacaoRepository#reservarEstoque`), que também sobe a versão.
-- As coleções de `Produto` (`categorias`, `apresentacoes`, `imagens`) são LAZY. Acesse dentro de transação ou
-  com `JOIN FETCH`, senão dá `LazyInitializationException` ou consulta N+1. Não há cascade: grave cada
-  `Apresentacao` e `ImagemProduto` pelo próprio repository.
-
-## Modelo de compra
-
-Entidades em `model` (`Carrinho`, `ItemCarrinho`, `Endereco`, `CartaoSalvo`, `Loja`); o schema vem da `V1__init.sql`.
-
-- **O carrinho tem um dono só:** um `Usuario` (logado) **ou** um `token` UUID guardado em cookie (visitante).
-  O banco recusa carrinho sem dono ou com os dois; `Carrinho#isDeVisitante()` diz qual é. Cada usuário tem no
-  máximo um carrinho, e cada apresentação aparece uma vez por carrinho (adicionar de novo soma a quantidade).
-  No login, o carrinho do token é mesclado ao do usuário (I12).
-- **Itens:** `Carrinho.itens` tem `cascade = ALL` e `orphanRemoval = true`. Para adicionar, coloque o item na lista
-  (com `item.setCarrinho(carrinho)`); para remover, tire da lista. Os itens vêm ordenados por `id`.
-- **`ItemCarrinho.precoVisto`** é o preço no momento em que o item entrou no carrinho. `getSubtotal()` usa
-  esse preço; comparar com `Apresentacao.preco` detecta que o preço mudou (UC05-E3).
-- **`CartaoSalvo` guarda só o token do gateway e dados mascarados.** Nunca grave número completo nem CVV (LGPD e PCI DSS).
-- `Endereco` salvo não é o endereço do pedido: o pedido guarda uma cópia, então editar ou excluir um endereço não
-  altera pedidos antigos.
-- `Loja` é o ponto de retirada. Produto que exige receita só pode ser retirado em loja (I3). As duas lojas do seed
-  ficam em Campo Grande/MS (`V11`): Farma++ Centro (Rua Quatorze de Julho, 2000, CEP 79002-336) e Farma++ Jardim dos
-  Estados (Avenida Afonso Pena, 4100, CEP 79020-001).
-
-## Modelo de pedido
-
-Entidades em `model` (`Pedido`, `ItemPedido`, `Pagamento`, `HistoricoStatusPedido`, `LogAuditoria`); o schema vem da `V1__init.sql`,
-com os acréscimos da `V4` (checkout) e da `V5` (`status_anterior`).
-
-- **O pedido guarda cópias (snapshots).** O endereço de entrega vai no `@Embeddable EnderecoEntrega`, que o `Pedido`
-  mapeia para as colunas `entrega_*`, e o `ItemPedido` guarda nome, descrição, SKU, preço e `exigeReceita` do momento
-  da compra. Mudar um `Endereco` salvo ou o catálogo não altera pedidos antigos.
-- **Entrega x retirada:** entrega tem `enderecoEntrega` e não tem `lojaRetirada`; retirada tem `lojaRetirada`, frete zero
-  e `enderecoEntrega` nulo. O banco recusa as outras combinações.
-- **Chame `Pedido#recalcularTotais()` antes de gravar.** O banco exige `total = subtotal + frete`. O método arredonda
-  cada item e o frete para 2 casas (HALF_UP) e depois soma, e trata frete nulo como zero.
-- **Regra que o banco não garante:** pedido com item que exige receita só pode ser RETIRADA. `Pedido#temItemQueExigeReceita()`
-  só consulta; quem valida é o `CheckoutService`, com teste próprio.
-- `Pedido.itens` tem `cascade = ALL`: grave o pedido e os itens vão juntos. Pagamentos e histórico são gravados pelos
-  próprios repositories.
-- Um pedido tem várias tentativas de `Pagamento` (UC08-E2). Do cartão só ficam dados mascarados, e parcelas acima de 1
-  só no crédito, até 12 (`CheckoutForm.MAX_PARCELAS`): acima disso o resumo não deixa confirmar e a nova tentativa é
-  recusada, antes de reservar estoque.
-- `HistoricoStatusPedido.alteradoPor` nulo significa que a mudança foi do sistema.
-- `HistoricoStatusPedido.statusAnterior` é o status de onde o pedido saiu (UC17). É nulo no registro de criação do pedido e
-  nos eventos gravados antes da `V5`, que não guardaram a origem: a migration não a reconstitui. Quem muda o status lê o
-  anterior **antes** de chamar `setStatus` e o passa ao registrar o histórico (`EstadoPedidoService#registrarHistorico`);
-  a administração de pedidos (F-17) segue o mesmo caminho.
-- `PedidoRepository#findByIdAndUsuarioId` é o jeito de buscar um pedido para o cliente: de outro usuário, volta vazio (UC06).
-- `PRONTO_PARA_RETIRADA` é o status do pedido de retirada em loja. Quem decide as transições entre status é o service
-  (`EstadoPedidoService` e `AdminPedidosService`, F-14 e F-17).
-
-## Endereços do cliente (F-11 / UC16)
-
-Telas em `/enderecos` (lista, `novo`, `{id}/editar`, `{id}/excluir`); exigem login (regra "todo o resto" do
-`SecurityConfig`). Código: `EnderecoController`, `EnderecoService`, `EnderecoForm`, `EnderecoRepository`.
-
-- **Dono é sempre o usuário da sessão.** Nenhum método lê id de usuário da requisição, e o formulário não tem
-  `id` nem usuário. `EnderecoRepository#findByIdAndUsuarioId` é o único jeito de buscar para o cliente: endereço
-  de outra pessoa responde **404** (ler, editar, excluir, selecionar, buscar CEP e POST direto). Conta que não está
-  `ATIVA` recebe 403, e o administrador também (ele não compra; o atalho "Meus endereços" só aparece para cliente).
-  O mesmo vale para "Meus cartões" (`CartaoSalvoService`).
-- **Validação** (`EnderecoForm`): destinatário, CEP, logradouro, número, bairro, cidade e UF obrigatórios; CEP com 8
-  dígitos (com ou sem traço, gravado só com dígitos); UF é uma das 27 siglas; complemento e referência opcionais.
-- **Consulta de CEP** por adaptador: a tela depende da interface `cep/ConsultaCep`. O padrão é o
-  `cep/viacep/ViaCepAdapter`, que consulta `https://viacep.com.br/ws/{cep}/json/` pelo servidor (tempo limite em
-  `spring.http.client.*`). Com `app.cep.provedor=demo`, entra o `cep/demo/DemoCepAdapter` (7 CEPs fixos, sem internet;
-  `99999-999` simula falha). CEP inexistente = "não localizado"; ViaCEP fora do ar = "não foi possível consultar". Nos dois
-  casos o formulário continua com o que já foi digitado e a pessoa preenche à mão. CEP geral de cidade pequena só traz
-  cidade e UF, e a tela pede o logradouro e o bairro.
-- **Busca ao digitar:** com os 8 números, `static/js/cep.js` chama `GET /enderecos/cep?cep=` (JSON, só logado) e preenche
-  logradouro, bairro, cidade e UF; a mensagem sai em `#cep-status` (`role="status"`, o leitor de tela anuncia). O foco
-  não sai do CEP. A busca só roda quando a pessoa digita: abrir a edição não sobrescreve o endereço salvo. Sem
-  JavaScript, o botão "Buscar CEP" faz a mesma consulta por `POST`. O Enter dentro do
-  formulário **salva** (há um botão de envio escondido antes dele, porque o Enter aciona o primeiro botão do formulário).
-- **Área atendida:** o endereço fora dela **pode ser salvo**; quem bloqueia a compra é o checkout.
-- **Principal sob concorrência:** salvar e "Tornar principal" travam a linha da conta (`UsuarioRepository#findByIdParaAtualizar`)
-  antes de mexer no principal, então um duplo clique em "Salvar" no primeiro endereço grava os dois com um só principal, em
-  vez de violar o índice `ux_endereco_principal` (erro 500).
-- **Exclusão** pede confirmação (`/{id}/excluir`). Editar ou excluir **não altera pedidos antigos**: o pedido guarda a
-  cópia `EnderecoEntrega`. `EnderecoService#copiaParaEntrega(usuarioId, enderecoId)` entrega essa cópia (só de
-  endereço do próprio usuário) para o checkout/F-14 gravar no pedido.
-- **Integração com o checkout:** o checkout abre `/enderecos?retorno=checkout` (ou `/enderecos/novo?retorno=checkout`).
-  Só o valor exato `checkout` é aceito e o destino é fixo (`/checkout`), então nada que vem da URL vira
-  redirecionamento. Salvar ou "Usar este endereço" volta para `/checkout?enderecoId=<id>`; cancelar volta para `/checkout`.
-  **Quem fizer o checkout deve ler `enderecoId` e buscar o endereço por `EnderecoService`** (nunca por
-  `EnderecoRepository#findById`), para manter a regra de 404 para endereço alheio.
-- **Máscara do CEP:** `static/js/cep.js` coloca o hífen enquanto a pessoa digita e formata o CEP salvo ao editar. É só conforto: sem JavaScript o campo aceita com ou sem hífen.
-- **Tela pequena:** a tabela da lista rola dentro da própria caixa (`.tabela-rolavel`), sem fazer a página rolar para o lado.
-- **Testes:** `EnderecoFormTest`, `DemoCepAdapterTest` e `ViaCepAdapterTest` (sem Spring nem internet: resposta simulada),
-  `EnderecoControllerTest` (camada web, sem Docker, inclusive o JSON da busca)
-  e `EnderecoServiceIntegracaoTest` (Docker ligado: isolamento entre clientes e pedido antigo intacto).
-
-## Checkout (F-14 / UC08 e UC09)
-
-Telas em `/checkout`; exigem login e conta `CLIENTE` `ATIVA` (administrador e conta pendente recebem 403). O carrinho de
-quem está logado é a origem dos itens. A F-10 só precisa levar a pessoa para `/checkout` e manter `ItemCarrinho.precoVisto`.
-
-| Rota | O que faz |
-|---|---|
-| `GET /checkout` | Escolha de entrega ou retirada, endereço, loja, pagamento e parcelas. Aceita `?enderecoId=` na volta de `/enderecos` |
-| `GET /checkout/resumo` | Resumo calculado no servidor, antes de confirmar |
-| `POST /checkout/precos` | Aceita os preços novos dos itens |
-| `POST /checkout/confirmar` | Registra o pedido e faz a primeira cobrança |
-| `GET /checkout/pedidos/{id}` | Confirmação e situação do pedido (pedido alheio responde 404) |
-| `POST /checkout/pedidos/{id}/pagamento` | Nova tentativa no mesmo pedido |
-| `POST /checkout/pedidos/{id}/atualizar` | "Já paguei": consulta o gateway |
-| `POST /checkout/pedidos/{id}/resumo` | Reenvia o resumo que não foi enviado |
-| `POST /checkout/pedidos/{id}/demo/{aprovar,expirar}` | Simula o evento de Pix/boleto. Só no perfil `demo` e só para o dono do pedido |
-
-**Frete de demonstração** (`service/FreteDemo`). Só Mato Grosso do Sul é atendido. O CEP e a UF precisam combinar; o que não está na tabela não é atendido e
-bloqueia a entrega. Retirada tem frete zero.
-
-| UF | Faixa de CEP | Frete | Prazo |
-|---|---|---|---|
-| MS | 79000-000 a 79129-999 (Campo Grande) | R$ 9,90 | 2 dias |
-| MS | 79130-000 a 79999-999 (demais cidades) | R$ 14,90 | 3 dias |
-
-**Receita:** qualquer item que exige receita obriga a retirada em loja, inclusive em `POST` direto. A tela avisa que a
-receita é apresentada na loja. Não há envio nem análise de receita pelo site (decisão do grupo).
-
-**O servidor recalcula tudo.** Do navegador só vêm as escolhas. Não existe campo de total: um `total=` na requisição é
-ignorado. O formulário leva uma `conferencia` (impressão digital do resumo mostrado): se o recalculado for diferente, a
-pessoa volta ao resumo. Na entrega, a conferência inclui o `enderecoId` e o endereço inteiro (não só o CEP): editar o
-endereço em outra aba, mesmo mantendo o CEP, também manda de volta ao resumo. Se `ItemCarrinho.precoVisto` difere do preço atual, a tela mostra o aviso e só deixa confirmar
-depois de aceitar o preço novo.
-
-**Política de pagamento e estoque** (uma só, em `EstadoPedidoService`; todo evento trava a linha do pedido antes de agir):
-
-| Situação | Pedido | Estoque |
-|---|---|---|
-| Pedido registrado, ou Pix/boleto pendente | `AGUARDANDO_PAGAMENTO` | Reservado (já saiu de `estoque`) |
-| Aprovação | `PAGAMENTO_APROVADO` | A reserva é consumida; soma em `qtd_vendida` |
-| Recusa | Continua `AGUARDANDO_PAGAMENTO` | Continua reservado; nova tentativa no mesmo pedido, até `expira_em` |
-| Expiração ou cancelamento | `CANCELADO` | Devolvido uma vez |
-
-- **Validade da reserva:** Pix 30 minutos e boleto 3 dias (do gateway); nos demais casos (cartão recusado, resposta
-  perdida), `app.checkout.validade-reserva` (30 minutos). O `ExpiracaoPedidosJob` roda a cada minuto
-  (`app.checkout.expiracao.cron`) e, antes de expirar, consulta o gateway: Pix pago no último minuto vira aprovação.
-- **Última unidade:** `ApresentacaoRepository#reservarEstoque` é um `UPDATE` condicional (`estoque >= quantidade` e preço
-  igual ao confirmado). O banco trava a linha, então só uma das compras passa; a outra volta ao resumo sem pedido.
-- **Envio repetido:** o resumo gera uma `chave` por exibição. O mesmo envio (duplo clique, voltar e reenviar) devolve o
-  mesmo pedido, sem nova reserva nem cobrança: a linha do carrinho põe os envios em fila e `ux_pedido_chave` é a garantia final.
-- **Dupla aprovação:** o índice `ux_pagamento_ativo` só permite uma tentativa pendente ou aprovada por pedido. Só tentativa
-  pendente muda de estado, então evento repetido ou atrasado não faz nada.
-- **Gateway fora da transação** (`PagamentoPedidoService`, sem `@Transactional`): grava a tentativa pendente (commit), chama
-  o gateway, grava o retorno (outro commit). Se a resposta se perder, a tentativa fica pendente e a tela oferece repetir com
-  a mesma chave, que o gateway reconhece e não cobra de novo. Pagamento de pedido cancelado que chegue depois é ignorado.
-- **Resumo por e-mail** (`ResumoPedidoService`): sai pelo `EnvioDeMensagem` depois do commit, quando o pedido é aceito
-  (aprovado, ou Pix/boleto gerado). Se falhar, o pedido continua valendo e a tela oferece **Reenviar resumo**. No perfil demo,
-  a mensagem aparece em `/caixa-demo`.
-- **Erro no cartão não apaga o formulário:** `checkout-cartao.js` confere o formato antes de enviar (mesmas regras do
-  `CartaoForm`), com a mensagem embaixo de cada campo. Se o erro vier do servidor (formato ou recusa do gateway), voltam a
-  validade, o nome impresso, o cartão salvo escolhido, "salvar cartão", a forma de pagamento e as parcelas
-  (`CartaoForm#digitado`, por flash). Número e código de segurança nunca voltam: não passam pela sessão nem pelo HTML.
-  Teste: `CheckoutMantemDadosIntegracaoTest`.
-
-**Para testar na demonstração:** os cartões fictícios `4111 1111 1111 1111` (aprova) e `4111 1111 1111 1210` (recusa), com
-validade futura. Pix e boleto mostram os botões **Simular pagamento aprovado** e **Simular expiração**. Como o gateway demo
-guarda as transações na memória, reiniciar a aplicação faz o Pix pendente responder como recusado (a pessoa tenta de novo).
-Esses botões e o `POST /demo/pagamento/forcar-status` (só `ADMIN`) existem apenas no perfil `demo`; fora dele, respondem 404.
-
-**Contratos para outras issues:**
-
-- **F-16 (pedidos do cliente):** entregue em "Meus pedidos" (seção própria, abaixo). A confirmação continua em
-  `/checkout/pedidos/{id}`, que também cuida do pagamento (Pix, boleto, nova tentativa); o detalhe em `/pedidos/{id}` leva até ela
-  enquanto o pedido aguarda pagamento.
-- **F-17 (administração):** cancelar é `EstadoPedidoService#cancelar(pedidoId, autor, observacao)`, que devolve o estoque uma
-  vez e funciona até `EM_SEPARACAO`; registrar a necessidade de estorno fica com a F-17. `Pedido.versao` (`@Version`) já existe
-  para a atualização concorrente. Pagamento aprovado só vem de `PagamentoPedidoService#processarEvento`.
-- **F-15:** a `V4` criou o que o checkout precisa (`pedido.versao` e as colunas `retirada_*`) e a `V5` acrescentou o
-  `status_anterior` ao histórico, que o `EstadoPedidoService` já preenche (aprovação, expiração e cancelamento).
-  `PRONTO_PARA_RETIRADA` está nas constraints desde a `V1`.
-
-**Testes:** `FreteDemoTest` e `CartaoFormTest` (sem banco); `CheckoutServiceIntegracaoTest` (acesso, total, frete, receita, preço
-alterado, última unidade e envio repetido, com threads de verdade); `PagamentoPedidoIntegracaoTest` (recusa, evento repetido,
-expiração, cancelamento, gateway fora do ar e falha no envio); `CheckoutFluxoWebIntegracaoTest` (o percurso pelas telas);
-`CheckoutDemoSemPerfilTest` (sem o perfil demo, os botões não existem). A base `CheckoutTesteBase` não usa `@Transactional` de
-propósito: um rollback no fim do teste esconderia os commits e as travas, que são o assunto.
-
-**Cartão salvo:** veio na F-25 (seção "Facilidades opcionais").
-
-## Meus pedidos (F-16 / UC06)
-
-O cliente acompanha os próprios pedidos em `/pedidos` (lista) e `/pedidos/{id}` (detalhe). O link **Meus pedidos** aparece no
-cabeçalho só para o perfil `CLIENTE`. Código: `PedidosClienteController`, `PedidosClienteService`, `templates/pedidos/`.
-
-- **Só leitura.** Não há POST, PUT nem DELETE em `/pedidos`: o cliente não altera status nem dados do pedido (responde 405).
-  Quem muda o status é o administrador (F-17); a tela reflete o que o `EstadoPedidoService` gravou no histórico.
-- **De quem é o pedido.** O serviço sempre recebe o id da **sessão** (nunca um id da URL ou do formulário) e busca o pedido por
-  `id` **e** dono (`findByIdAndUsuarioId`). Pedido de outra pessoa responde igual a pedido inexistente: **404**, sem revelar que
-  existe. Administrador, conta pendente e conta excluída recebem **403**. Visitante e sessão expirada vão para o login.
-- **Lista:** do mais recente para o mais antigo (desempate pelo número), 10 por página, com número, data, total de unidades,
-  total e situação. As unidades vêm de uma consulta agrupada, não item a item. Página além do fim cai na última; página
-  negativa, na primeira. Sem pedidos: mensagem e link para o catálogo. Falha ao carregar: aviso com "Tentar novamente" e
-  status 503, sem mostrar a mensagem técnica.
-- **Detalhe:** itens com nome, apresentação, preço e quantidade **da hora da compra** (snapshots: mudar o preço do produto não
-  altera pedido antigo), subtotal, frete, total, a **cópia** do endereço de entrega ou da loja de retirada (editar ou excluir o
-  endereço salvo não muda pedidos já feitos), pagamento e histórico de status. Pedido que exige receita lembra de levar a
-  receita à loja; pedido aguardando pagamento leva à tela `/checkout/pedidos/{id}`.
-- **Pagamento mascarado:** método, situação, valor, parcelas e, no cartão, bandeira e final (`VISA final 1111`). O motivo da
-  recusa aparece só quando recusado. Nunca aparecem número do cartão, CVV, código do Pix/boleto nem o id do gateway.
-- **Linha do tempo:** do passo mais antigo ao mais recente, o último marcado como atual, incluindo `PRONTO_PARA_RETIRADA`.
-  Mostra o status e o horário; **não** mostra o autor da mudança (é um administrador) nem a observação (pode ser anotação
-  interna da F-17). Pedido sem histórico gravado mostra ao menos a situação atual.
-- **Para a F-09/F-17:** `PedidosClienteService` é a consulta **do cliente sobre si mesmo**; ela recusa administrador de
-  propósito. O histórico de um cliente na tela do administrador continua sendo uma consulta própria, atrás de `/admin/**`.
-  Reaproveite os métodos `findByUsuarioIdOrderByCriadoEmDescIdDesc` e `findByPedidoIdOrderByCriadoEmAscIdAsc`, que desempatam
-  por id.
-- **Filtros por situação e período (UC06-A2):** vieram na F-23 (seção "Filtros por período e exportação CSV"). "Comprar
-  novamente" (UC06-A3) veio na F-25.
-
-## Carrinho (F-10 / UC05)
-
-Entidades `Carrinho` e `ItemCarrinho` (as tabelas e unicidades já vinham da `V1`: um item por apresentação em cada
-carrinho; o dono é o usuário **ou** o token, nunca os dois). O **administrador não compra**: toda escrita no carrinho e o
-"Finalizar compra" voltam ao carrinho com "Contas de administrador não fazem compras." (na adição rápida em JSON, 403 com a
-mesma mensagem); o login de administrador não mescla o carrinho de visitante, e para ele o cabeçalho não mostra o carrinho
-nem os cards e o detalhe mostram "Adicionar ao carrinho". O aviso do login conta **unidades** ("Você tem 3 unidades no seu
-carrinho."), como o número do cabeçalho. Regras em `service/CarrinhoService`, telas em
-`CarrinhoController` + `templates/carrinho*.html`.
-
-| Rota | O que faz |
-|---|---|
-| `GET /carrinho` | lista o carrinho, com total recalculado no servidor (`BigDecimal`) |
-| `POST /carrinho/itens` (`apresentacaoId`, `quantidade`) | adiciona; se já existe, **soma** |
-| `POST /carrinho/itens/{id}/quantidade` | altera; quantidade menor que 1 leva à confirmação de remoção |
-| `GET/POST /carrinho/itens/{id}/remover` | confirmação e remoção |
-| `POST /carrinho/itens/{id}/aceitar-preco` | aceita o preço novo (UC05-E3) |
-| `GET/POST /carrinho/esvaziar` | confirmação e esvaziamento |
-| `GET /carrinho/finalizar` | revalida e segue para `/checkout`; visitante vai ao login e **volta aqui** depois |
-
-- **De quem é o carrinho:** quem decide é o servidor. Usuário logado: o id do login. Visitante: o cookie `carrinho_token`
-  (UUID, `HttpOnly`, `SameSite=Lax`, 30 dias; `security/CarrinhoCookie`). Nenhuma rota recebe "id de carrinho"; o id de item
-  é procurado só dentro do carrinho do dono, então id alheio (inclusive por POST direto) dá "não está no seu carrinho".
-- **Revalidação a cada operação e a cada exibição:** produto ativo, apresentação ativa, estoque e limite por pedido.
-  Passou do limite ou do estoque ao adicionar: o servidor ajusta e avisa. Item que ficou indisponível depois fica
-  destacado, fora do total, e **bloqueia** o "Finalizar" até ser corrigido ou removido.
-- **Produto desativado ou excluído pela farmácia:** o item desativado continua no carrinho, fora do total, e o topo do
-  `/carrinho` lista "Estes itens não estão mais à venda". O produto apagado de vez (sem pedido) sai do carrinho em cascata
-  (`item_carrinho` com `ON DELETE CASCADE`); por isso o `ProdutoService#excluir` anota, depois do commit, os nomes por
-  carrinho em `service/AvisosDeItensRemovidos`, e o `/carrinho` mostra uma vez "Estes itens saíram do catálogo e foram
-  tirados do seu carrinho" (para conta e visitante). Testes: `ProdutoInativoNoCarrinhoIntegracaoTest` (desativar pelo
-  formulário, excluir com e sem pedido, com o item em carrinhos) e `AvisosDeItensRemovidosTest`.
-- **Login:** `security/MesclagemCarrinhoNoLogin` ouve o evento de login bem-sucedido (publicado antes do
-  `LoginSuccessHandler`, que **não foi alterado**, para não conflitar com a F-18). Une por apresentação, soma
-  respeitando limite e estoque, guarda os avisos na sessão (aparecem em `/carrinho`), apaga o carrinho do visitante e o
-  cookie. Falha na mesclagem não impede o login. Sair não apaga o carrinho da conta.
-- **Para a página do produto (UC02) e o checkout (F-14):** adicionar é `POST /carrinho/itens`; o destino do
-  "Finalizar" é a constante `CarrinhoController.DESTINO_CHECKOUT` (`/checkout`, F-14). Administrador e conta pendente
-  chegam lá e recebem 403. A home já tem o botão "Adicionar ao carrinho" na apresentação padrão disponível de cada card.
-- **Adicionar sem sair da página:** `static/js/carrinho-rapido.js` intercepta o envio de `form.card-carrinho` e faz o mesmo
-  `POST /carrinho/itens` pedindo JSON (`Accept: application/json`). A resposta traz a mensagem, os avisos, o item
-  (nome, apresentação, imagem, quantidade, preço, subtotal), `totalUnidades` e `total`; recusa de regra volta como 422 com
-  `{"erro": ...}`. Um painel pequeno mostra o item e tem "Continuar comprando" (fecha e devolve o foco ao botão) e "Ver
-  carrinho"; Esc também fecha, e ele não some sozinho. Sem JavaScript, ou se a chamada falhar, o formulário segue o caminho
-  normal e redireciona para `/carrinho` (a página do produto, F-02, continua assim).
-- **Contador e aviso no cabeçalho:** `CarrinhoContagemAdvice` entrega ao `layout.html` o número de unidades (`Carrinho (3)`,
-  com " itens no carrinho" em `.visually-hidden`; sem número quando vazio; conta todas as unidades, inclusive de item
-  indisponível, ao contrário do total de `/carrinho`). No login, `MesclagemCarrinhoNoLogin` guarda na sessão "Você tem N
-  itens no seu carrinho." (também quando não havia cookie, se a conta já tinha itens) e o layout mostra o aviso **uma vez**,
-  na primeira página realmente exibida (redirect não consome). Quem veio de "Finalizar" ainda cai onde o login mandar: voltar
-  a `/checkout` depois do cadastro é da F-18.
-- **Layout do card:** `.card` virou coluna flex e o botão fica preso ao fundo (`margin-top: auto`), em vez de vazar por cima
-  do card da linha de baixo.
-
-## Detalhes do produto (F-02 / UC02)
-
-- `GET /produtos/{id}` mostra dados do produto, indicações em tópicos, bula quando há um endereço HTTP(S) válido
-  (link cadastrado inválido é sinalizado e não aberto),
-  avisos, informações de pagamento e imagens. O contador de visualizações sobe uma vez por abertura válida da página.
-- A apresentação inicial é a primeira ativa por ordem; a seleção mostra preço, estoque e imagens gerais ou específicas
-  daquela apresentação. Apresentações inativas ou pertencentes a outro produto não são aceitas na URL.
-- O botão envia `apresentacaoId` e quantidade por `POST /carrinho/itens` (contrato da F-10). Estoque e limite são
-  revalidados no servidor pelo `CarrinhoService`; sem estoque, a compra fica desabilitada. Produto inexistente/inativo
-  retorna 404 com orientação para o catálogo.
-- Migalhas no topo (Início › Categoria › Produto): o caminho vai da raiz até a categoria ativa mais funda do produto
-  (empate: menor ordem). Sem categoria ativa, fica Início › Produtos.
-
-## Cadastro de clientes (F-04 / UC03)
-
-- **Telas:** `/cadastro` (formulário e POST) e `/confirmar-conta` (página provisória até a F-05). Quem já está logado é
-  mandado para a home.
-- **Regras** (`CadastroForm` e `CadastroService`): CPF pelos dígitos verificadores (`@CpfValido`), 18 anos ou mais,
-  celular com DDD e 9 dígitos, e-mail válido, senha de 8 caracteres ou mais com letra e número (até 72 bytes, o limite do
-  BCrypt) e CPF e e-mail ainda sem conta, sem diferenciar maiúsculas. Se dois cadastros iguais chegarem ao mesmo tempo,
-  o índice único do banco recusa o segundo e a tela mostra o mesmo aviso de duplicidade.
-- **A conta nasce PENDENTE e CLIENTE**, com senha em BCrypt e a versão dos termos (`app.termos.versao`, hoje `1.0`) e a
-  data do aceite. O navegador não manda nada disso: o `CadastroForm` não tem esses campos, então `perfil=ADMIN` ou
-  `status=ATIVA` na requisição são ignorados (há teste).
-- **Duplicidade:** a tela avisa que já existe conta e oferece entrar (`/login`) ou recuperar a senha (`/recuperar-senha`,
-  da F-06).
-- **Máscaras:** o CPF e o celular ganham pontuação enquanto a pessoa digita (`static/js/mascaras.js`, pelo atributo
-  `data-mascara="cpf"` ou `"celular"`). Sem JavaScript o formulário continua funcionando: o servidor grava só os dígitos.
-- **Retorno ao carrinho:** `/cadastro?retorno=carrinho` ou `?retorno=checkout` (só essas duas palavras; qualquer outra coisa é
-  ignorada). O valor fica na sessão (`retornoCadastro`); `CadastroController.destinoDoRetorno` converte para `/carrinho`
-  ou `/checkout`. Quem montar o botão "Criar conta" do carrinho (F-10) usa esse parâmetro.
-- **Contrato com a confirmação (F-05):** depois de gravar, o cadastro guarda na **sessão** o id da conta
-  (`contaEmConfirmacao`) e redireciona para `/confirmar-conta`. A F-05 lê o id daí (nunca da URL) e, ao final, usa o
-  `retornoCadastro`.
-- **Testes:** `CpfValidatorTest`, `CadastroFormTest`, `CadastroControllerTest` (sem banco), `CadastroServiceIntegracaoTest`
-  e `CadastroIntegracaoTest` (PostgreSQL real; este último inclui a tentativa de elevar o perfil e o login da conta pendente).
-
-## Termos, privacidade e ambiente de demonstração (F-03)
-
-- O cadastro liga o aceite aos documentos públicos `/institucional/termos-de-uso` e `/institucional/privacidade`.
-  Ambos mostram a mesma versão de `app.termos.versao`, que é a versão gravada na conta no momento do aceite.
-  Se o conteúdo de qualquer documento mudar, atualize essa propriedade.
-- Os documentos são explicitamente demonstrativos, assim como o ambiente acadêmico. Não solicite nem use dados pessoais
-  ou dados de pagamento reais na demonstração. O aviso geral não detalha integrações; fluxos específicos informam quando
-  mensagens ou pagamentos são simulados.
-- O cabeçalho oferece atalhos para conta e endereços a quem está autenticado, pedidos para CLIENTE e painel para ADMIN.
-  O logout continua sendo somente formulário POST com proteção CSRF.
-
-## Confirmação da conta e códigos de verificação (F-05 / UC04)
-
-- **Fluxo:** depois do cadastro, `/confirmar-conta` mostra o e-mail e o celular mascarados (`m***@dominio.com`,
-  `(67) 9****-8888`). A pessoa escolhe o canal, recebe um código de 6 números e o digita. Com o código certo, aquele
-  contato fica confirmado (`usuario.email_confirmado_em` ou `celular_confirmado_em`, migration `V3`), a conta vira `ATIVA`
-  e a pessoa volta ao login com o aviso "Conta confirmada". Confirmar o e-mail não confirma o celular, e vice-versa.
-- **Retomada:** o login de conta pendente mostra o link "Confirmar minha conta" (`/confirmar-conta/retomar`). Para
-  retomar, a pessoa informa e-mail ou CPF **e a senha**; quem sabe só o e-mail de alguém não abre nada. A conta em
-  confirmação fica sempre na sessão (`contaEmConfirmacao`), nunca na URL.
-- **Códigos (`CodigoVerificacaoService`):** gerados com `SecureRandom`, guardados só como hash BCrypt, de uso único e
-  separados por finalidade (`CADASTRO`, `ALTERAR_EMAIL`, `ALTERAR_CELULAR`, `RECUPERAR_SENHA`): código de uma finalidade
-  não vale para outra. A F-06 (recuperação) e a F-21 (troca de contato) usam o mesmo serviço. Recusas voltam como
-  resultado, sem exceção, para a tentativa errada ficar gravada.
-- **Limites** (em `app.codigos.*` no `application.properties`):
-
-  | Configuração | Valor | O que faz |
-  |---|---|---|
-  | `app.codigos.validade` | `10m` | tempo de vida do código |
-  | `app.codigos.tentativas-maximas` | `5` | erros até o código ser bloqueado |
-  | `app.codigos.intervalo-reenvio` | `60s` | espera mínima para pedir outro código (o novo invalida o anterior) |
-  | `app.codigos.envios-por-hora` | `5` | envios na última hora antes de começar o bloqueio |
-  | `app.codigos.bloqueio-envio` | `15m` | depois do limite, cada novo envio só sai esse tempo depois do anterior |
-
-- **Envio de demonstração e perfil demo:** não há serviço real de e-mail ou SMS. O `DemoEnvioAdapter` guarda as
-  mensagens na memória (as últimas 50, somem ao reiniciar) e a página `/caixa-demo` as mostra. Essa página só existe com
-  o perfil `demo`, que vem ligado no `application.properties` (`spring.profiles.active=demo`). Para desligar, apague a
-  linha ou suba com outro perfil (`$env:SPRING_PROFILES_ACTIVE="producao"`): aí `/caixa-demo` dá 404. O código nunca vai
-  para log nem para resposta fora dessa página.
-- **Cada pessoa vê só as mensagens da própria conta:** cada mensagem guarda a conta dona (a do código ou a do pedido). A
-  `/caixa-demo` mostra as mensagens da conta logada e as da conta em confirmação na sessão (`contaEmConfirmacao`, que só o
-  cadastro, a retomada com senha e o login social de conta pendente preenchem); o administrador vê todas, inclusive as sem conta.
-  Visitante sem nada disso vê a caixa vazia. Por isso os códigos de **recuperação de senha** e de **vínculo social** só
-  aparecem para o administrador: quem pede o envio não prova ser o dono da conta. Na apresentação, mostre esses códigos
-  pela aba do admin.
-  Antes, a caixa era a da sessão que pediu o envio: um visitante pedia a recuperação de `admin@farma.com`, lia o código na
-  própria caixa e trocava a senha. Filtrar pelo destino também não bastaria, porque o celular pode se repetir entre contas
-  (cadastro ou troca de celular para o número de outra pessoa).
-- **Código validado uma vez só:** `validar` busca o último código com trava (`SELECT ... FOR UPDATE`), então duas
-  requisições simultâneas com o código certo não passam as duas.
-- **Contrato de envio para outras issues:** `mensagem/EnvioDeMensagem.enviar(canal, destino, assunto, texto)`, com a
-  variante `enviar(..., contaId)` que diz de qual conta é a mensagem (o adaptador demo usa para a caixa; a variante
-  padrão chama a de quatro argumentos). Os códigos e o resumo do pedido (F-14) usam a variante com a conta.
-- **Retomada recusada** volta com o e-mail ou CPF digitado; a senha volta vazia.
-- **Testes:** `ContatoMascaradoTest` e `DemoEnvioAdapterTest` (unitários), `CaixaDemoControllerTest` e
-  `CaixaDemoSemPerfilTest` (camada web, com e sem o perfil demo), `CodigoVerificacaoServiceIntegracaoTest` (expirado,
-  incorreto, uso repetido, finalidade errada, bloqueio por tentativas, reenvio, limite por hora, código fora do log e
-  tentativa gravada mesmo com a recusa) e `ConfirmacaoContaIntegracaoTest` (fluxo completo, SMS, retomada e caixa demo).
-  A caixa por conta também é testada em `RecuperacaoSenhaIntegracaoTest` e `LoginSocialIntegracaoTest` (quem pede o código
-  de outra conta não o lê), `ContaContatoIntegracaoTest` (código da troca para o e-mail novo) e
-  `CheckoutFluxoWebIntegracaoTest` (resumo do pedido só na caixa do dono).
-
-## Recuperação de senha e revogação de sessões (F-06 / UC14)
-
-- **Fluxo, sem login:** `/recuperar-senha` (e-mail ou CPF, mais o canal preferido) → `/recuperar-senha/codigo` (o código
-  de 6 números) → `/recuperar-senha/nova-senha`. A tela de login tem o atalho "Esqueci minha senha". A conta em
-  recuperação fica na sessão, nunca na URL, e a nova senha só é aceita depois de um código válido.
-- **Resposta sempre igual:** para conta elegível, inexistente, pendente, excluída ou sem contato confirmado, o pedido mostra
-  a mesma mensagem ("Se houver uma conta com esses dados..."), e o código errado também. O código só vai para um contato
-  **já confirmado** (`email_confirmado_em` ou `celular_confirmado_em`), do canal preferido ou, se ele não estiver
-  confirmado, do outro.
-- **Limites:** o código usa a finalidade `RECUPERAR_SENHA` e as regras da F-05 (`app.codigos.*`: 10 min, 5 tentativas,
-  uso único, 60 s entre pedidos, 5 por hora). Além disso, o `LimiteDeSolicitacoes` aplica os mesmos 60 s e 5 por hora
-  **por identificador digitado**, exista a conta ou não, para o "aguarde" também não denunciar contas. Esse limite fica
-  na memória e zera quando a aplicação reinicia. Passando de 1000 identificadores, ele varre os que já não pesam em nenhum
-  limite, e cada chave guarda no máximo 150 caracteres: identificadores inventados não fazem a memória crescer sem fim.
-- **Nova senha:** mesma regra do cadastro (`validacao/PoliticaDeSenha`: 8 ou mais, letra e número, até 72 bytes), gravada
-  em BCrypt, e precisa ser diferente da atual. Cliente e administrador recuperam do mesmo jeito; o vínculo com Google ou Facebook não é apagado, e conta
-  sem senha local passa a ter uma.
-- **Sessões antigas:** ao trocar a senha, `RevogacaoDeSessoes` encerra todas as sessões da conta, em qualquer navegador.
-  A `SecurityConfig` registra as sessões (`SessionRegistry`, sem limite de sessões por pessoa); a sessão encerrada é
-  barrada na próxima requisição e vai para `/login?expirada`. A troca de senha logado (F-12) e o login (F-18) podem
-  reaproveitar o mesmo `RevogacaoDeSessoes`.
-- **"Aguarde" para pedir outro código** volta com o e-mail ou CPF e o canal escolhidos.
-- **Testes:** `LimiteDeSolicitacoesTest` e `RevogacaoDeSessoesTest` (unitários), `RecuperacaoSenhaServiceIntegracaoTest`
-  (elegibilidade, resposta igual, limite por identificador, canal confirmado, troca, reutilização, administrador, conta
-  social, sessões) e `RecuperacaoSenhaIntegracaoTest` (fluxo completo, código reutilizado, mensagens iguais, aguardar,
-  sessão aberta antes da troca perde o acesso, senha fraca, administrador e o atalho no login).
-
-## Minha conta: dados pessoais e senha (F-12 / parte do UC07)
-
-Área do cliente logado para ver e editar os próprios dados e trocar a senha. Regras em `service/ContaService`, telas em
-`ContaController` + `templates/conta/*.html`. As rotas não estão em `ROTAS_PUBLICAS`: exigem login (regra "todo o resto").
-
-| Rota | O que faz |
-|---|---|
-| `GET /conta` | dados pessoais (CPF, nascimento, gênero) e contatos (e-mail e celular, com "confirmado" ou "não confirmado") |
-| `GET/POST /conta/editar` | altera **nome, data de nascimento e gênero**; "Cancelar" é um link para `/conta` e não salva nada |
-| `GET/POST /conta/senha` | troca a senha: exige a senha atual, a nova e a confirmação |
-
-- **Limite de tentativas da senha atual:** trocar a senha (e trocar e-mail ou celular, F-21) segue o limite do login
-  (F-18): conta bloqueada é recusada antes de conferir ("Muitas tentativas com a senha errada..."), cada senha errada conta
-  uma falha gravada mesmo com a troca recusada, e a senha certa zera o contador. Cinco erros aqui também bloqueiam o login
-  por 15 minutos.
-- **Mesmas regras do cadastro (F-04/F-06):** nome obrigatório (até 150), nascimento válido (de 1900 até hoje, 18 anos ou
-  mais) e gênero obrigatório. A nova senha segue `validacao/PoliticaDeSenha` (8 caracteres ou mais, com letra e número, até
-  72 bytes), é gravada em BCrypt com o mesmo `PasswordEncoder` e precisa ser diferente da atual.
-- **O que o formulário não consegue alterar:** `ContaForm` só tem `nome`, `dataNascimento` e `genero`, e o controller
-  libera só esses campos no binder. CPF, e-mail, perfil, status e id enviados à força no POST são ignorados; o dono da
-  conta é sempre o usuário da sessão (nenhuma rota recebe id). Só conta `ATIVA` usa estas telas (cliente ou administrador).
-- **Cabeçalho:** depois de salvar os dados, `security/SessaoAutenticada` recria o principal da sessão com o nome novo, então
-  o primeiro nome do cabeçalho muda sem novo login. O link "Minha conta" fica no cabeçalho, ao lado de "Meus endereços".
-- **Sessões na troca de senha:** `RevogacaoDeSessoes.encerrarOutrasSessoesDe(usuarioId, idDaSessaoAtual)` encerra as
-  **outras** sessões da conta (outro navegador ou aparelho; vão para `/login?expirada`). A sessão em que a senha foi trocada
-  continua logada, com o id da sessão renovado (`changeSessionId`).
-- **Contatos:** e-mail e celular são exibidos aqui; a troca com confirmação por código é a F-21 (seção abaixo).
-- **Testes:** `ContaFormsTest` e `DadosDaContaTest` (unitários), `ContaControllerTest` (camada web),
-  `ContaServiceIntegracaoTest`, `ContaIntegracaoTest` e `ContaSessoesServidorRealTest` (Tomcat de verdade, dois
-  "navegadores" com cookies separados, para provar a revogação das outras sessões) (PostgreSQL real; incluem campos forjados ignorados, senha atual
-  errada, nova igual à atual, senha acima de 72 bytes, cancelar sem gravar, nome novo no cabeçalho e sessões revogadas).
-
-
-
-## Troca de e-mail e de celular (F-21 / UC07)
-
-Fecha o UC07: o cliente logado troca o e-mail ou o celular confirmando o **novo** contato por código. Regras em
-`service/ContatoService`, telas em `ContaContatoController` + `templates/conta/contato.html`. Reaproveita o
-`CodigoVerificacaoService` da F-05 (finalidades `ALTERAR_EMAIL` e `ALTERAR_CELULAR`); não há migration.
-
-| Rota | O que faz |
-|---|---|
-| `GET /conta/contato/{tipo}` | tela com os dois passos: pedir o código e digitar o código (`tipo` = `email` ou `celular`; outro valor dá 404) |
-| `POST /conta/contato/{tipo}/enviar` | confere a senha atual e o novo contato e envia o código ao **destino novo** |
-| `POST /conta/contato/{tipo}/confirmar` | confere o código e só então troca o contato |
-
-- **O contato atual só muda depois do código certo.** O novo contato fica no registro do código (`destino`), e é dele, nunca
-  de um campo do formulário, que o contato novo é gravado. Cancelar é voltar a `/conta`: nada foi alterado.
-- **Senha atual obrigatória** para pedir a troca (quem sequestra uma sessão aberta não consegue trocar o contato).
-- **Mesmas regras do cadastro:** e-mail no formato `nome@dominio.com`, até 254 caracteres, único (sem diferenciar maiúsculas);
-  celular com DDD e 9 dígitos, gravado só com dígitos (o cadastro não exige celular único, então aqui também não). Contato
-  igual ao atual é recusado.
-- **Confirmar um não confirma o outro:** a troca do e-mail grava só `email_confirmado_em`; a do celular, só
-  `celular_confirmado_em`. Um código de outra finalidade (cadastro, recuperação de senha, ou o do outro contato) nunca vale.
-- **Disputa de e-mail:** se outra conta ficar com o e-mail entre o pedido e a confirmação, a troca é recusada, o e-mail antigo
-  continua e a mensagem é genérica ("Não foi possível usar este e-mail").
-- **Limites** (os da F-05): 6 números, 10 min, 5 tentativas, reenvio a cada 60 s, 5 envios por hora. Tentativa errada fica
-  gravada. O código nunca aparece em log nem na resposta; na demonstração ele está em `/caixa-demo`.
-- **Sessões:** trocar o **e-mail** (identificador de login) encerra as outras sessões da conta
-  (`RevogacaoDeSessoes.encerrarOutrasSessoesDe`) e renova o id da sessão atual; o cabeçalho já mostra o dado novo. Trocar o
-  celular só atualiza a sessão atual.
-- **O formulário não consegue** mandar id, perfil, status nem contato confirmado: o binder só aceita `novoContato` e
-  `senhaAtual`, e a conta é sempre a da sessão.
-- **Testes:** `ContatoServiceIntegracaoTest` (PostgreSQL real: destino novo, conta intacta antes do código, flags separados,
-  finalidade errada, tentativas, expirado, reenvio, disputa de e-mail, conta pendente), `ContaContatoControllerTest`
-  (camada web: login, CSRF, 404, HTML, campos forjados ignorados, erro por campo, efeitos na sessão) e
-  `ContaContatoIntegracaoTest` (fluxo completo com login no e-mail novo). `ContaControllerTest` e `ContaIntegracaoTest` foram
-  ajustados: a tela da conta mostra os links de troca.
-
-
-## Login social simulado (F-20 / UC10-A1/A2)
-
-- **Não é OAuth real:** Google e Facebook são **simulados**. A interface `social/ProvedorIdentidade` tem um único
-  adaptador, `social/demo/DemoProvedorIdentidade`, que só existe no perfil `demo`; sem ele os botões somem e
-  `/login/social/**` responde 404. Um provedor real seria outro adaptador, e credenciais reais não fazem parte do projeto.
-- **Fluxo:**
-  1. "Google (simulado)" no login leva a `/login/social/google`, que guarda um `state` na sessão.
-  2. A tela do provedor simulado pede identificador, nome, e-mail (opcional) e "e-mail verificado", com as opções
-     Permitir, Cancelar ou Simular provedor fora do ar. Nunca entra numa conta pronta.
-  3. O retorno (`/login/social/google/retorno`) confere o `state` e troca um código de uso único pela identidade. O código
-     vale 5 minutos, e os vencidos são varridos a cada código novo. A opção "e-mail verificado" vem desmarcada.
-- **Regras (`LoginSocialService`):**
-  - Identidade já vinculada a conta ativa: entra. Conta pendente vai para a confirmação da F-05. Excluída ou bloqueada
-    recebe mensagem genérica. **Administrador nunca entra nem vincula por aqui.**
-  - Sem vínculo, a pessoa completa CPF, nascimento (18+), gênero, celular, termos e, se faltar, e-mail
-    (`CompletarSocialForm`, sem perfil/status/senha). A identidade fica na sessão, nunca na URL.
-  - CPF novo cria uma conta CLIENTE **sem senha**. Fica ATIVA só se o provedor declarou o e-mail verificado; senão fica
-    PENDENTE e confirma com código.
-  - CPF de conta existente: o vínculo exige a **senha dessa conta** (erro conta como falha de login, F-18) **ou** um
-    código `VINCULO_SOCIAL` mandado ao **e-mail cadastrado na conta**. E-mail igual sozinho nunca basta.
-  - E-mail do provedor que já está em outra conta, com CPF diferente: recusa (conflito).
-- **Login sem formulário (`security/LoginProgramatico`):** troca o id da sessão, grava o contexto e registra a sessão no
-  `SessionRegistry` (a revogação da F-06 funciona). Publica o evento de login, que mescla o carrinho. Volta ao
-  carrinho/checkout como no login normal.
-- **Minha conta:**
-  - Logado, "Vincular Google/Facebook" liga a identidade à conta da sessão. Se a identidade já for de outra conta, recusa.
-  - A conta social define senha por "Esqueci minha senha", sem perder o vínculo.
-- **Sem migration:** `identidade_social` e a finalidade `VINCULO_SOCIAL` já existiam desde a V1.
-- **Testes:**
-  - `LoginSocialIntegracaoTest`: primeiro acesso e volta, menor de idade, e-mail não verificado ou ausente, CPF
-    existente com senha e com código, admin, cancelar, fora do ar, `state` forjado, campos proibidos, conflito de
-    e-mail, vincular logado, retorno ao carrinho, sessão registrada.
-  - `LoginSocialSemDemoTest`: sem perfil demo, as rotas dão 404 e os botões somem.
-
-## Excluir minha conta (F-24 / I14)
-
-O cliente logado exclui a própria conta em `GET/POST /conta/excluir` (link em "Minha conta"). Regras em
-`service/ExclusaoContaService`, tela em `ContaExclusaoController` + `templates/conta/excluir.html`. Sem migration: a V1 já
-tinha o status `EXCLUIDA` e a coluna `excluido_em`.
-
-- **Quem pode:** só conta CLIENTE `ATIVA`, sempre a da sessão (nenhuma rota recebe id; o binder só aceita `senhaAtual` e
-  `confirmacao`). Visitante vai para o login; administrador recebe 403. CSRF ligado.
-- **Confirmação:** senha atual (identidade) e a palavra `EXCLUIR` digitada (intenção). Senha errada conta como falha de
-  login (F-18) e fica gravada mesmo com a recusa; conta bloqueada por tentativas não é excluída.
-- **Conta sem senha** (entrou só pelo login social): a tela orienta a definir uma senha em "Esqueci minha senha" antes. Não
-  há código por e-mail aqui porque o CHECK da V1 não tem a finalidade `EXCLUIR_CONTA` e uma finalidade não vale para outra.
-- **Pedido em andamento bloqueia:** com algum pedido em `AGUARDANDO_PAGAMENTO`, `PAGAMENTO_APROVADO`, `EM_SEPARACAO`,
-  `ENVIADO` ou `PRONTO_PARA_RETIRADA`, a exclusão é recusada com link para "Meus pedidos". Pedido `ENTREGUE` ou `CANCELADO`
-  não impede.
-- **Política de retenção da demonstração** (decisão funcional, não é avaliação jurídica):
-  - **Apagado:** endereços, cartões salvos (o pagamento mantém bandeira e últimos 4; `cartao_salvo_id` vira NULL), carrinho e
-    itens, vínculos sociais e códigos de verificação.
-  - **Anonimizado na linha do usuário:** nome vira "Conta excluída", e-mail vira `excluida-<id>@excluida.invalid`; CPF,
-    celular, gênero, senha e as datas de confirmação ficam vazios. O e-mail e o CPF originais ficam livres para um cadastro
-    novo. A data de nascimento fica (é `NOT NULL` na V1).
-  - **Mantido:** a linha do usuário (status `EXCLUIDA` + `excluido_em`), pedidos, itens, pagamentos e histórico de status,
-    com as cópias de endereço e loja gravadas no pedido. É o registro de vendas.
-  - **Auditoria:** `log_auditoria` recebe `CONTA_EXCLUIR` com o próprio usuário como autor e alvo, sem dado pessoal.
-- **Depois do commit:** a sessão atual sai, as outras sessões da conta são encerradas (`RevogacaoDeSessoes`) e o login mostra
-  "Sua conta foi excluída.". Entrar de novo dá a mensagem genérica (conta `EXCLUIDA` é tratada como inexistente), e o login
-  social também não entra, porque o vínculo foi apagado.
-- **Testes:** `ContaExclusaoIntegracaoTest` (PostgreSQL real): anonimização conferida por SQL, dados acessórios apagados,
-  pedido/pagamento/histórico intactos, auditoria, login negado (e-mail e CPF), outras sessões encerradas, e-mail e CPF
-  reutilizáveis, campos forjados ignorados, bloqueio por cada status em andamento, senha errada (tentativa gravada), sem
-  `EXCLUIR`, conta sem senha, conta bloqueada, CSRF, visitante, administrador e HTML (um h1, rótulos, erro ligado ao campo).
-
-## Proteção do login (F-18 / UC10, UC15)
-
-Completa o login da F1-09 sem trocar o que já existia (CPF ou e-mail, conta pendente, redirecionamentos). Regras em
-`security/LoginTentativasService`, chamado pelos handlers do login; sem migration (usa `tentativas_login_falhas` e
-`bloqueado_ate` do `usuario`).
-
-- **Bloqueio:** só senha realmente incorreta conta (`BadCredentialsException`). Cinco falhas seguidas bloqueiam a conta por 15 minutos;
-  login bem-sucedido ou senha recuperada (F-06) zera o contador e o bloqueio. Conta pendente, identificador inexistente, conta já
-  bloqueada e falha do sistema (banco fora do ar) não contam. Se o bloqueio já venceu, a próxima senha errada recomeça a contagem.
-  A atualização usa lock pessimista para não perder falhas simultâneas. O limite está fixo em `LoginTentativasService`.
-- **Sem revelar se a conta existe:** o identificador que não é de conta ativa (inexistente, por exemplo) é contado na memória
-  (`security/LimiteDeTentativasEmMemoria`, mesmos 5 erros e 15 minutos, varredura das entradas vencidas e chave de até 150
-  caracteres). Assim a sexta tentativa dá "bloqueada" para conta real e para e-mail inventado. A retomada da confirmação
-  (`/confirmar-conta/retomar`) usa o mesmo limitador.
-- **Sessão:** expira após 30 minutos de inatividade (`server.servlet.session.timeout`). O logout é `POST /logout` com CSRF, invalida só a
-  sessão que saiu (outras abas da mesma conta, com outra sessão, seguem até o próprio logout ou a revogação da F-06) e as páginas
-  protegidas saem com `Cache-Control: no-store`, então "voltar" não as restaura.
-- **Perfil:** o formulário de login ignora `perfil`, `status` e afins; o perfil vem só do banco.
-- **Volta ao carrinho/checkout:** quem se cadastrou a partir do carrinho ou do checkout (`retornoCadastro` na sessão, F-04) volta para
-  lá depois do login; qualquer outro valor é ignorado e apagado. Admin vai sempre para `/admin`.
-- **Rotas:** conferidas contra `ROTAS_PUBLICAS`; `/conta/**`, `/enderecos/**`, `/checkout/**` e `/admin/**` exigem login.
-- **Erro mantém o e-mail ou CPF:** o `LoginFailureHandler` guarda o que foi digitado na sessão (nunca na URL) e o
-  `LoginController` devolve no campo uma única vez; a senha volta vazia (`FormulariosMantemDadosIntegracaoTest`, que
-  também cobre a retomada da F-05 e a recuperação da F-06).
-- **Testes:** `LoginProtecaoIntegracaoTest` (contagem, bloqueio vencido, campos proibidos, sessão, logout, cache, rotas, retorno),
-  acréscimos em `LoginIntegracaoTest`, `LoginHandlersTest` e `RecuperacaoSenhaServiceIntegracaoTest`. Os testes que mexem no cliente do seed
-  limpam falhas e bloqueio antes e depois, porque o banco é compartilhado entre as classes.
-
-## Consulta de clientes (F-09 / UC11)
-
-Consulta administrativa **somente leitura** de clientes, com auditoria. Regras em `service/ClienteAdminService`, telas em
-`AdminClienteController` + `templates/admin/clientes.html` e `cliente-detalhe.html`. Fica sob `/admin/**` (só `ADMIN`:
-visitante vai para `/login`, cliente logado recebe 403, inclusive por URL direta). Não há rota de escrita: o controller só
-tem `GET`, e não existe edição administrativa de conta.
-
-| Rota | O que faz |
-|---|---|
-| `GET /admin/clientes` | lista paginada (20 por página, por nome) com busca `q` e filtro `status` (todos, pendente, ativa, excluída) |
-| `GET /admin/clientes/{id}` | detalhe do cliente e seus 10 pedidos mais recentes |
-
-- **Busca:** `q` procura em nome e e-mail (sem diferenciar maiúsculas) e em CPF (aceita pontuação; só vale com 3 dígitos ou
-  mais). `%`, `_` e `!` digitados são texto comum, não curinga. Status desconhecido vira "todos". Só contas `CLIENTE`
-  aparecem; um id de administrador no detalhe responde 404, como id inexistente.
-- **O que aparece:** a lista mostra o CPF **mascarado** (`***.982.247-**`, `ContatoMascarado.cpf`). O detalhe mostra o CPF
-  completo (a consulta é auditada), nascimento, gênero, e-mail e celular com "confirmado" ou "não confirmado", status e data
-  de cadastro. Nunca aparecem senha, hash, tentativas de login, termos, códigos de verificação nem dados de pagamento.
-- **Histórico:** lista mínima (número, data, total e status) dos 10 pedidos mais recentes, lida do `PedidoRepository`.
-  A F-16 entregou só a consulta **do próprio cliente** (`/pedidos`), que recusa administrador; esta lista continua usando o
-  `PedidoRepository` por ser uma consulta de administrador, auditada.
-- **Auditoria (`log_auditoria`):** cada consulta grava o log **na mesma transação** da leitura; se o log falhar, a consulta
-  falha. Sem administrador identificado na sessão também não há consulta.
-
-  | Ação | Quando | `alvo_tipo` / `alvo_id` | `detalhes` |
-  |---|---|---|---|
-  | `CLIENTE_LISTAR` | abrir a lista (com ou sem filtro) | vazios | `status=<ATIVA\|...\|TODOS>, busca=sim\|nao, pagina=<n>` |
-  | `CLIENTE_VISUALIZAR` | abrir o detalhe de um cliente | `USUARIO` / id do cliente | vazio |
-
-  Todos gravam autor, IP (`getRemoteAddr()`; `X-Forwarded-For` não é confiável) e data. O texto buscado **nunca** vai para o
-  log (pode ser CPF ou e-mail). Detalhe de cliente inexistente ou de administrador responde 404 e não grava log.
-- **Período e CSV:** vieram na F-23 (seção abaixo).
-- **Sem migration:** a tabela `log_auditoria` já existe desde a V1.
-- **Testes:** `ContatoMascaradoTest` (unitário), `AdminClienteSegurancaTest` (visitante, cliente, sem rota de escrita),
-  `AdminClienteTelaTest` (HTML: um único h1, CPF mascarado, tabela em região rolável, detalhe sem formulário) e
-  `ClienteAdminServiceIntegracaoTest` (PostgreSQL real: busca por nome, e-mail e CPF, status, só cliente, paginação,
-  curingas como texto, auditoria sem o termo buscado, 404 sem log, pedidos recentes, log que falha derruba a consulta).
-
-## Facilidades opcionais (F-25 / UC06-A3, UC09-A2, UC16)
-
-- **Comprar novamente:** botão no detalhe do pedido (`POST /pedidos/{id}/comprar-novamente`, `RecompraController`).
-  - Cada item passa por `CarrinhoService.adicionar`, que revalida produto e apresentação ativos, estoque, limite por pedido
-    e preço atual. O preço antigo nunca é reaproveitado.
-  - Item recusado vira aviso e não impede os outros (cada item tem a própria transação).
-  - Leva ao carrinho para revisão: nada é comprado direto.
-  - Pedido de outra pessoa responde 404.
-- **Endereço principal** (`V9__endereco_principal.sql`):
-  - Coluna `endereco.principal` com índice único parcial (no máximo um por cliente).
-  - Regras: o primeiro endereço já nasce principal; "Tornar principal" em Meus endereços
-    (`POST /enderecos/{id}/principal`); excluir o principal promove o mais recente.
-  - A V9 marca como principal o endereço mais recente de quem já tinha endereço (o mesmo que o checkout pré-selecionava).
-  - O checkout abre com ele marcado. Pedidos não mudam, porque guardam a cópia `EnderecoEntrega`.
-- **Cartão salvo por token:**
-  - Na hora de pagar, "Salvar este cartão": só se o pagamento for **aprovado**, o gateway devolve um token
-    (`GatewayDePagamento.tokenizar`). O banco guarda token, bandeira, 4 últimos números, validade e nome. O mesmo cartão
-    não é salvo duas vezes.
-  - Pagar com cartão salvo pede o **código de segurança de novo**. O dono é conferido (`CartaoSalvoRepository.findByIdAndUsuarioId`)
-    **antes** de registrar o pedido: cartão de outra pessoa dá 404 sem pedido nem cobrança.
-  - O pagamento registra o cartão usado (`pagamento.cartao_salvo_id`).
-  - Remover o cartão em "Meus cartões" (`/conta/cartoes`), depois de confirmar em `GET /conta/cartoes/{id}/remover`
-    (cartão de outra pessoa: 404); pagamentos antigos ficam com o cartão nulo.
-  - Número completo e CVV nunca vão para o banco, log nem `toString`.
-  - No gateway demo, o token vive na memória: depois de reiniciar o app, o cartão salvo é recusado com
-    "Cartão salvo não reconhecido" e basta informar o cartão de novo.
-- **Testes:** `FacilidadesOpcionaisIntegracaoTest` (recompra, endereço principal e cartão salvo, inclusive recurso de outra
-  pessoa e CSRF) e `DemoGatewayTokenizacaoTest` (tokenização, token desconhecido, CVV obrigatório).
-
-## Filtros por período e exportação CSV (F-23 / UC06-A2, UC11-A2, UC17)
-
-- **Período:** `de` e `ate` (datas `AAAA-MM-DD`, as duas inclusivas, no horário de São Paulo) em três listas. Data inicial
-  depois da final mostra erro ligado aos campos e não consulta. `PeriodoFiltro` vira um intervalo `[início, fim)` com
-  limites largos quando a data falta (o PostgreSQL não aceita parâmetro nulo sem tipo).
-  - **Meus pedidos** (`/pedidos`): situação (`status`) e período de criação. O dono continua vindo só da sessão.
-  - **Pedidos do admin** (`/admin/pedidos`): número, status, cliente (nome, e-mail ou CPF) e período. Status desconhecido
-    vira "todos" em vez de erro 400.
-  - **Clientes do admin** (`/admin/clientes`): período de cadastro somado à busca e ao status. O log `CLIENTE_LISTAR` ganha
-    `periodo=sim` quando há período.
-- **Paginação:** os links de "Anterior" e "Próxima" levam todos os filtros.
-- **CSV de clientes:** `GET /admin/clientes/exportar.csv` (só ADMIN, regra `/admin/**`), com os mesmos filtros da tela,
-  até 5.000 linhas.
-  - UTF-8 com BOM, separador `;` (abre direto no Excel em português) e anexo `clientes-AAAAMMDD.csv`, sem cache.
-  - Colunas: id, nome, CPF, e-mail e celular **mascarados** (`ContatoMascarado`), status e cadastro. Nada de senha, hash,
-    termos ou tentativas de login.
-  - Toda célula vai entre aspas (aspas internas dobradas). Valor que começa com `=`, `+`, `-`, `@`, tab ou CR ganha um `'`
-    na frente para a planilha não executar como fórmula.
-  - Cada exportação grava `CLIENTE_EXPORTAR` na auditoria com os filtros e o número de linhas, sem o texto buscado.
-- **Sem migration.**
-- **Testes:** `FiltrosEExportacaoIntegracaoTest` (limites do período, status combinado, pedido de outro cliente, cliente
-  por nome/CPF, paginação com filtros, período inválido, CSV mascarado e auditado, fórmula, rota só para admin). Os mocks
-  de `AdminClienteTelaTest`, `AdminClienteSegurancaTest`, `AdminPedidoSegurancaTest` e `PedidosClienteControllerTest`
-  seguem as assinaturas novas.
-
-## Busca tolerante e refinamentos do catálogo (F-22 / UC01-A2)
-
-- **Sem acento nem caixa:** `GET /produtos?q=` compara `unaccent(lower(...))` em nome, marca, princípio ativo,
-  indicação e EAN ("Paracetamól" acha "Paracetamol"). A `V8__busca_tolerante.sql` só cria as extensões
-  `unaccent` e `pg_trgm` (confiáveis no PostgreSQL 13+, sem superusuário). **Não há índice**: `unaccent()` não é
-  IMMUTABLE, então o índice funcional fica como melhoria futura (o catálogo é pequeno).
-- **Filtros novos** (selects montados só com valores de produtos ativos; combinam por AND com os antigos):
-  `marca`, `principioAtivo`, `forma` (igualdade sem acento/caixa), `tipo` (GENERICO, SIMILAR, REFERENCIA; valor
-  inválido é ignorado) e `receita` (`sim` / `nao`; vazio = qualquer).
-- **Ordenação nova:** `MAIS_VENDIDOS` (`qtd_vendida` desc, desempate por id) e `RELEVANCIA` (nome começa com o termo,
-  nome contém, marca/princípio ativo, resto; depois nome; sem termo vale `NOME`). O padrão continua `NOME`.
-  Não há filtro nem ordenação por **avaliação**: o sistema não guarda avaliações.
-- **"Você quis dizer":** quando a busca por texto volta vazia, cada palavra com 3+ letras que não existe é trocada
-  pela mais parecida (nome, marca e princípio ativo de produtos ativos) via `similarity()` do `pg_trgm`. Limite
-  `app.catalogo.sugestao-similaridade` (padrão `0.4`). A sugestão aparece em `role="status"` e o link refaz a busca
-  com `?q=`. Falha ao calcular a sugestão não derruba a página; o texto digitado não vai para o log.
-- **Código:** `FiltroCatalogo` (record) em `repository`; as assinaturas antigas de `buscarCatalogo` e
-  `CatalogoService#buscar` continuam e delegam.
-- **Testes:** `CatalogoBuscaToleranteTest` (acento, cada filtro isolado e composto, ordenações, sugestão, tela e
-  paginação). `CatalogoErroTest` passou a simular `buscar(FiltroCatalogo, ...)`.
-
-## Produtos, apresentações, estoque e imagens (F-08 / UC12)
-
-Cadastro administrativo de produtos. Regras em `service/ProdutoService`, telas em `AdminProdutoController` +
-`templates/admin/produtos.html` e `produto-form.html`; fotos em `service/ArmazenamentoImagem` e `config/UploadsConfig`.
-Fica sob `/admin/**` (só `ADMIN`: visitante vai para `/login`, cliente logado recebe 403, inclusive em POST direto).
-
-| Rota | O que faz |
-|---|---|
-| `GET /admin/produtos` | lista paginada (20 por página, por nome) com busca `q` (nome, marca, princípio ativo, SKU ou EAN) e filtro `status` (ativos, inativos) |
-| `GET /admin/produtos/novo`, `POST /admin/produtos` | formulário e cadastro |
-| `GET /admin/produtos/{id}/editar`, `POST /admin/produtos/{id}` | edição |
-| `POST /admin/produtos/{id}/excluir` | exclusão (ver abaixo) |
-
-- **Regras do formulário:** nome e marca obrigatórios; ao menos uma categoria **ativa**; tarja vermelha ou preta exige
-  receita; ao menos uma apresentação, cada uma com descrição (até 60), SKU (até 40) e EAN (8 a 14 dígitos) **únicos**, preço
-  maior que zero, estoque não negativo e limite por pedido maior que zero. Toda violação volta ao formulário com a mensagem
-  no alerta de erro (regras de negócio) ou junto ao campo, com `aria-invalid` (validação do formulário), sem gravar nada.
-  Número que não converte (texto, vírgula no preço, estoque acima de 2.147.483.647) também aparece junto ao campo da
-  apresentação, com a mensagem de `messages.properties` (`typeMismatch.*`), nunca a mensagem técnica do Spring.
-- **Preço e estoque ficam em `Apresentacao`.** Apresentação não é removida: desmarca-se "Ativa". Linhas em branco no fim
-  do formulário cadastram novas apresentações.
-- **Estoque e compra concorrente:** cada linha carrega a `versao` lida ao abrir o formulário. Se uma compra (ou
-  cancelamento) mexeu no estoque depois, o salvamento é recusado com "foi alterada por outra operação"; o estoque da compra
-  não é sobrescrito. A conferência final vale também contra a corrida entre validar e gravar (lock otimista).
-- **Dois administradores no mesmo produto ou na mesma categoria:** o formulário leva a `versao` do produto (ou da
-  categoria, V12). Quem salva por último é recusado com "foi alterado por outra pessoa... Recarregue o formulário", em
-  vez de apagar em silêncio o que o outro gravou. Vendas e visualizações (UPDATE direto) não mudam a versão, então não
-  invalidam um formulário aberto (`ProdutoServiceIntegracaoTest`, `CategoriaServiceIntegracaoTest`).
-- **Quem e quando:** `atualizado_por` (o administrador da sessão, nunca um campo do formulário) e `atualizado_em`.
-- **Exclusão:** produto com pedido (`item_pedido`) só é **inativado**, e o histórico fica intacto; sem pedido, é apagado de
-  vez (imagens e apresentações primeiro, porque o mapeamento não tem cascade). Se surgir um vínculo no meio do caminho, a
-  tela pede para inativar. Produto inativado sai do catálogo (F-01/F-02); no carrinho de quem já o tinha, ver F-10.
-  A lixeira pede confirmação numa janela da própria página (`static/js/confirmar.js`: `<form data-confirmar="...">` abre
-  um `<dialog>`; o foco abre em "Cancelar" e Esc fecha), no lugar do `confirm()` do navegador.
-- **Situação do produto:** o interruptor "Produto ativo" fica no topo do formulário, com a situação atual em texto.
-- **Mensagens do admin:** sucesso e erro de produtos, categorias e pedidos aparecem como toast no canto da tela
-  (`static/js/toast.js`, alertas com `data-toast`), verde ou vermelho, que some em cerca de 6 segundos (pausa com o mouse
-  em cima ou o foco dentro) e tem "Fechar". Sem JavaScript, o alerta fica no topo, como antes.
-- **Fotos:** JPG, PNG ou WebP de até 2 MB, conferidas pela extensão, pelo tipo enviado **e** pelo conteúdo do arquivo. O nome
-  gravado é um UUID (o nome enviado nunca vira caminho). Ficam em `app.uploads.dir` (padrão `uploads/`, fora do JAR) e são
-  servidas em `/uploads/produtos/**` (rota pública, só leitura). A foto nova vale para todas as apresentações ou para uma
-  delas, e a apresentação escolhida precisa ser do mesmo produto. Sem foto, o site usa a imagem padrão. Se a gravação
-  falha, os arquivos já escritos são apagados; arquivos de fotos removidas são apagados só depois do commit.
-- **Limites de envio:** `spring.servlet.multipart.max-file-size=10MB` e `max-request-size=30MB` (o limite de 2 MB por
-  foto é do serviço); passar do limite do servidor mostra a mensagem de `UploadExcedidoAdvice`. Cada campo do multipart
-  conta como uma parte, e o formulário passa de 50 (o padrão do Spring Boot 3.5) só com as linhas de apresentação; por
-  isso `server.tomcat.max-part-count=120` (`FormularioProdutoServidorRealTest` envia 60 partes pelo Tomcat de verdade).
-- **Cache das fotos e do site:** fotos enviadas (`/uploads/produtos/`, nome UUID, nunca sobrescritas) ficam um ano no
-  navegador (`UploadsConfig`). CSS, JS e `/images` usam `spring.web.resources.cache.cachecontrol.no-cache=true`: o
-  navegador guarda e só confere se mudou (304), sem o risco de um CSS velho. As páginas seguem com `no-store` do Spring
-  Security (`CacheDosEstaticosServidorRealTest`).
-- **Bula:** a URL é opcional, mas, se informada, precisa ser um endereço `http://` ou `https://` válido (mesma regra da página do produto, F-02, que continua tratando URL inválida já gravada).
-- **Testes:** `ProdutoServiceRegrasIntegracaoTest` (foto e apresentação de outro produto, SKU/EAN repetido
-  ou já cadastrado, preço e limite), `AdminCategoriaExclusaoIntegracaoTest` (exclusão e reatribuição de categoria pela tela),
-  `ProdutoServiceIntegracaoTest` (PostgreSQL real: cadastro aparece no catálogo e grava o administrador,
-  violações com mensagem, estoque alterado por compra não é sobrescrito, foto vinculada à apresentação certa, exclusão
-  definitiva e só inativação com pedido), `ArmazenamentoImagemTest`, `UploadExcedidoAdviceTest`,
-  `AdminProdutoSegurancaTest` (visitante, cliente, administrador da sessão gravado, CSRF) e `AdminProdutoTelaTest` (HTML:
-  um único h1, rótulos, erro ligado ao campo por `aria-describedby`, tabela em região rolável).
+## Segurança
+
+- Dois papéis, `CLIENTE` e `ADMIN`. Páginas públicas ficam em `ROTAS_PUBLICAS` (`config/SecurityConfig`); `/admin/**` é
+  só do `ADMIN` (cliente recebe 403); todo o resto exige login. O administrador não compra.
+- Senhas e códigos de verificação em BCrypt; código, senha e CPF completo nunca vão para log. CSRF ligado em todo `POST`.
+- Recurso de outra pessoa (pedido, endereço, cartão) responde 404. O id da conta em fluxos públicos fica na sessão,
+  nunca na URL, e os formulários não aceitam perfil, status nem id.
+- Login, recuperação e retomada não revelam se a conta existe. Cinco senhas erradas bloqueiam o login por 15 minutos.
+- Trocar a senha encerra as outras sessões da conta.
+
+O enunciado descreve o usuário comum como "somente listagem/visualização". Aqui o sistema é uma loja: o `CLIENTE` também
+mexe no próprio carrinho e nos próprios pedidos (sem isso não haveria compra). O que é exclusivo do `ADMIN` é o cadastro
+do catálogo e a administração de clientes e pedidos.
 
 ## Riscos conhecidos
 
-Limites assumidos de propósito neste trabalho acadêmico (não são defeitos a corrigir agora):
+Limites assumidos de propósito neste trabalho acadêmico:
 
-- **O perfil `demo` é só para apresentação.** Ele liga a `/caixa-demo`, o provedor social simulado e os botões que deixam o
-  próprio cliente simular a aprovação ou a expiração do pagamento (`CheckoutDemoController`). Em produção, desligue o perfil.
-- **Bloqueio intencional por terceiros:** quem souber o e-mail ou CPF de alguém pode errar a senha cinco vezes e bloquear o
-  login dessa conta por 15 minutos. Não há CAPTCHA nem limite por IP.
-- **Tempo de resposta do bloqueio:** a conta real bloqueada é recusada antes de conferir a senha (sem BCrypt), enquanto o
-  identificador inexistente bloqueado passa pelo hash fictício. A mensagem é a mesma; só o tempo difere.
-- **Provedor social demo e e-mail verificado:** na tela do provedor simulado, quem marca "e-mail verificado" cria uma
-  conta ATIVA com um e-mail que ninguém confirmou (desde que ainda não esteja cadastrado). Se o dono real recuperar a senha
-  depois, a identidade social de quem criou a conta continua vinculada. A opção vem desmarcada; o fluxo real não muda.
-- **Provedor social demo e identificador externo:** a tela do provedor simulado aceita qualquer identificador. Quem souber
-  o identificador de uma identidade já vinculada entra na conta dona dele. É o mesmo limite do item acima: só existe no
-  perfil `demo`.
-- **Cancelar pedido com Pix ou boleto já gerado:** o `GatewayDePagamento` simulado não tem a operação de cancelar uma
-  cobrança. Quando o admin cancela um pedido aguardando pagamento, o pagamento vira EXPIRADO só aqui; num gateway real, a
-  cobrança precisaria ser cancelada lá também, senão um pagamento feito depois chegaria sem pedido e sem estorno marcado.
-- **Dependências:** a consulta à base pública OSV (auditoria de 2026-11-04) aponta avisos no Tomcat 10.1.55, Jackson 2.21.4,
-  Spring Web MVC 6.2.19, driver do PostgreSQL 42.7.11 e Log4j API 2.24.3, todos vindos do Spring Boot 3.5.16 (a última
-  versão da linha 3.5). Nenhum atinge o que o app usa (restrições do `web.xml` e autenticação do próprio Tomcat, HTTP/2,
-  SSE, `XsltView`, TLS do banco); o Jackson só gera a resposta do carrinho rápido.
-- **Contadores na memória:** o limite de recuperação (`LimiteDeSolicitacoes`), o de tentativas para identificador sem conta
-  (`LimiteDeTentativasEmMemoria`) e o aviso de item excluído do carrinho (`AvisosDeItensRemovidos`) recomeçam quando a
-  aplicação reinicia e não são compartilhados entre várias instâncias: se reiniciar antes da visita, o aviso se perde.
-
-## Como criar uma página nova
-
-Toda página usa o layout `templates/fragments/layout.html` (cabeçalho com busca, menu de
-categorias e área do usuário, rodapé e link "Pular para o conteúdo"). **Não copie cabeçalho nem
-rodapé** — crie o arquivo assim:
-
-```html
-<!DOCTYPE html>
-<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
-<head>
-    <title>Minha página | Farma++</title>
-</head>
-<body>
-<div id="pagina">
-    <h1>Título da página</h1>
-    <!-- conteúdo -->
-</div>
-</body>
-</html>
-```
-
-Regras: um único `<h1>` por página (sem pular nível nos demais títulos); links com
-`th:href="@{...}"`; toda imagem com `alt` (decorativa: `alt=""`); todo campo com `<label for>`;
-cores sempre via `var(--cor-...)` do `tokens.css`, nunca hexadecimal solto; tamanhos em `rem`;
-campos de formulário com o fragment `fragments/campo`; formulário `POST` sempre com `th:action` (o token CSRF vem
-junto) e página aberta a visitantes precisa estar em `ROTAS_PUBLICAS` do `SecurityConfig`
-(ver [Segurança e papéis](#segurança-e-papéis)). Veja o checklist completo em
-[`docs/acessibilidade.md`](docs/acessibilidade.md) e cole-o na descrição do PR. O teste
-`LayoutTest` confere o layout das páginas existentes — adicione a nova página nele.
-
-## Fluxo de Pull Request
-
-1. Toda mudança entra por PR — ninguém commita direto na `main`.
-2. PR precisa de descrição curta: o que foi feito e como testar localmente.
-3. Pelo menos 1 aprovação de outro integrante antes do merge.
-4. Preferir PRs pequenos e focados numa única funcionalidade.
-5. Usar "Squash and merge" pra manter o histórico da `main` limpo.
-6. O CI (GitHub Actions) precisa estar verde para o merge.
-
-O repositório tem um template (`.github/pull_request_template.md`): todo PR novo já abre com as seções
-**O que muda**, **Como testar** e o checklist. Preencha tudo, inclusive o `Closes #<número da issue>`.
-
-### Convenção de branch, commit e PR
-
-- **Branch:** `tipo/f1-NN-descricao-curta`, em minúsculas e com hífens. Tipos: `feat`, `fix`, `docs`, `style`,
-  `test` e `chore`. Ex.: `feat/f1-04-entidades-carrinho-endereco-cartao-loja`.
-- **Commit:** `tipo: verbo no imperativo e o que mudou`, curto, um assunto por commit. Ex.:
-  `feat: adiciona entidades de pedido` e `fix: corrige a ordem dos endereços`.
-- **PR:** o título começa com o código da issue (`F1-05: Entidades e repositories de Pedido...`) e a descrição
-  traz `Closes #<número da issue>`.
-
-### Autoria dos commits
-
-Para os commits aparecerem no seu perfil do GitHub, o nome e o e-mail do Git precisam ser os da sua conta.
-Confira antes do primeiro commit:
-```bash
-git config user.name
-git config user.email
-```
-Para corrigir (vale só neste repositório), use o e-mail cadastrado na sua conta do GitHub ou o endereço
-`noreply` que ela mostra em *Settings > Emails*:
-```bash
-git config user.name "Seu Nome"
-git config user.email "email-da-sua-conta-do-github"
-```
-A revisão é cruzada: quem aprova o PR é de outra trilha.
-
-### Proteção da `main`
-
-A `main` aceita mudanças só por PR: com 1 aprovação e o check `verify` (CI) verde, e com squash and merge.
-Push direto na `main` é recusado. As regras ficam em *Settings > Rules* do repositório e quem as altera é o
-dono do repositório.
+- **O perfil `demo` é só para a apresentação.** Ele liga a `/caixa-demo`, o provedor social simulado e os botões que
+  deixam o próprio cliente simular a aprovação ou a expiração do pagamento. Em produção, o perfil deve ser desligado.
+- **Bloqueio por terceiros:** quem souber o e-mail ou CPF de alguém pode errar a senha cinco vezes e bloquear o login
+  dessa conta por 15 minutos. Não há CAPTCHA nem limite por IP.
+- **Tempo de resposta do bloqueio:** conta real bloqueada é recusada sem conferir a senha; identificador inexistente
+  passa por um hash fictício. A mensagem é a mesma, só o tempo difere.
+- **Provedor social simulado:** marcar "e-mail verificado" cria conta ativa com um e-mail que ninguém confirmou, e quem
+  souber o identificador externo de uma identidade vinculada entra na conta dona dele. Só existe no perfil `demo`.
+- **Cancelar pedido com Pix ou boleto gerado:** o gateway simulado não cancela a cobrança. Num gateway real, ela
+  precisaria ser cancelada lá também.
+- **Dependências:** a base OSV (consulta de 2026-11-04) aponta avisos no Tomcat, Jackson, Spring Web MVC, driver do
+  PostgreSQL e Log4j API, todos na versão do Spring Boot 3.5.16 (a última da linha 3.5). Nenhum atinge recursos que o app
+  usa.
+- **Contadores na memória:** o limite de pedidos de recuperação, o de tentativas para identificador sem conta e o aviso
+  de item tirado do carrinho recomeçam quando a aplicação reinicia e não são compartilhados entre instâncias.
 
 ## Quem fez o quê
-
-Uma linha por módulo; **atualize esta tabela no seu PR** (o template lembra). Ela é o roteiro do item
-"Divisão da equipe" da apresentação: cada integrante explica as linhas dele.
 
 ### Fase 1: fundação
 
@@ -1197,7 +175,7 @@ Uma linha por módulo; **atualize esta tabela no seu PR** (o template lembra). E
 | Catálogo: entidades e repositories | F1-03 (#7) | Jean (@JeanFlavioZTezini) | #17 |
 | Compra: carrinho, endereço, cartão e loja | F1-04 (#13) | Kauê (@KaueAlves09) | #18, #44 |
 | Pedido, pagamento, histórico e auditoria | F1-05 (#16) | Kauê (@KaueAlves09) | #19, #44 |
-| Seed de demonstração (`V2`) | F1-06 (#8) | Kauê (@KaueAlves09) e _preencher_ (autor do `V2` original) | #15 |
+| Seed de demonstração (`V2`) | F1-06 (#8) | Aieser (autor do `V2` original), ajustes por Kauê (@KaueAlves09) | #15 |
 | Layout-base, cabeçalho, rodapé e acessibilidade da interface | F1-07 | Kauê (@KaueAlves09) | #5 |
 | Documento de acessibilidade | F1-08 | Nakao (@FernandoNakao) | #10 |
 | Login e papéis (Spring Security) | F1-09 | Jean (@JeanFlavioZTezini) | #20 |
@@ -1206,9 +184,6 @@ Uma linha por módulo; **atualize esta tabela no seu PR** (o template lembra). E
 | Home e menu de categorias pelo banco | F1-12 | Cássio (@cassioqm), ajustes por Kauê (@KaueAlves09) | #22, #43 |
 
 ### Onda final: entrega e estabilização
-
-Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: ao criar a issue, anote o número ao lado
-(por exemplo `F-04 (#52)`). As letras A a F são as pessoas do plano; troque cada uma pelo nome e pelo usuário do GitHub.
 
 | Módulo | Issue | Integrante | PR |
 |---|---|---|---|
@@ -1223,17 +198,27 @@ Os códigos `F-NN` são os do plano da onda final, não os números do GitHub: a
 | Consulta administrativa de clientes com auditoria (UC11) | F-09 (#32) | Kauê (@KaueAlves09), repassada da trilha C | #60, #65 |
 | Carrinho de visitante e cliente, com mesclagem no login (UC05) | F-10 | Aieser, integração por Kauê (@KaueAlves09) | #56 |
 | CRUD de endereços e seleção no checkout (UC16) | F-11 | Aieser, integração por Kauê (@KaueAlves09) | #49 |
-| Edição de dados pessoais e senha autenticada (UC07) | F-12 (#35) | Aieser (pessoa D), integração por Kauê (@KaueAlves09) | #57 |
+| Edição de dados pessoais e senha autenticada (UC07) | F-12 (#35) | Aieser, integração por Kauê (@KaueAlves09) | #57 |
 | Gateway de pagamento simulado e retorno idempotente (UC08/UC09) | F-13 | João (@Joaomarceloap) | #46 |
 | Checkout transacional, entrega ou retirada, estoque e expiração (UC08/UC09) | F-14 (#37) | João (@Joaomarceloap) | #52 |
 | Contratos e modelos de pedidos e migrations de compatibilidade (UC06/UC08/UC14/UC17) | F-15 | Jean (@JeanFlavioZTezini), com Kauê (contatos confirmados) e João | #59 |
 | Histórico e detalhe de pedidos do cliente (UC06) | F-16 | Jean (@JeanFlavioZTezini) | #61 |
 | Administração de pedidos: transições, receita e histórico (UC17) | F-17 | Jean (@JeanFlavioZTezini) | #64 |
 | Proteção do login e logout validado nos novos fluxos (UC10/UC15) | F-18 | Jean (@JeanFlavioZTezini), correções por Kauê (@KaueAlves09) | #68 |
-| Integração, teste do percurso completo e entrega reproduzível | F-19 (#26) | Todos; integração por Kauê (@KaueAlves09) | |
+| Integração, teste do percurso completo e entrega reproduzível | F-19 (#26) | Todos; integração por Kauê (@KaueAlves09) | #79 |
 | Login social demonstrável com vínculo seguro de CPF (UC10) | F-20 | Kauê (@KaueAlves09) | #77 |
 | Alteração de e-mail/celular com confirmação do novo contato (UC07) | F-21 | Kauê (@KaueAlves09) | #67 |
 | Correção de busca e refinamentos do catálogo (UC01) | F-22 | Kauê (@KaueAlves09) | #75 |
 | Filtros completos de pedidos/clientes e exportação CSV (UC06/UC11) | F-23 | Kauê (@KaueAlves09) | #75 |
 | Excluir a própria conta preservando histórico necessário (regra I14) | F-24 | Kauê (@KaueAlves09) | #78 |
 | Facilidades explicitamente opcionais | F-25 | Kauê (@KaueAlves09) | #76 |
+
+### Polimento depois da entrega
+
+| Módulo | Integrante | PR |
+|---|---|---|
+| Revisão visual e de UX (base, compra, conta e admin) | Kauê (@KaueAlves09) | #80, #81, #82, #83 |
+| Correções de segurança da demonstração, checkout e carrinho | Kauê (@KaueAlves09) | #84, #85, #86, #87 |
+| Formulários mantêm os dados após erro; limite de partes do formulário de produto | Kauê (@KaueAlves09) | #88, #89 |
+| Lojas de retirada em Campo Grande e CEP pelo ViaCEP | João (@Joaomarceloap) | #90 |
+| Auditoria: edição simultânea no admin, páginas de erro, cache, testes do admin, ajustes, SEO e fotos | Kauê (@KaueAlves09) | #91 a #97 |

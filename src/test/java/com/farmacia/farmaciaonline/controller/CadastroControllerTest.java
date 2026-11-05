@@ -121,6 +121,8 @@ class CadastroControllerTest {
                 .contains("href=\"/institucional/privacidade\"")
                 .contains("versão")
                 .contains(">1.0<");
+        // Sem a classe, o `.campo input { width: 100% }` centraliza a caixa numa linha só dela.
+        assertThat(html).containsPattern("<label for=\"aceiteTermos\" class=\"campo__marcador\">\\s*<input type=\"checkbox\"");
         assertThat(html).doesNotContain("name=\"retorno\"");
     }
 

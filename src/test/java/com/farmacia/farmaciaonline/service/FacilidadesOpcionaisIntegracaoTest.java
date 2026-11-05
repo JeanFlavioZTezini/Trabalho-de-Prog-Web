@@ -452,7 +452,8 @@ class FacilidadesOpcionaisIntegracaoTest extends CheckoutTesteBase {
                         .param("lojaId", "1").param("metodo", "CARTAO_CREDITO"))
                 .andExpect(status().isOk()).andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
 
-        assertThat(html).contains("name=\"cartaoSalvoId\"", "VISA final 1111", "<label for=\"salvarCartao\"");
+        assertThat(html).contains("name=\"cartaoSalvoId\"", "VISA final 1111")
+                .containsPattern("<label for=\"salvarCartao\" class=\"campo__marcador\">\\s*<input type=\"checkbox\"");
         assertThat(cartoes.listar(cliente.getId())).hasSize(1);
     }
 }

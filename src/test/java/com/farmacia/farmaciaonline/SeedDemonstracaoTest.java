@@ -212,6 +212,13 @@ class SeedDemonstracaoTest {
     }
 
     @Test
+    void lojasDeRetiradaFicamEmCampoGrande() {
+        assertThat(contar("SELECT count(*) FROM loja WHERE cidade <> 'Campo Grande' OR uf <> 'MS'")).isZero();
+        assertThat(jdbc.queryForObject("SELECT logradouro || ', ' || numero || ' - ' || bairro FROM loja WHERE id = 1",
+                String.class)).isEqualTo("Rua Quatorze de Julho, 2000 - Centro");
+    }
+
+    @Test
     void todosOsEansSaoEan13Validos() {
         List<String> eans = jdbc.queryForList("SELECT ean FROM apresentacao", String.class);
 

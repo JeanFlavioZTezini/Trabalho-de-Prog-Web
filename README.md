@@ -95,6 +95,7 @@ Essas contas existem só para desenvolvimento e demonstração.
   | `V8` | extensões `unaccent` e `pg_trgm` da busca tolerante | F-22 |
   | `V9` | `endereco.principal` (endereço principal) | F-25 |
   | `V10` | fotos da Neo Dipirona e da Loratadina (marca da Loratadina passa a Cimed) | revisão visual |
+  | `V11` | lojas de retirada em Campo Grande/MS (Centro e Jardim dos Estados) | |
   | `V12` | `produto.versao` e `categoria.versao` (edição simultânea no admin) | polimento |
 - **Textos com várias linhas no seed:** use `E'linha 1\nlinha 2'`. Quebrar a linha dentro das aspas
   grava um fim de linha diferente no Windows e no Linux.
@@ -136,12 +137,12 @@ testes, 0 falhas**. O CI roda o mesmo comando em todo PR e em todo push na `main
 "Simular pagamento aprovado/expiração" do pedido, o provedor de login social simulado e o aviso de projeto acadêmico no
 rodapé. Sem ele, essas telas respondem 404 e os botões somem.
 
-**Nada aqui é integração real.** Cada serviço externo é uma interface com um adaptador de demonstração:
+**Só o CEP é integração real.** Cada serviço externo é uma interface com um adaptador; os outros são de demonstração:
 
 | Serviço | Adaptador | Como se comporta |
 |---|---|---|
 | E-mail e SMS (códigos, resumo do pedido) | `mensagem/demo/DemoEnvioAdapter` | guarda as últimas 50 mensagens na memória; ver em `/caixa-demo` |
-| CEP | `cep/demo/DemoCepAdapter` | endereços fixos; `99999-999` simula o serviço fora do ar |
+| CEP | `cep/viacep/ViaCepAdapter` (API pública do ViaCEP) | precisa de internet; fora do ar ou lento (4 s), a tela pede o endereço à mão. Offline: `app.cep.provedor=demo` liga o `cep/demo/DemoCepAdapter` (endereços fixos; `99999-999` simula falha) |
 | Pagamento (cartão, Pix, boleto) | `gateway/demo/DemoGatewayAdapter` | `4111 1111 1111 1111` aprova, `4111 1111 1111 1210` recusa; Pix e boleto ficam pendentes até o botão demo |
 | Login com Google/Facebook | `social/demo/DemoProvedorIdentidade` | tela "Provedor simulado"; sem OAuth real |
 | Frete | tabela demo | entrega só para MS (CEP e UF precisam combinar) |
@@ -285,7 +286,7 @@ disponíveis como artefato da execução.
 
 ```
 com.farmacia.farmaciaonline
-├── cep              (ConsultaCep: porta de consulta de CEP; demo/DemoCepAdapter)
+├── cep              (ConsultaCep: porta de consulta de CEP; viacep/ViaCepAdapter e demo/DemoCepAdapter)
 ├── config           (SecurityConfig, WebConfig, etc.)
 ├── controller       (Controllers Thymeleaf; UsuarioLogadoAdvice entrega o primeiro nome ao cabeçalho)
 ├── model            (Entidades JPA)
@@ -371,7 +372,9 @@ Entidades em `model` (`Carrinho`, `ItemCarrinho`, `Endereco`, `CartaoSalvo`, `Lo
 - **`CartaoSalvo` guarda só o token do gateway e dados mascarados.** Nunca grave número completo nem CVV (LGPD e PCI DSS).
 - `Endereco` salvo não é o endereço do pedido: o pedido guarda uma cópia, então editar ou excluir um endereço não
   altera pedidos antigos.
-- `Loja` é o ponto de retirada. Produto que exige receita só pode ser retirado em loja (I3).
+- `Loja` é o ponto de retirada. Produto que exige receita só pode ser retirado em loja (I3). As duas lojas do seed
+  ficam em Campo Grande/MS (`V11`): Farma++ Centro (Rua Quatorze de Julho, 2000, CEP 79002-336) e Farma++ Jardim dos
+  Estados (Avenida Afonso Pena, 4100, CEP 79020-001).
 
 ## Modelo de pedido
 
@@ -411,10 +414,16 @@ Telas em `/enderecos` (lista, `novo`, `{id}/editar`, `{id}/excluir`); exigem log
   `ATIVA` recebe 403.
 - **Validação** (`EnderecoForm`): destinatário, CEP, logradouro, número, bairro, cidade e UF obrigatórios; CEP com 8
   dígitos (com ou sem traço, gravado só com dígitos); UF é uma das 27 siglas; complemento e referência opcionais.
-- **Consulta de CEP** por adaptador: a tela depende da interface `cep/ConsultaCep`, e hoje só existe o
-  `cep/demo/DemoCepAdapter`, com 7 CEPs fictícios (`01310-100`, `04094-050`, `01001-000`, `20040-020`, `30130-010`, `79002-000`, `79800-001`).
-  CEP fora da lista = "não localizado"; `99999-999` simula o serviço fora do ar. Nos dois casos o formulário
-  continua com o que já foi digitado e a pessoa preenche à mão. O botão "Buscar CEP" é um `POST` (funciona sem JavaScript). O Enter dentro do
+- **Consulta de CEP** por adaptador: a tela depende da interface `cep/ConsultaCep`. O padrão é o
+  `cep/viacep/ViaCepAdapter`, que consulta `https://viacep.com.br/ws/{cep}/json/` pelo servidor (tempo limite em
+  `spring.http.client.*`). Com `app.cep.provedor=demo`, entra o `cep/demo/DemoCepAdapter` (7 CEPs fixos, sem internet;
+  `99999-999` simula falha). CEP inexistente = "não localizado"; ViaCEP fora do ar = "não foi possível consultar". Nos dois
+  casos o formulário continua com o que já foi digitado e a pessoa preenche à mão. CEP geral de cidade pequena só traz
+  cidade e UF, e a tela pede o logradouro e o bairro.
+- **Busca ao digitar:** com os 8 números, `static/js/cep.js` chama `GET /enderecos/cep?cep=` (JSON, só logado) e preenche
+  logradouro, bairro, cidade e UF; a mensagem sai em `#cep-status` (`role="status"`, o leitor de tela anuncia). O foco
+  não sai do CEP. A busca só roda quando a pessoa digita: abrir a edição não sobrescreve o endereço salvo. Sem
+  JavaScript, o botão "Buscar CEP" faz a mesma consulta por `POST`. O Enter dentro do
   formulário **salva** (há um botão de envio escondido antes dele, porque o Enter aciona o primeiro botão do formulário).
 - **Área atendida:** o endereço fora dela **pode ser salvo**; quem bloqueia a compra é o checkout.
 - **Principal sob concorrência:** salvar e "Tornar principal" travam a linha da conta (`UsuarioRepository#findByIdParaAtualizar`)
@@ -430,7 +439,8 @@ Telas em `/enderecos` (lista, `novo`, `{id}/editar`, `{id}/excluir`); exigem log
   `EnderecoRepository#findById`), para manter a regra de 404 para endereço alheio.
 - **Máscara do CEP:** `static/js/cep.js` coloca o hífen enquanto a pessoa digita e formata o CEP salvo ao editar. É só conforto: sem JavaScript o campo aceita com ou sem hífen.
 - **Tela pequena:** a tabela da lista rola dentro da própria caixa (`.tabela-rolavel`), sem fazer a página rolar para o lado.
-- **Testes:** `EnderecoFormTest` e `DemoCepAdapterTest` (sem Spring), `EnderecoControllerTest` (camada web, sem Docker)
+- **Testes:** `EnderecoFormTest`, `DemoCepAdapterTest` e `ViaCepAdapterTest` (sem Spring nem internet: resposta simulada),
+  `EnderecoControllerTest` (camada web, sem Docker, inclusive o JSON da busca)
   e `EnderecoServiceIntegracaoTest` (Docker ligado: isolamento entre clientes e pedido antigo intacto).
 
 ## Checkout (F-14 / UC08 e UC09)

@@ -1050,7 +1050,9 @@ Fica sob `/admin/**` (só `ADMIN`: visitante vai para `/login`, cliente logado r
   conta como uma parte, e o formulário passa de 50 (o padrão do Spring Boot 3.5) só com as linhas de apresentação; por
   isso `server.tomcat.max-part-count=120` (`FormularioProdutoServidorRealTest` envia 60 partes pelo Tomcat de verdade).
 - **Bula:** a URL é opcional, mas, se informada, precisa ser um endereço `http://` ou `https://` válido (mesma regra da página do produto, F-02, que continua tratando URL inválida já gravada).
-- **Testes:** `ProdutoServiceIntegracaoTest` (PostgreSQL real: cadastro aparece no catálogo e grava o administrador,
+- **Testes:** `ProdutoServiceRegrasIntegracaoTest` (foto e apresentação de outro produto, SKU/EAN repetido
+  ou já cadastrado, preço e limite), `AdminCategoriaExclusaoIntegracaoTest` (exclusão e reatribuição de categoria pela tela),
+  `ProdutoServiceIntegracaoTest` (PostgreSQL real: cadastro aparece no catálogo e grava o administrador,
   violações com mensagem, estoque alterado por compra não é sobrescrito, foto vinculada à apresentação certa, exclusão
   definitiva e só inativação com pedido), `ArmazenamentoImagemTest`, `UploadExcedidoAdviceTest`,
   `AdminProdutoSegurancaTest` (visitante, cliente, administrador da sessão gravado, CSRF) e `AdminProdutoTelaTest` (HTML:

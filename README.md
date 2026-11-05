@@ -1068,6 +1068,10 @@ Fica sob `/admin/**` (só `ADMIN`: visitante vai para `/login`, cliente logado r
   foto é do serviço); passar do limite do servidor mostra a mensagem de `UploadExcedidoAdvice`. Cada campo do multipart
   conta como uma parte, e o formulário passa de 50 (o padrão do Spring Boot 3.5) só com as linhas de apresentação; por
   isso `server.tomcat.max-part-count=120` (`FormularioProdutoServidorRealTest` envia 60 partes pelo Tomcat de verdade).
+- **Cache das fotos e do site:** fotos enviadas (`/uploads/produtos/`, nome UUID, nunca sobrescritas) ficam um ano no
+  navegador (`UploadsConfig`). CSS, JS e `/images` usam `spring.web.resources.cache.cachecontrol.no-cache=true`: o
+  navegador guarda e só confere se mudou (304), sem o risco de um CSS velho. As páginas seguem com `no-store` do Spring
+  Security (`CacheDosEstaticosServidorRealTest`).
 - **Bula:** a URL é opcional, mas, se informada, precisa ser um endereço `http://` ou `https://` válido (mesma regra da página do produto, F-02, que continua tratando URL inválida já gravada).
 - **Testes:** `ProdutoServiceIntegracaoTest` (PostgreSQL real: cadastro aparece no catálogo e grava o administrador,
   violações com mensagem, estoque alterado por compra não é sobrescrito, foto vinculada à apresentação certa, exclusão

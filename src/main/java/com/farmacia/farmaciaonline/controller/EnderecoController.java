@@ -1,8 +1,10 @@
 package com.farmacia.farmaciaonline.controller;
 
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.stereotype.Controller;
+import org.springframework.util.StringUtils;
 import org.springframework.ui.Model;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -10,6 +12,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
+import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
@@ -85,6 +88,24 @@ public class EnderecoController {
         return buscarCep(id, form, retorno, model);
     }
 
+    /** Busca enquanto a pessoa digita ({@code static/js/cep.js}). Sem JavaScript, o botão "Buscar CEP" faz o POST acima. */
+    @GetMapping(value = "/cep", produces = MediaType.APPLICATION_JSON_VALUE)
+    @ResponseBody
+    public RespostaCep consultarCep(@AuthenticationPrincipal UsuarioAutenticado usuario,
+            @RequestParam(required = false) String cep) {
+        idDe(usuario);
+        ResultadoCep resultado = consultar(cep);
+        EnderecoCep achado = resultado.achado();
+        return achado == null
+                ? new RespostaCep(false, resultado.mensagem(), null, null, null, null)
+                : new RespostaCep(true, resultado.mensagem(), achado.logradouro(), achado.bairro(), achado.cidade(),
+                        achado.uf());
+    }
+
+    public record RespostaCep(boolean encontrado, String mensagem, String logradouro, String bairro, String cidade,
+            String uf) {
+    }
+
     @GetMapping("/{id}/excluir")
     public String confirmarExclusao(@AuthenticationPrincipal UsuarioAutenticado usuario, @PathVariable Long id,
             @RequestParam(required = false) String retorno, Model model) {
@@ -130,22 +151,33 @@ public class EnderecoController {
     }
 
     private String buscarCep(Long id, EnderecoForm form, String retorno, Model model) {
-        String digitos = form.getCep() == null ? "" : form.getCep().replaceAll("\\D", "");
+        ResultadoCep resultado = consultar(form.getCep());
+        if (resultado.achado() != null) {
+            preencher(form, resultado.achado());
+        }
+        avisarCep(model, resultado.mensagem(), resultado.achado() == null);
+        return formulario(model, id, form, retorno);
+    }
+
+    private record ResultadoCep(EnderecoCep achado, String mensagem) {
+    }
+
+    private ResultadoCep consultar(String cep) {
+        String digitos = cep == null ? "" : cep.replaceAll("\\D", "");
         if (digitos.length() != 8) {
-            avisarCep(model, "Informe um CEP com 8 números para buscar. Você também pode preencher o endereço à mão.", true);
-            return formulario(model, id, form, retorno);
+            return new ResultadoCep(null,
+                    "Informe um CEP com 8 números para buscar. Você também pode preencher o endereço à mão.");
         }
         try {
-            consultaCep.consultar(digitos).ifPresentOrElse(
-                    achado -> {
-                        preencher(form, achado);
-                        avisarCep(model, "Endereço preenchido pelo CEP. Confira os dados e informe o número.", false);
-                    },
-                    () -> avisarCep(model, "CEP não localizado. Preencha o endereço à mão.", true));
+            return consultaCep.consultar(digitos)
+                    .map(achado -> new ResultadoCep(achado, !StringUtils.hasText(achado.logradouro())
+                            // CEP geral da cidade (cidade pequena): só vem cidade e UF
+                            ? "CEP de " + achado.cidade() + "/" + achado.uf() + ". Preencha o logradouro, o número e o bairro."
+                            : "Endereço preenchido pelo CEP. Confira os dados e informe o número."))
+                    .orElseGet(() -> new ResultadoCep(null, "CEP não localizado. Preencha o endereço à mão."));
         } catch (RuntimeException e) {
-            avisarCep(model, "Não foi possível consultar o CEP agora. Preencha o endereço à mão.", true);
+            return new ResultadoCep(null, "Não foi possível consultar o CEP agora. Preencha o endereço à mão.");
         }
-        return formulario(model, id, form, retorno);
     }
 
     private static void preencher(EnderecoForm form, EnderecoCep achado) {

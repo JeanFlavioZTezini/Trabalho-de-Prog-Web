@@ -72,7 +72,9 @@ class MigracaoUpgradeIntegracaoTest {
         assertThat(resultado.success).isTrue();
         List<String> versoes = banco.queryForList(
                 "select version from flyway_schema_history where success order by installed_rank", String.class);
-        assertThat(versoes).containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "13");
+        assertThat(versoes).containsExactly("1", "2", "3", "4", "5", "6", "7", "8", "9", "10", "11", "12", "13");
+        assertThat(banco.queryForList("select cidade || '/' || uf from loja", String.class))
+                .containsOnly("Campo Grande/MS");
 
         assertThat(banco.queryForObject("select count(*) from produto", Integer.class)).isEqualTo(produtos);
         Map<String, Object> linha = banco.queryForMap(

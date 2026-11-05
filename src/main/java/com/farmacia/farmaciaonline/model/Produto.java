@@ -29,6 +29,7 @@ import jakarta.persistence.ManyToOne;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.OrderBy;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -119,6 +120,10 @@ public class Produto {
     private Instant atualizadoEm;
 
     /** Último administrador que alterou o produto (UC12). */
+    /** Lock otimista da edição pelo admin (V12). Contadores de vendas e visualizações não sobem a versão. */
+    @Version
+    private Long versao;
+
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "atualizado_por_id")
     private Usuario atualizadoPor;

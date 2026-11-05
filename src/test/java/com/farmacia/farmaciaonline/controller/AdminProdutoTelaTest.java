@@ -110,6 +110,22 @@ class AdminProdutoTelaTest {
     }
 
     @Test
+    @DisplayName("edição leva a versão do produto escondida e a devolve ao serviço ao salvar")
+    void edicaoLevaAVersao() throws Exception {
+        ProdutoForm form = new ProdutoForm();
+        form.setVersao(4L);
+        when(service.formDe(1L)).thenReturn(form);
+
+        assertThat(html("/admin/produtos/1/editar")).containsPattern("<input type=\"hidden\" id=\"versao\" name=\"versao\" value=\"4\"");
+
+        mvc.perform(post("/admin/produtos/1").with(admin()).with(csrf())
+                .param("nome", "Produto").param("marca", "Marca").param("tarja", "SEM_TARJA").param("versao", "4"));
+        org.mockito.ArgumentCaptor<ProdutoForm> enviado = org.mockito.ArgumentCaptor.forClass(ProdutoForm.class);
+        org.mockito.Mockito.verify(service).salvar(org.mockito.ArgumentMatchers.eq(1L), enviado.capture(), any());
+        assertThat(enviado.getValue().getVersao()).isEqualTo(4L);
+    }
+
+    @Test
     @DisplayName("interruptor de situação no topo: antes do nome, com rótulo, ajuda ligada e o estado atual em texto")
     void interruptorDeSituacaoNoTopo() throws Exception {
         ProdutoForm inativo = new ProdutoForm();

@@ -6,6 +6,7 @@ import static org.assertj.core.api.Assertions.assertThatThrownBy;
 import java.math.BigDecimal;
 import java.util.List;
 
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
@@ -99,6 +100,49 @@ class ProdutoServiceIntegracaoTest {
         em.clear();
         assertThatThrownBy(() -> service.salvar(id, f, ADMIN))
                 .isInstanceOf(ProdutoException.class).hasMessageContaining("alterada por outra operação");
+    }
+
+    @Test
+    @DisplayName("dois admins no mesmo produto: o segundo a salvar é recusado, sem apagar o que o primeiro gravou")
+    void edicaoSimultaneaDoProdutoNaoSobrescreveEmSilencio() {
+        ProdutoForm doPrimeiro = service.formDe(1L);
+        ProdutoForm doSegundo = service.formDe(1L);
+        doPrimeiro.setNome("Novalgina Dipirona 1g (primeiro admin)");
+        service.salvar(1L, doPrimeiro, ADMIN);
+        em.flush();
+        em.clear();
+
+        doSegundo.setMarca("Marca do segundo admin");
+        assertThatThrownBy(() -> service.salvar(1L, doSegundo, ADMIN))
+                .isInstanceOf(ProdutoException.class).hasMessageContaining("alterado por outra pessoa");
+        em.clear();
+        Produto gravado = produtoRepository.findById(1L).orElseThrow();
+        assertThat(gravado.getNome()).isEqualTo("Novalgina Dipirona 1g (primeiro admin)");
+        assertThat(gravado.getMarca()).isNotEqualTo("Marca do segundo admin");
+    }
+
+    @Test
+    @DisplayName("edição sem a versão do produto (envio adulterado ou tela antiga) é recusada")
+    void edicaoSemVersaoERecusada() {
+        ProdutoForm f = service.formDe(1L);
+        f.setVersao(null);
+        assertThatThrownBy(() -> service.salvar(1L, f, ADMIN))
+                .isInstanceOf(ProdutoException.class).hasMessageContaining("alterado por outra pessoa");
+    }
+
+    @Test
+    @DisplayName("vender ou visualizar o produto não invalida o formulário aberto pelo admin")
+    void contadoresNaoMudamAVersao() {
+        ProdutoForm f = service.formDe(1L);
+        produtoRepository.somarVendidos(1L, 3);
+        produtoRepository.incrementarVisualizacoes(1L);
+        em.clear();
+        f.setNome("Novalgina Dipirona 1g (depois de vendas)");
+
+        service.salvar(1L, f, ADMIN);
+        em.flush();
+        em.clear();
+        assertThat(produtoRepository.findById(1L).orElseThrow().getNome()).isEqualTo("Novalgina Dipirona 1g (depois de vendas)");
     }
 
     @Test

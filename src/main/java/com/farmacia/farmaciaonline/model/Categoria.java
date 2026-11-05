@@ -14,6 +14,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
+import jakarta.persistence.Version;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
@@ -57,6 +58,10 @@ public class Categoria {
     /** "Controlados": os produtos da categoria herdam essa exigência (UC13). */
     @Column(nullable = false)
     private boolean exigeReceita;
+
+    /** Lock otimista da edição pelo admin (V12). */
+    @Version
+    private Long versao;
 
     @CreationTimestamp
     @Column(nullable = false, updatable = false)

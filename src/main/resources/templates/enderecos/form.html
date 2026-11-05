@@ -29,11 +29,14 @@
 
         <div class="campo">
             <label for="cep">CEP</label>
-            <p class="campo__ajuda" id="cep-ajuda">Ex.: 01310-100. Use “Buscar CEP” para preencher o endereço ou digite à mão.</p>
+            <p class="campo__ajuda" id="cep-ajuda">Ex.: 79002-336. Ao digitar os 8 números, o endereço é preenchido sozinho; você também pode usar “Buscar CEP” ou digitar à mão.</p>
             <input type="text" id="cep" th:field="*{cep}" maxlength="9" inputmode="numeric" required
-                   autocomplete="postal-code" th:aria-invalid="${#fields.hasErrors('cep')} ? 'true'"
+                   autocomplete="postal-code" th:attr="data-consulta=@{/enderecos/cep}"
+                   th:aria-invalid="${#fields.hasErrors('cep')} ? 'true'"
                    th:aria-describedby="${#fields.hasErrors('cep')} ? 'cep-ajuda cep-erro' : 'cep-ajuda'">
             <p class="campo__erro" role="alert" id="cep-erro" th:if="${#fields.hasErrors('cep')}" th:errors="*{cep}"></p>
+            <!--/* Resultado da busca automática (cep.js). Fica vazio no HTML para o leitor de tela anunciar quando mudar. */-->
+            <p class="cep-status" id="cep-status" role="status"></p>
             <button type="submit" class="btn-secundario" formnovalidate
                     th:formaction="${enderecoId == null} ? @{/enderecos/cep} : @{/enderecos/{id}/cep(id=${enderecoId})}">Buscar CEP</button>
         </div>

@@ -247,6 +247,32 @@ class CategoriaServiceIntegracaoTest {
     }
 
     @Test
+    @DisplayName("dois admins na mesma categoria: o segundo a salvar é recusado, sem apagar o que o primeiro gravou")
+    void edicaoSimultaneaDaCategoriaNaoSobrescreveEmSilencio() {
+        CategoriaForm doPrimeiro = service.formDe(DOR_E_FEBRE);
+        CategoriaForm doSegundo = service.formDe(DOR_E_FEBRE);
+        doPrimeiro.setNome("Dor, febre e cólica");
+        service.salvar(DOR_E_FEBRE, doPrimeiro);
+        em.flush();
+        em.clear();
+
+        doSegundo.setOrdem(7);
+        assertThatThrownBy(() -> service.salvar(DOR_E_FEBRE, doSegundo))
+                .isInstanceOf(CategoriaException.class).hasMessageContaining("alterada por outra pessoa");
+        em.clear();
+        assertThat(categoriaRepository.findById(DOR_E_FEBRE).orElseThrow().getNome()).isEqualTo("Dor, febre e cólica");
+    }
+
+    @Test
+    @DisplayName("edição sem a versão da categoria é recusada")
+    void edicaoSemVersaoERecusada() {
+        CategoriaForm form = service.formDe(DOR_E_FEBRE);
+        form.setVersao(null);
+        assertThatThrownBy(() -> service.salvar(DOR_E_FEBRE, form))
+                .isInstanceOf(CategoriaException.class).hasMessageContaining("alterada por outra pessoa");
+    }
+
+    @Test
     @DisplayName("não ativa filha enquanto o pai estiver inativo")
     void naoAtivaFilhaComPaiInativo() {
         service.inativar(MEDICAMENTOS);

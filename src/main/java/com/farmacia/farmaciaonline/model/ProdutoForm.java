@@ -58,6 +58,9 @@ public class ProdutoForm {
     /** Fotos novas desta edição. */
     private List<MultipartFile> novasImagens = new ArrayList<>();
 
+    /** Versão do produto lida ao abrir o formulário (lock otimista); nula no cadastro. */
+    private Long versao;
+
     /** Apresentação das fotos novas; nulo = vale para todas. */
     private Long imagemApresentacaoId;
 

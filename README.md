@@ -183,7 +183,7 @@ Spring Security com dois papéis, `CLIENTE` e `ADMIN` (coluna `usuario.perfil`; 
 
 | Rota | Quem acessa |
 |---|---|
-| `/`, `/produtos/**`, `/carrinho/**`, `/login`, `/cadastro/**`, `/confirmar-conta/**`, `/institucional/**`, `/css/**`, `/images/**`, `/js/**`, `/error` | Qualquer pessoa (visitante inclusive) |
+| `/`, `/produtos/**`, `/carrinho/**`, `/login`, `/cadastro/**`, `/confirmar-conta/**`, `/institucional/**`, `/css/**`, `/images/**`, `/js/**`, `/robots.txt`, `/error` | Qualquer pessoa (visitante inclusive) |
 | `/admin/**` | Só `ADMIN`. Visitante é mandado para `/login`; cliente logado recebe a página 403 |
 | Todo o resto | Qualquer usuário logado |
 
@@ -1069,6 +1069,16 @@ Limites assumidos de propósito neste trabalho acadêmico (não são defeitos a 
 - **Provedor social demo e e-mail verificado:** na tela do provedor simulado, quem marca "e-mail verificado" cria uma
   conta ATIVA com um e-mail que ninguém confirmou (desde que ainda não esteja cadastrado). Se o dono real recuperar a senha
   depois, a identidade social de quem criou a conta continua vinculada. A opção vem desmarcada; o fluxo real não muda.
+- **Provedor social demo e identificador externo:** a tela do provedor simulado aceita qualquer identificador. Quem souber
+  o identificador de uma identidade já vinculada entra na conta dona dele. É o mesmo limite do item acima: só existe no
+  perfil `demo`.
+- **Cancelar pedido com Pix ou boleto já gerado:** o `GatewayDePagamento` simulado não tem a operação de cancelar uma
+  cobrança. Quando o admin cancela um pedido aguardando pagamento, o pagamento vira EXPIRADO só aqui; num gateway real, a
+  cobrança precisaria ser cancelada lá também, senão um pagamento feito depois chegaria sem pedido e sem estorno marcado.
+- **Dependências:** a consulta à base pública OSV (auditoria de 2026-11-04) aponta avisos no Tomcat 10.1.55, Jackson 2.21.4,
+  Spring Web MVC 6.2.19, driver do PostgreSQL 42.7.11 e Log4j API 2.24.3, todos vindos do Spring Boot 3.5.16 (a última
+  versão da linha 3.5). Nenhum atinge o que o app usa (restrições do `web.xml` e autenticação do próprio Tomcat, HTTP/2,
+  SSE, `XsltView`, TLS do banco); o Jackson só gera a resposta do carrinho rápido.
 - **Contadores na memória:** o limite de recuperação (`LimiteDeSolicitacoes`), o de tentativas para identificador sem conta
   (`LimiteDeTentativasEmMemoria`) e o aviso de item excluído do carrinho (`AvisosDeItensRemovidos`) recomeçam quando a
   aplicação reinicia e não são compartilhados entre várias instâncias: se reiniciar antes da visita, o aviso se perde.

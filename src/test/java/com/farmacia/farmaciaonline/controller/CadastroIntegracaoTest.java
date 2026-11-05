@@ -30,6 +30,7 @@ import com.farmacia.farmaciaonline.model.Usuario;
 import com.farmacia.farmaciaonline.model.enums.Perfil;
 import com.farmacia.farmaciaonline.model.enums.StatusUsuario;
 import com.farmacia.farmaciaonline.repository.UsuarioRepository;
+import com.farmacia.farmaciaonline.service.PeriodoFiltro;
 
 /**
  * O cadastro de ponta a ponta (controller, serviço, banco e login), com o seed do V2.
@@ -143,7 +144,7 @@ class CadastroIntegracaoTest {
     @Test
     @DisplayName("menor de idade, CPF inválido e senhas diferentes: formulário volta, nada é gravado")
     void dadosRecusadosNaoGravamNada() throws Exception {
-        LocalDate dezessete = LocalDate.now().minusYears(17);
+        LocalDate dezessete = LocalDate.now(PeriodoFiltro.FUSO_SAO_PAULO).minusYears(17);
 
         String html = pagina(cadastro("dataNascimento", dezessete.toString(), "cpf", "390.533.447-04",
                 "confirmarSenha", "Outra123"));

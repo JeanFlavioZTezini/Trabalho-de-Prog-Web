@@ -63,7 +63,7 @@ public class CadastroService {
 
         LocalDate nascimento = form.getDataNascimento();
         if (nascimento != null) {
-            LocalDate hoje = LocalDate.now();
+            LocalDate hoje = LocalDate.now(PeriodoFiltro.FUSO_SAO_PAULO);
             if (nascimento.isBefore(NASCIMENTO_MAIS_ANTIGO) || nascimento.isAfter(hoje)) {
                 erros.put("dataNascimento", "Informe uma data de nascimento válida.");
             } else if (Period.between(nascimento, hoje).getYears() < IDADE_MINIMA) {

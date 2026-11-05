@@ -11,6 +11,7 @@ import com.farmacia.farmaciaonline.model.Endereco;
 import com.farmacia.farmaciaonline.model.EnderecoEntrega;
 import com.farmacia.farmaciaonline.model.EnderecoForm;
 import com.farmacia.farmaciaonline.model.Usuario;
+import com.farmacia.farmaciaonline.model.enums.Perfil;
 import com.farmacia.farmaciaonline.model.enums.StatusUsuario;
 import com.farmacia.farmaciaonline.repository.EnderecoRepository;
 import com.farmacia.farmaciaonline.repository.UsuarioRepository;
@@ -127,10 +128,18 @@ public class EnderecoService {
         return copia;
     }
 
+    /** Para as telas que não leem endereço (formulário novo, busca de CEP): mesma barreira das demais. */
+    @Transactional(readOnly = true)
+    public void exigirCliente(Long usuarioId) {
+        exigirContaAtiva(usuarioId);
+    }
+
+    /** Endereço é para entrega: só cliente ativo (o administrador não compra, como no checkout). */
     private Usuario exigirContaAtiva(Long usuarioId) {
         Usuario usuario = usuarioRepository.findById(usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.FORBIDDEN));
-        if (usuario.getStatus() != StatusUsuario.ATIVA || usuario.getExcluidoEm() != null) {
+        if (usuario.getPerfil() != Perfil.CLIENTE || usuario.getStatus() != StatusUsuario.ATIVA
+                || usuario.getExcluidoEm() != null) {
             throw new ResponseStatusException(HttpStatus.FORBIDDEN);
         }
         return usuario;

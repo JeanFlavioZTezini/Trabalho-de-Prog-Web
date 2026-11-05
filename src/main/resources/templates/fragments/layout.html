@@ -77,7 +77,7 @@
             <div class="usuario__menu" id="menu-usuario">
                 <nav class="usuario__atalhos" aria-label="Atalhos da conta">
                     <a th:href="@{/conta}">Minha conta</a>
-                    <a th:href="@{/enderecos}">Meus endereços</a>
+                    <a th:href="@{/enderecos}" sec:authorize="hasRole('CLIENTE')">Meus endereços</a>
                     <a th:href="@{/pedidos}" sec:authorize="hasRole('CLIENTE')">Meus pedidos</a>
                     <a th:href="@{/admin}" sec:authorize="hasRole('ADMIN')">Painel admin</a>
                 </nav>

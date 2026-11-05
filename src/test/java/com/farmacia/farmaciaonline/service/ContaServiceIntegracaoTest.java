@@ -92,8 +92,8 @@ class ContaServiceIntegracaoTest {
     @Test
     @DisplayName("menor de 18 anos, data futura e data antes de 1900 são recusados")
     void nascimentoInvalido() {
-        LocalDate dezessete = LocalDate.now().minusYears(17);
-        LocalDate futura = LocalDate.now().plusDays(1);
+        LocalDate dezessete = LocalDate.now(PeriodoFiltro.FUSO_SAO_PAULO).minusYears(17);
+        LocalDate futura = LocalDate.now(PeriodoFiltro.FUSO_SAO_PAULO).plusDays(1);
         LocalDate antiga = LocalDate.of(1899, 12, 31);
 
         for (LocalDate data : new LocalDate[] {dezessete, futura, antiga}) {
@@ -107,7 +107,7 @@ class ContaServiceIntegracaoTest {
     @Test
     @DisplayName("quem tem 18 anos hoje pode manter a conta")
     void exatamenteDezoitoAnos() {
-        service.atualizarDados(cliente.getId(), dados("Joana Souza", LocalDate.now().minusYears(18), Genero.FEMININO));
+        service.atualizarDados(cliente.getId(), dados("Joana Souza", LocalDate.now(PeriodoFiltro.FUSO_SAO_PAULO).minusYears(18), Genero.FEMININO));
 
         assertThat(usuarios.findById(cliente.getId()).orElseThrow().getNome()).isEqualTo("Joana Souza");
     }

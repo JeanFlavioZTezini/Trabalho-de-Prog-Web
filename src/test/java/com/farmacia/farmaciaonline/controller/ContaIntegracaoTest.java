@@ -28,6 +28,7 @@ import com.farmacia.farmaciaonline.model.Usuario;
 import com.farmacia.farmaciaonline.model.enums.Perfil;
 import com.farmacia.farmaciaonline.model.enums.StatusUsuario;
 import com.farmacia.farmaciaonline.repository.UsuarioRepository;
+import com.farmacia.farmaciaonline.service.PeriodoFiltro;
 
 @SpringBootTest
 @AutoConfigureMockMvc
@@ -115,7 +116,7 @@ class ContaIntegracaoTest {
 
         String conteudo = mvc.perform(post("/conta/editar").session(sessao).with(csrf())
                         .param("nome", "Joana Souza")
-                        .param("dataNascimento", LocalDate.now().minusYears(17).toString())
+                        .param("dataNascimento", LocalDate.now(PeriodoFiltro.FUSO_SAO_PAULO).minusYears(17).toString())
                         .param("genero", "FEMININO"))
                 .andExpect(status().isOk())
                 .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);

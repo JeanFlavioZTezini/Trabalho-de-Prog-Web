@@ -19,6 +19,7 @@ import com.farmacia.farmaciaonline.model.enums.Genero;
 import com.farmacia.farmaciaonline.security.UsuarioAutenticado;
 import com.farmacia.farmaciaonline.service.CadastroInvalidoException;
 import com.farmacia.farmaciaonline.service.CadastroService;
+import com.farmacia.farmaciaonline.service.PeriodoFiltro;
 
 import jakarta.servlet.http.HttpSession;
 import jakarta.validation.Valid;
@@ -94,7 +95,7 @@ public class CadastroController {
     private String tela(Model model, CadastroForm form, String retorno, boolean duplicidade) {
         model.addAttribute("cadastroForm", form);
         model.addAttribute("generos", Genero.values());
-        model.addAttribute("hoje", LocalDate.now());
+        model.addAttribute("hoje", LocalDate.now(PeriodoFiltro.FUSO_SAO_PAULO));
         model.addAttribute("retorno", destinoDoRetorno(retorno) == null ? null : retorno);
         model.addAttribute("duplicidade", duplicidade);
         model.addAttribute("termosVersao", termosVersao);

@@ -395,7 +395,8 @@ com os acréscimos da `V4` (checkout) e da `V5` (`status_anterior`).
 - `Pedido.itens` tem `cascade = ALL`: grave o pedido e os itens vão juntos. Pagamentos e histórico são gravados pelos
   próprios repositories.
 - Um pedido tem várias tentativas de `Pagamento` (UC08-E2). Do cartão só ficam dados mascarados, e parcelas acima de 1
-  só no crédito.
+  só no crédito, até 12 (`CheckoutForm.MAX_PARCELAS`): acima disso o resumo não deixa confirmar e a nova tentativa é
+  recusada, antes de reservar estoque.
 - `HistoricoStatusPedido.alteradoPor` nulo significa que a mudança foi do sistema.
 - `HistoricoStatusPedido.statusAnterior` é o status de onde o pedido saiu (UC17). É nulo no registro de criação do pedido e
   nos eventos gravados antes da `V5`, que não guardaram a origem: a migration não a reconstitui. Quem muda o status lê o
@@ -413,7 +414,8 @@ Telas em `/enderecos` (lista, `novo`, `{id}/editar`, `{id}/excluir`); exigem log
 - **Dono é sempre o usuário da sessão.** Nenhum método lê id de usuário da requisição, e o formulário não tem
   `id` nem usuário. `EnderecoRepository#findByIdAndUsuarioId` é o único jeito de buscar para o cliente: endereço
   de outra pessoa responde **404** (ler, editar, excluir, selecionar, buscar CEP e POST direto). Conta que não está
-  `ATIVA` recebe 403.
+  `ATIVA` recebe 403, e o administrador também (ele não compra; o atalho "Meus endereços" só aparece para cliente).
+  O mesmo vale para "Meus cartões" (`CartaoSalvoService`).
 - **Validação** (`EnderecoForm`): destinatário, CEP, logradouro, número, bairro, cidade e UF obrigatórios; CEP com 8
   dígitos (com ou sem traço, gravado só com dígitos); UF é uma das 27 siglas; complemento e referência opcionais.
 - **Consulta de CEP** por adaptador: a tela depende da interface `cep/ConsultaCep`. O padrão é o

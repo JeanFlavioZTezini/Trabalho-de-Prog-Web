@@ -183,6 +183,8 @@ public class CheckoutService {
         }
         if (form.getMetodo() == null) {
             problemas.add("Escolha a forma de pagamento.");
+        } else if (form.isParcelasForaDoLimite()) {
+            problemas.add(CheckoutForm.MENSAGEM_PARCELAS);
         }
 
         BigDecimal total = subtotal.add(frete);

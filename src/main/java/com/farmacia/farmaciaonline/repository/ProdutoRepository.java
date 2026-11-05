@@ -35,15 +35,15 @@ public interface ProdutoRepository extends JpaRepository<Produto, Long>, Produto
     @Query("update Produto p set p.visualizacoes = p.visualizacoes + 1 where p.id = :id and p.ativo = true")
     int incrementarVisualizacoes(@Param("id") Long id);
 
-    /** Lista administrativa (UC12): nome, marca, princípio ativo, SKU ou EAN; {@code termo} já vem com %...%. */
+    /** Lista administrativa (UC12): nome, marca, princípio ativo, SKU ou EAN; {@code termo} já vem com %...% e escape '!'. */
     @Query("""
             select p from Produto p
             where p.ativo in :estados
-              and (lower(p.nome) like :termo
-                or lower(p.marca) like :termo
-                or lower(coalesce(p.principioAtivo, '')) like :termo
+              and (lower(p.nome) like :termo escape '!'
+                or lower(p.marca) like :termo escape '!'
+                or lower(coalesce(p.principioAtivo, '')) like :termo escape '!'
                 or exists (select a.id from Apresentacao a
-                           where a.produto = p and (lower(a.sku) like :termo or a.ean like :termo)))
+                           where a.produto = p and (lower(a.sku) like :termo escape '!' or a.ean like :termo escape '!')))
             """)
     Page<Produto> buscarAdmin(@Param("termo") String termo, @Param("estados") List<Boolean> estados,
             Pageable pageable);

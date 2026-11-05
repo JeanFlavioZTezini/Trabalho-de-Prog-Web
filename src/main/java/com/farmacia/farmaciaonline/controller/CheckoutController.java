@@ -115,6 +115,8 @@ public class CheckoutController {
         lembrarEscolhas(checkoutForm, cartaoForm, ra);
         if (checkoutForm.getMetodo() == null) {
             ra.addFlashAttribute("erros", List.of("Escolha a forma de pagamento."));
+        } else if (checkoutForm.isParcelasForaDoLimite()) {
+            ra.addFlashAttribute("erros", List.of(CheckoutForm.MENSAGEM_PARCELAS));
         } else if (checkoutForm.isPagoComCartao() && !cartaoForm.errosPorCampo().isEmpty()) {
             ra.addFlashAttribute("errosCartao", cartaoForm.errosPorCampo());
         } else {

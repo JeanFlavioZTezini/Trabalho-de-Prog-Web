@@ -50,7 +50,7 @@ public class EnderecoController {
     @GetMapping("/novo")
     public String novo(@AuthenticationPrincipal UsuarioAutenticado usuario,
             @RequestParam(required = false) String retorno, Model model) {
-        idDe(usuario);
+        service.exigirCliente(idDe(usuario));
         return formulario(model, null, new EnderecoForm(), retorno);
     }
 
@@ -77,7 +77,7 @@ public class EnderecoController {
     @PostMapping("/cep")
     public String buscarCepNovo(@AuthenticationPrincipal UsuarioAutenticado usuario, EnderecoForm form,
             @RequestParam(required = false) String retorno, Model model) {
-        idDe(usuario);
+        service.exigirCliente(idDe(usuario));
         return buscarCep(null, form, retorno, model);
     }
 
@@ -93,7 +93,7 @@ public class EnderecoController {
     @ResponseBody
     public RespostaCep consultarCep(@AuthenticationPrincipal UsuarioAutenticado usuario,
             @RequestParam(required = false) String cep) {
-        idDe(usuario);
+        service.exigirCliente(idDe(usuario));
         ResultadoCep resultado = consultar(cep);
         EnderecoCep achado = resultado.achado();
         return achado == null

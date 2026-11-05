@@ -107,7 +107,7 @@ class CadastroServiceIntegracaoTest {
     @Test
     @DisplayName("menor de 18 anos é recusado; quem faz 18 anos hoje passa")
     void idadeMinima() {
-        LocalDate hoje = LocalDate.now();
+        LocalDate hoje = LocalDate.now(PeriodoFiltro.FUSO_SAO_PAULO);
         CadastroForm menor = formValido();
         menor.setDataNascimento(hoje.minusYears(18).plusDays(1));
         CadastroForm dezoito = formValido();
@@ -122,7 +122,7 @@ class CadastroServiceIntegracaoTest {
     @DisplayName("data no futuro ou antes de 1900 não é uma data de nascimento válida")
     void dataImpossivel() {
         CadastroForm futura = formValido();
-        futura.setDataNascimento(LocalDate.now().plusDays(1));
+        futura.setDataNascimento(LocalDate.now(PeriodoFiltro.FUSO_SAO_PAULO).plusDays(1));
         CadastroForm antiga = formValido();
         antiga.setDataNascimento(LocalDate.of(1899, 12, 31));
 

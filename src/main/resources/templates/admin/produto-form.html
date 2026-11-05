@@ -141,15 +141,27 @@
                 </div>
                 <div class="campo">
                     <label th:for="|apr-preco-${i.index}|">Preço (R$)</label>
-                    <input type="number" th:id="|apr-preco-${i.index}|" th:field="*{apresentacoes[__${i.index}__].preco}" step="0.01" min="0.01">
+                    <input type="number" th:id="|apr-preco-${i.index}|" th:field="*{apresentacoes[__${i.index}__].preco}" step="0.01" min="0.01"
+                           th:aria-invalid="${#fields.hasErrors('apresentacoes[__${i.index}__].preco')} ? 'true'"
+                           th:aria-describedby="${#fields.hasErrors('apresentacoes[__${i.index}__].preco')} ? |apr-preco-${i.index}-erro|">
+                    <p class="campo__erro" role="alert" th:id="|apr-preco-${i.index}-erro|"
+                       th:if="${#fields.hasErrors('apresentacoes[__${i.index}__].preco')}" th:errors="*{apresentacoes[__${i.index}__].preco}"></p>
                 </div>
                 <div class="campo">
                     <label th:for="|apr-estoque-${i.index}|">Estoque</label>
-                    <input type="number" th:id="|apr-estoque-${i.index}|" th:field="*{apresentacoes[__${i.index}__].estoque}" min="0">
+                    <input type="number" th:id="|apr-estoque-${i.index}|" th:field="*{apresentacoes[__${i.index}__].estoque}" min="0"
+                           th:aria-invalid="${#fields.hasErrors('apresentacoes[__${i.index}__].estoque')} ? 'true'"
+                           th:aria-describedby="${#fields.hasErrors('apresentacoes[__${i.index}__].estoque')} ? |apr-estoque-${i.index}-erro|">
+                    <p class="campo__erro" role="alert" th:id="|apr-estoque-${i.index}-erro|"
+                       th:if="${#fields.hasErrors('apresentacoes[__${i.index}__].estoque')}" th:errors="*{apresentacoes[__${i.index}__].estoque}"></p>
                 </div>
                 <div class="campo">
                     <label th:for="|apr-limitePorPedido-${i.index}|">Limite por pedido</label>
-                    <input type="number" th:id="|apr-limitePorPedido-${i.index}|" th:field="*{apresentacoes[__${i.index}__].limitePorPedido}" min="1">
+                    <input type="number" th:id="|apr-limitePorPedido-${i.index}|" th:field="*{apresentacoes[__${i.index}__].limitePorPedido}" min="1"
+                           th:aria-invalid="${#fields.hasErrors('apresentacoes[__${i.index}__].limitePorPedido')} ? 'true'"
+                           th:aria-describedby="${#fields.hasErrors('apresentacoes[__${i.index}__].limitePorPedido')} ? |apr-limitePorPedido-${i.index}-erro|">
+                    <p class="campo__erro" role="alert" th:id="|apr-limitePorPedido-${i.index}-erro|"
+                       th:if="${#fields.hasErrors('apresentacoes[__${i.index}__].limitePorPedido')}" th:errors="*{apresentacoes[__${i.index}__].limitePorPedido}"></p>
                 </div>
                 <label class="interruptor" th:for="|apr-ativa-${i.index}|">
                     <input type="checkbox" role="switch" th:id="|apr-ativa-${i.index}|" th:field="*{apresentacoes[__${i.index}__].ativa}"><span class="interruptor__trilho" aria-hidden="true"></span> Ativa

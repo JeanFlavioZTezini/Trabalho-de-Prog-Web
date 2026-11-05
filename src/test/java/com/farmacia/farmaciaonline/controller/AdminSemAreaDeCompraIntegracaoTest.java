@@ -44,6 +44,8 @@ class AdminSemAreaDeCompraIntegracaoTest {
         mvc.perform(get("/enderecos").with(admin())).andExpect(status().isForbidden());
         mvc.perform(get("/enderecos/novo").with(admin())).andExpect(status().isForbidden());
         mvc.perform(get("/conta/cartoes").with(admin())).andExpect(status().isForbidden());
+        mvc.perform(get("/enderecos/cep").param("cep", "79002336").accept("application/json").with(admin()))
+                .andExpect(status().isForbidden()); // busca automática do formulário (cep.js), sem chegar ao ViaCEP
         mvc.perform(post("/enderecos").with(admin()).with(csrf())
                         .param("destinatario", "Admin").param("cep", "79002-000").param("logradouro", "Rua A")
                         .param("numero", "1").param("bairro", "Centro").param("cidade", "Campo Grande").param("uf", "MS"))

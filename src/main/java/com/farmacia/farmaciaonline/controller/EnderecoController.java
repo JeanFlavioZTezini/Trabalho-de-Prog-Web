@@ -93,7 +93,7 @@ public class EnderecoController {
     @ResponseBody
     public RespostaCep consultarCep(@AuthenticationPrincipal UsuarioAutenticado usuario,
             @RequestParam(required = false) String cep) {
-        idDe(usuario);
+        service.exigirCliente(idDe(usuario));
         ResultadoCep resultado = consultar(cep);
         EnderecoCep achado = resultado.achado();
         return achado == null

@@ -24,6 +24,7 @@ import com.farmacia.farmaciaonline.security.SessaoAutenticada;
 import com.farmacia.farmaciaonline.security.UsuarioAutenticado;
 import com.farmacia.farmaciaonline.service.ContaInvalidaException;
 import com.farmacia.farmaciaonline.service.ContaService;
+import com.farmacia.farmaciaonline.service.PeriodoFiltro;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -114,7 +115,7 @@ public class ContaController {
         model.addAttribute("contaForm", form);
         model.addAttribute("dados", service.dados(usuarioId));
         model.addAttribute("generos", Genero.values());
-        model.addAttribute("hoje", LocalDate.now());
+        model.addAttribute("hoje", LocalDate.now(PeriodoFiltro.FUSO_SAO_PAULO));
         return "conta/editar";
     }
 

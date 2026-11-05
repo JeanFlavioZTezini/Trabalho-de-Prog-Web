@@ -29,6 +29,7 @@ import com.farmacia.farmaciaonline.service.CodigoVerificacaoService.ResultadoEnv
 import com.farmacia.farmaciaonline.service.LoginSocialService;
 import com.farmacia.farmaciaonline.service.LoginSocialService.Conclusao;
 import com.farmacia.farmaciaonline.service.LoginSocialService.Resolucao;
+import com.farmacia.farmaciaonline.service.PeriodoFiltro;
 import com.farmacia.farmaciaonline.social.IdentidadeExterna;
 import com.farmacia.farmaciaonline.social.ProvedorIdentidade;
 import com.farmacia.farmaciaonline.social.ProvedorIndisponivelException;
@@ -264,7 +265,7 @@ public class LoginSocialController {
         model.addAttribute("emailDoProvedor", identidade.temEmail() ? identidade.email() : null);
         model.addAttribute("emailVerificado", identidade.temEmail() && identidade.emailVerificado());
         model.addAttribute("generos", Genero.values());
-        model.addAttribute("hoje", LocalDate.now());
+        model.addAttribute("hoje", LocalDate.now(PeriodoFiltro.FUSO_SAO_PAULO));
         return "social/completar";
     }
 

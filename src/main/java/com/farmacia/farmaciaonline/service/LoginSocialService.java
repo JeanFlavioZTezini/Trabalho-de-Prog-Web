@@ -132,7 +132,7 @@ public class LoginSocialService {
     public Conclusao completar(IdentidadeExterna identidade, CompletarSocialForm form) {
         Map<String, String> erros = new LinkedHashMap<>();
         LocalDate nascimento = form.getDataNascimento();
-        LocalDate hoje = LocalDate.now();
+        LocalDate hoje = LocalDate.now(PeriodoFiltro.FUSO_SAO_PAULO);
         if (nascimento != null && (nascimento.isAfter(hoje) || nascimento.isBefore(LocalDate.of(1900, 1, 1)))) {
             erros.put("dataNascimento", "Informe uma data de nascimento válida.");
         } else if (nascimento != null && Period.between(nascimento, hoje).getYears() < CadastroService.IDADE_MINIMA) {

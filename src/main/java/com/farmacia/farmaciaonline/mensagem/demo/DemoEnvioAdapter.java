@@ -11,6 +11,7 @@ import org.springframework.stereotype.Component;
 import com.farmacia.farmaciaonline.mensagem.EnvioDeMensagem;
 import com.farmacia.farmaciaonline.mensagem.MensagemEnviada;
 import com.farmacia.farmaciaonline.model.enums.CanalCodigo;
+import com.farmacia.farmaciaonline.service.PeriodoFiltro;
 
 /**
  * Envio simulado de e-mail e SMS: em vez de mandar, guarda as últimas mensagens na memória (somem ao reiniciar).
@@ -32,7 +33,9 @@ public class DemoEnvioAdapter implements EnvioDeMensagem {
 
     @Override
     public synchronized void enviar(CanalCodigo canal, String destino, String assunto, String texto, Long contaId) {
-        caixa.addFirst(new MensagemEnviada(LocalDateTime.now(), canal, destino, assunto, texto, contaId));
+        // Hora de Brasília, como as outras telas (o servidor pode estar em outro fuso).
+        caixa.addFirst(new MensagemEnviada(LocalDateTime.now(PeriodoFiltro.FUSO_SAO_PAULO), canal, destino, assunto, texto,
+                contaId));
         while (caixa.size() > LIMITE) {
             caixa.removeLast();
         }

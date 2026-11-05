@@ -97,6 +97,21 @@ class LayoutTest {
     }
 
     @Test
+    void todaPaginaTemDescricaoParaBuscadores() throws Exception {
+        assertThat(pagina("/")).containsPattern("<meta name=\"description\" content=\"Farma\\+\\+[^\"]{40,160}\">");
+    }
+
+    @Test
+    void robotsTxtEPublicoEFechaAsAreasLogadas() throws Exception {
+        String robots = mvc.perform(get("/robots.txt")).andExpect(status().isOk())
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+
+        assertThat(robots).contains("User-agent: *").contains("Disallow: /admin")
+                .contains("Disallow: /conta").contains("Disallow: /checkout")
+                .doesNotContainPattern("(?m)^Disallow: /\\s*$"); // o catálogo continua aberto aos buscadores
+    }
+
+    @Test
     void iconesSaoDecorativosEOTextoContinuaSendoONome() throws Exception {
         String html = pagina("/");
 

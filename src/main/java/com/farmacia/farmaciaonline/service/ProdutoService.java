@@ -8,6 +8,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.HashSet;
 import java.util.List;
+import java.util.Objects;
 import java.util.Set;
 
 import org.springframework.dao.DataIntegrityViolationException;
@@ -45,6 +46,9 @@ import lombok.RequiredArgsConstructor;
 public class ProdutoService {
 
     private static final int LINHAS_EM_BRANCO = 2;
+
+    static final String MENSAGEM_ALTERADO = "Este produto foi alterado por outra pessoa (outro administrador ou uma "
+            + "compra) enquanto você editava. Recarregue o formulário e refaça a alteração.";
     private static final BigDecimal PRECO_MAXIMO = new BigDecimal("99999999.99");
 
     private final ProdutoRepository produtoRepository;
@@ -87,6 +91,7 @@ public class ProdutoService {
         f.setViaAdministracao(p.getViaAdministracao());
         f.setPublicoAlvo(p.getPublicoAlvo());
         f.setAtivo(p.isAtivo());
+        f.setVersao(p.getVersao());
         p.getCategorias().forEach(c -> f.getCategoriaIds().add(c.getId()));
         for (Apresentacao a : p.getApresentacoes()) {
             ApresentacaoForm af = new ApresentacaoForm();
@@ -124,6 +129,9 @@ public class ProdutoService {
         Produto produto = id == null ? new Produto() : buscarProduto(id);
         List<String> erros = new ArrayList<>();
 
+        if (id != null && !Objects.equals(form.getVersao(), produto.getVersao())) {
+            erros.add(MENSAGEM_ALTERADO);
+        }
         List<Categoria> categorias = validarCategorias(form, erros);
         if (form.getTarja() == null) {
             erros.add("Selecione a tarja.");
@@ -186,7 +194,7 @@ public class ProdutoService {
             throw new ProdutoException("Não foi possível gravar as imagens. Tente novamente.");
         } catch (OptimisticLockingFailureException e) {
             escritos.forEach(armazenamento::excluir);
-            throw new ProdutoException("O estoque foi alterado por outra operação (ex.: uma compra). Recarregue e tente de novo.");
+            throw new ProdutoException(MENSAGEM_ALTERADO);
         } catch (DataIntegrityViolationException e) {
             escritos.forEach(armazenamento::excluir);
             throw new ProdutoException("Dados inválidos ou SKU/EAN já cadastrado.");

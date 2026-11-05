@@ -16,6 +16,7 @@
 
     <form th:action="${produtoId == null} ? @{/admin/produtos} : @{/admin/produtos/{id}(id=${produtoId})}"
           th:object="${produtoForm}" method="post" enctype="multipart/form-data">
+        <input type="hidden" th:field="*{versao}">
 
         <!--/* A situação vem primeiro: é o que o admin mais procura ao abrir um produto. */-->
         <fieldset class="campo--grupo">

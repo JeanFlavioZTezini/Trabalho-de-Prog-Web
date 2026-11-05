@@ -120,6 +120,7 @@ class ProdutoInativoNoCarrinhoIntegracaoTest {
     private Map<String, String> formulario(boolean ativo) {
         ProdutoForm form = produtos.formDe(produtoId);
         Map<String, String> campos = new LinkedHashMap<>();
+        campos.put("versao", String.valueOf(form.getVersao()));
         campos.put("nome", form.getNome());
         campos.put("marca", form.getMarca());
         campos.put("principioAtivo", texto(form.getPrincipioAtivo()));

@@ -79,7 +79,7 @@ Essas contas existem só para desenvolvimento e demonstração.
   dados (`MigracaoUpgradeIntegracaoTest` prova isso partindo de um banco na `V2`). Apagar o banco não é a solução para
   uma migração em conflito: renumere a migração da branch antes do merge.
 - **Não edite uma migração que já está na `main`:** o Flyway guarda o checksum e a aplicação deixa de
-  subir em quem já a aplicou. Para mudar dados, crie uma migração nova com o próximo número livre (hoje, `V12`).
+  subir em quem já a aplicou. Para mudar dados, crie uma migração nova com o próximo número livre (hoje, `V13`).
 - **Numeração das migrações:** duas branches com o mesmo número quebram o Flyway no merge. Antes de abrir PR com
   migração, confira a `main` e as branches abertas e avise o grupo do número escolhido.
 
@@ -96,6 +96,7 @@ Essas contas existem só para desenvolvimento e demonstração.
   | `V9` | `endereco.principal` (endereço principal) | F-25 |
   | `V10` | fotos da Neo Dipirona e da Loratadina (marca da Loratadina passa a Cimed) | revisão visual |
   | `V11` | lojas de retirada em Campo Grande/MS (Centro e Jardim dos Estados) | |
+  | `V12` | `produto.versao` e `categoria.versao` (edição simultânea no admin) | polimento |
 - **Textos com várias linhas no seed:** use `E'linha 1\nlinha 2'`. Quebrar a linha dentro das aspas
   grava um fim de linha diferente no Windows e no Linux.
 - **Imagens de produto:** ficam em `src/main/resources/static/images/produtos/`, em WebP de até 800 px,
@@ -1040,6 +1041,10 @@ Fica sob `/admin/**` (só `ADMIN`: visitante vai para `/login`, cliente logado r
 - **Estoque e compra concorrente:** cada linha carrega a `versao` lida ao abrir o formulário. Se uma compra (ou
   cancelamento) mexeu no estoque depois, o salvamento é recusado com "foi alterada por outra operação"; o estoque da compra
   não é sobrescrito. A conferência final vale também contra a corrida entre validar e gravar (lock otimista).
+- **Dois administradores no mesmo produto ou na mesma categoria:** o formulário leva a `versao` do produto (ou da
+  categoria, V12). Quem salva por último é recusado com "foi alterado por outra pessoa... Recarregue o formulário", em
+  vez de apagar em silêncio o que o outro gravou. Vendas e visualizações (UPDATE direto) não mudam a versão, então não
+  invalidam um formulário aberto (`ProdutoServiceIntegracaoTest`, `CategoriaServiceIntegracaoTest`).
 - **Quem e quando:** `atualizado_por` (o administrador da sessão, nunca um campo do formulário) e `atualizado_em`.
 - **Exclusão:** produto com pedido (`item_pedido`) só é **inativado**, e o histórico fica intacto; sem pedido, é apagado de
   vez (imagens e apresentações primeiro, porque o mapeamento não tem cascade). Se surgir um vínculo no meio do caminho, a

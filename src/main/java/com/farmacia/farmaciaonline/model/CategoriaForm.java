@@ -22,4 +22,7 @@ public class CategoriaForm {
     private int ordem;
 
     private boolean ativa = true;
+
+    /** Versão da categoria lida ao abrir o formulário (lock otimista); nula no cadastro. */
+    private Long versao;
 }

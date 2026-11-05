@@ -79,7 +79,7 @@ Essas contas existem só para desenvolvimento e demonstração.
   dados (`MigracaoUpgradeIntegracaoTest` prova isso partindo de um banco na `V2`). Apagar o banco não é a solução para
   uma migração em conflito: renumere a migração da branch antes do merge.
 - **Não edite uma migração que já está na `main`:** o Flyway guarda o checksum e a aplicação deixa de
-  subir em quem já a aplicou. Para mudar dados, crie uma migração nova com o próximo número livre (hoje, `V11`).
+  subir em quem já a aplicou. Para mudar dados, crie uma migração nova com o próximo número livre (hoje, `V14`).
 - **Numeração das migrações:** duas branches com o mesmo número quebram o Flyway no merge. Antes de abrir PR com
   migração, confira a `main` e as branches abertas e avise o grupo do número escolhido.
 
@@ -95,13 +95,15 @@ Essas contas existem só para desenvolvimento e demonstração.
   | `V8` | extensões `unaccent` e `pg_trgm` da busca tolerante | F-22 |
   | `V9` | `endereco.principal` (endereço principal) | F-25 |
   | `V10` | fotos da Neo Dipirona e da Loratadina (marca da Loratadina passa a Cimed) | revisão visual |
+  | `V13` | fotos de Omeprazol, Amoxicilina e Clonazepam; marcas passam a Avivia, Mintlab e Milab | polimento |
 - **Textos com várias linhas no seed:** use `E'linha 1\nlinha 2'`. Quebrar a linha dentro das aspas
   grava um fim de linha diferente no Windows e no Linux.
 - **Imagens de produto:** ficam em `src/main/resources/static/images/produtos/`, em WebP de até 800 px,
   com nome descritivo em minúsculas e hífens (ex.: `dipirona-monoidratada-500mg-20-comprimidos.webp`).
   A coluna `imagem_produto.arquivo` guarda o caminho a partir da raiz do site (`/images/produtos/...`).
   Produto sem foto usa `placeholder.svg`. O texto alternativo (`alt`) vem do nome do produto.
-  Medicamento sob prescrição fica no `placeholder.svg`: as farmácias não mostram a caixa (RDC 96/2008 da ANVISA).
+  Até a V13, medicamento sob prescrição ficava no `placeholder.svg` (as farmácias mostram imagem ilustrativa, RDC
+  96/2008); desde a V13 o catálogo de demonstração mostra a caixa de todos, com a marca da caixa fotografada.
   As fotos do seed vêm de lojas e fabricantes, e servem só para a demonstração acadêmica.
 
 ## Como zerar o banco para a demonstração

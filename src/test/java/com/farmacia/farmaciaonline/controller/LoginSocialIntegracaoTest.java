@@ -111,6 +111,17 @@ class LoginSocialIntegracaoTest {
     }
 
     @Test
+    @DisplayName("tela do provedor simulado: checkbox do e-mail verificado dentro do rótulo alinhado")
+    void consentimentoComCheckboxAlinhado() throws Exception {
+        MockHttpSession sessao = new MockHttpSession();
+        String consentimento = mvc.perform(get("/login/social/google").session(sessao))
+                .andReturn().getResponse().getRedirectedUrl();
+
+        assertThat(html(mvc.perform(get(consentimento).session(sessao)).andReturn()))
+                .containsPattern("<label for=\"emailVerificado\" class=\"campo__marcador\">\\s*<input type=\"checkbox\"");
+    }
+
+    @Test
     @DisplayName("primeiro acesso com e-mail verificado cria conta ativa sem senha, vincula e entra; na volta entra direto")
     void primeiroAcessoEVolta() throws Exception {
         MockHttpSession sessao = new MockHttpSession();
@@ -119,6 +130,7 @@ class LoginSocialIntegracaoTest {
 
         assertThat(html(mvc.perform(get("/login/social/completar").session(sessao)).andReturn()))
                 .contains("<label for=\"cpf\"", "<label for=\"dataNascimento\"", "ana.social@teste.com")
+                .containsPattern("<label for=\"aceiteTermos\" class=\"campo__marcador\">\\s*<input type=\"checkbox\"")
                 .doesNotContain("id=\"email\"");
         MvcResult fim = completar(sessao, CPF_NOVO, "1995-05-20", null);
 

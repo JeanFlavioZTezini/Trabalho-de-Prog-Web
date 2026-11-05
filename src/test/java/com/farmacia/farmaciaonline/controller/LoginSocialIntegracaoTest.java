@@ -37,6 +37,7 @@ import com.farmacia.farmaciaonline.model.enums.StatusUsuario;
 import com.farmacia.farmaciaonline.repository.IdentidadeSocialRepository;
 import com.farmacia.farmaciaonline.repository.UsuarioRepository;
 import com.farmacia.farmaciaonline.security.UsuarioAutenticado;
+import com.farmacia.farmaciaonline.service.PeriodoFiltro;
 
 /**
  * F-20 de ponta a ponta com o provedor simulado (perfil demo, ligado no application.properties): botão, tela do
@@ -145,7 +146,7 @@ class LoginSocialIntegracaoTest {
         MockHttpSession sessao = new MockHttpSession();
         viaProvedor(sessao, "permitir", "g-menor", "menor@teste.com", true);
 
-        MvcResult fim = completar(sessao, CPF_NOVO, java.time.LocalDate.now().minusYears(17).toString(), null);
+        MvcResult fim = completar(sessao, CPF_NOVO, java.time.LocalDate.now(PeriodoFiltro.FUSO_SAO_PAULO).minusYears(17).toString(), null);
 
         assertThat(html(fim)).contains("id=\"dataNascimento-erro\"", "18 anos");
         assertThat(usuarios.findByCpf(CPF_NOVO)).isEmpty();

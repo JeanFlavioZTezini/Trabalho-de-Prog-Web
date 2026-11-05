@@ -9,6 +9,7 @@ import static org.springframework.security.test.web.servlet.request.SecurityMock
 import static org.springframework.security.test.web.servlet.request.SecurityMockMvcRequestPostProcessors.user;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.flash;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrl;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.redirectedUrlPattern;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -204,6 +205,30 @@ class CheckoutFluxoWebIntegracaoTest extends CheckoutTesteBase {
         Pedido pedido = pedidoRepository.findById(id).orElseThrow();
         assertThat(pedido.getStatus()).isEqualTo(StatusPedido.PAGAMENTO_APROVADO);
         assertThat(pagina(cliente, "/checkout/pedidos/" + id)).contains("Pagamento aprovado").doesNotContain(CARTAO_APROVADO);
+    }
+
+    @Test
+    @DisplayName("parcelas acima de 12 (envio adulterado): não cria pedido nem reserva, e a nova tentativa também é barrada")
+    void parcelasForaDoLimite() throws Exception {
+        Usuario cliente = novoCliente();
+        Apresentacao a = novaApresentacao("10.00", 5);
+        noCarrinho(cliente, a, 1);
+
+        // A conferência leva as parcelas: o envio adulterado precisa partir de um resumo com 99, que não pode ser confirmável.
+        assertThat(pagina(cliente, "/checkout/resumo?tipoEntrega=RETIRADA&metodo=CARTAO_CREDITO&lojaId=1&parcelas=99"))
+                .contains("Escolha de 1 a 12 parcelas.").doesNotContain("name=\"conferencia\"");
+        assertThat(estoqueDe(a)).isEqualTo(5);
+
+        Long id = idDoRedirecionamento(confirmar(cliente, "tipoEntrega=RETIRADA&metodo=CARTAO_CREDITO&lojaId=1",
+                "numeroCartao", CARTAO_RECUSADO, "validadeCartao", "12/40", "cvv", "987", "nomeImpresso", "CLIENTE TESTE"));
+        String tela = pagina(cliente, "/checkout/pedidos/" + id);
+        mvc.perform(post("/checkout/pedidos/" + id + "/pagamento").with(como(cliente)).with(csrf())
+                        .param("chave", campoOculto(tela, "chave")).param("metodo", "CARTAO_CREDITO").param("parcelas", "99")
+                        .param("numeroCartao", CARTAO_APROVADO).param("validadeCartao", "12/40")
+                        .param("cvv", "987").param("nomeImpresso", "CLIENTE TESTE"))
+                .andExpect(redirectedUrl("/checkout/pedidos/" + id))
+                .andExpect(flash().attribute("erros", java.util.List.of("Escolha de 1 a 12 parcelas.")));
+        assertThat(pagamentoRepository.findByPedidoIdOrderByIdDesc(id)).hasSize(1);
     }
 
     @Test

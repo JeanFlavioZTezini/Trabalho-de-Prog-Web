@@ -116,7 +116,7 @@ public class Pedido {
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal total;
 
-    /** Até quando o estoque fica reservado sem pagamento (ver "Checkout" no README). Nulo depois de pago ou cancelado. */
+    /** Até quando o estoque fica reservado sem pagamento (ver "Checkout" em docs/funcionalidades.md). Nulo depois de pago ou cancelado. */
     private Instant expiraEm;
 
     /** Identifica o envio do formulário: o mesmo envio repetido devolve este pedido em vez de criar outro. */

@@ -121,13 +121,13 @@
             <p class="campo__erro" role="alert" id="confirmarSenha-erro" th:if="${#fields.hasErrors('confirmarSenha')}" th:errors="*{confirmarSenha}"></p>
         </div>
         <div class="campo">
-            <label for="aceiteTermos">
+            <label for="aceiteTermos" class="campo__marcador">
                 <input type="checkbox" id="aceiteTermos" th:field="*{aceiteTermos}" required
                        th:aria-invalid="${#fields.hasErrors('aceiteTermos')} ? 'true'"
                        th:aria-describedby="${#fields.hasErrors('aceiteTermos')} ? 'aceiteTermos-erro'">
-                Li e aceito os <a th:href="@{/institucional/termos-de-uso}">Termos de Uso</a> e a
+                <span>Li e aceito os <a th:href="@{/institucional/termos-de-uso}">Termos de Uso</a> e a
                 <a th:href="@{/institucional/privacidade}">Política de Privacidade</a>, versão
-                <span th:text="${termosVersao}">1.0</span>.
+                <span th:text="${termosVersao}">1.0</span>.</span>
             </label>
             <p class="campo__erro" role="alert" id="aceiteTermos-erro" th:if="${#fields.hasErrors('aceiteTermos')}"
                th:errors="*{aceiteTermos}"></p>

@@ -38,9 +38,11 @@
     <div th:replace="~{fragments/campo :: campo(id='cvv', nome='cvv', rotulo='Código de segurança', tipo='text', ajuda='Pedido sempre, também para cartão salvo.', erro=${errosCartao?.get('cvv')}, autocomplete='cc-csc', valor=null)}"></div>
     <div th:replace="~{fragments/campo :: campo(id='nomeImpresso', nome='nomeImpresso', rotulo='Nome impresso no cartão', tipo='text', ajuda=null, erro=${errosCartao?.get('nomeImpresso')}, autocomplete='cc-name', valor=${cartaoDigitado?.nomeImpresso()})}"></div>
     <div class="campo">
-        <input type="checkbox" id="salvarCartao" name="salvarCartao" value="true" aria-describedby="salvarCartao-ajuda"
-               th:checked="${cartaoDigitado != null and cartaoDigitado.salvarCartao()}">
-        <label for="salvarCartao">Salvar este cartão para as próximas compras</label>
+        <label for="salvarCartao" class="campo__marcador">
+            <input type="checkbox" id="salvarCartao" name="salvarCartao" value="true" aria-describedby="salvarCartao-ajuda"
+                   th:checked="${cartaoDigitado != null and cartaoDigitado.salvarCartao()}">
+            Salvar este cartão para as próximas compras
+        </label>
         <p id="salvarCartao-ajuda" class="campo__ajuda">
             Guardamos só um código do gateway, a bandeira e os 4 últimos números. Nunca o número completo nem o código de segurança.
         </p>

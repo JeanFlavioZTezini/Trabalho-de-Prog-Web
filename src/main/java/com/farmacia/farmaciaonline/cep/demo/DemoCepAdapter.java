@@ -3,13 +3,16 @@ package com.farmacia.farmaciaonline.cep.demo;
 import java.util.Map;
 import java.util.Optional;
 
+import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.stereotype.Service;
 
 import com.farmacia.farmaciaonline.cep.CepIndisponivelException;
 import com.farmacia.farmaciaonline.cep.ConsultaCep;
 import com.farmacia.farmaciaonline.cep.EnderecoCep;
 
+/** CEPs fixos, sem internet. Liga com {@code app.cep.provedor=demo}; o padrão é o {@code ViaCepAdapter}. */
 @Service
+@ConditionalOnProperty(name = "app.cep.provedor", havingValue = "demo")
 public class DemoCepAdapter implements ConsultaCep {
 
     public static final String CEP_QUE_FALHA = "99999999";

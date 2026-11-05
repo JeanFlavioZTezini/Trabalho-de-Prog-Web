@@ -131,6 +131,25 @@ class AdminProdutoTelaTest {
     }
 
     @Test
+    @DisplayName("estoque e preço que não convertem: mensagem em português junto ao campo da apresentação, nada gravado")
+    void erroDeConversaoNaApresentacaoApareceNoCampo() throws Exception {
+        String html = conteudo(mvc.perform(post("/admin/produtos/1").with(admin()).with(csrf())
+                        .param("nome", "Produto").param("marca", "Marca").param("tarja", "SEM_TARJA")
+                        .param("apresentacoes[0].descricao", "10 comprimidos")
+                        .param("apresentacoes[0].preco", "12,50")
+                        .param("apresentacoes[0].estoque", "99999999999"))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8));
+
+        assertThat(html).contains("<p class=\"campo__erro\" role=\"alert\" id=\"apr-estoque-0-erro\">"
+                + "Informe um número inteiro válido (até 2.147.483.647).</p>");
+        assertThat(html).contains("id=\"apr-preco-0-erro\">Informe um valor válido, só com números e ponto decimal (ex.: 12.90).</p>");
+        assertThat(html).containsPattern("<input type=\"number\" id=\"apr-estoque-0\"[^>]*aria-invalid=\"true\"[^>]*"
+                + "aria-describedby=\"apr-estoque-0-erro\"");
+        assertThat(html).doesNotContain("Failed to convert");
+        org.mockito.Mockito.verify(service, org.mockito.Mockito.never()).salvar(any(), any(), any());
+    }
+
+    @Test
     @DisplayName("salvar com o interruptor desligado grava ativo=false")
     void salvarDesligadoGravaInativo() throws Exception {
         mvc.perform(post("/admin/produtos/1").with(admin()).with(csrf())

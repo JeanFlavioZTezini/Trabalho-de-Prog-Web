@@ -110,7 +110,10 @@
 
     <section aria-labelledby="atualizar-titulo" th:if="${!#lists.isEmpty(pedido.proximosStatus)}">
         <h2 id="atualizar-titulo">Atualizar situação</h2>
-        <form th:action="@{/admin/pedidos/{id}/status(id=${pedido.id})}" method="post">
+        <form th:action="@{/admin/pedidos/{id}/status(id=${pedido.id})}" method="post"
+              data-confirmar-se="novoStatus=CANCELADO" data-confirmar-titulo="Cancelar pedido"
+              data-confirmar-botao="Cancelar pedido" data-confirmar-voltar="Manter pedido"
+              th:data-confirmar="|Cancelar o pedido nº ${pedido.id}? É uma situação final: os itens voltam ao estoque${pedido.status.name() == 'AGUARDANDO_PAGAMENTO' ? '' : ' e o estorno fica pendente'}.|">
             <input type="hidden" name="versao" th:value="${pedido.versao}">
             <div class="campo">
                 <label for="novoStatus">Próxima situação permitida</label>
@@ -133,6 +136,7 @@
     </p>
 
     <script th:src="@{/js/toast.js}" defer></script>
+    <script th:src="@{/js/confirmar.js}" defer></script>
 </div>
 </body>
 </html>

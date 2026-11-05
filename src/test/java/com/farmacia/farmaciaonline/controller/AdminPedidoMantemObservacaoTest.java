@@ -73,4 +73,24 @@ class AdminPedidoMantemObservacaoTest {
                 .containsPattern("<textarea[^>]*id=\"observacao\"[^>]*>Cliente pediu por telefone</textarea>")
                 .containsPattern("<option value=\"CANCELADO\" selected=\"selected\">");
     }
+
+    @Test
+    @DisplayName("mudar para Cancelado pede confirmação numa janela com textos de cancelamento (outras situações, não)")
+    void cancelarPedeConfirmacao() throws Exception {
+        when(service.detalhar(7L)).thenReturn(new AdminPedidosService.Detalhe(7L, 1L, Instant.parse("2026-01-01T12:00:00Z"),
+                "01/01/2026 às 09:00", StatusPedido.PAGAMENTO_APROVADO, TipoEntrega.ENTREGA, "Cliente Teste",
+                "cliente@exemplo.com", List.of(), List.of(), List.of(), BigDecimal.ZERO, BigDecimal.ZERO,
+                BigDecimal.ZERO, "Rua teste, 1", false, null, null, null, false,
+                List.of(StatusPedido.EM_SEPARACAO, StatusPedido.CANCELADO)));
+
+        String tela = mvc.perform(get("/admin/pedidos/7").with(admin()))
+                .andReturn().getResponse().getContentAsString(StandardCharsets.UTF_8);
+
+        assertThat(tela).containsPattern("<form action=\"/admin/pedidos/7/status\" method=\"post\"[^>]*"
+                + "data-confirmar-se=\"novoStatus=CANCELADO\"")
+                .contains("data-confirmar-botao=\"Cancelar pedido\" data-confirmar-voltar=\"Manter pedido\"")
+                .contains("data-confirmar=\"Cancelar o pedido nº 7? É uma situação final: os itens voltam ao estoque "
+                        + "e o estorno fica pendente.\"")
+                .contains("src=\"/js/confirmar.js\"");
+    }
 }

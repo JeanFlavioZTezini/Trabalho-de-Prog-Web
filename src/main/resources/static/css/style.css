@@ -935,7 +935,7 @@ a.btn-perigo { background-color: var(--cor-erro); color: var(--cor-branco); }
   list-style: none;
 }
 .lista-cartoes > li.secao-cartao { margin: 0; }
-.lista-cartoes p { margin: 0 0 var(--esp-2); }
+.lista-cartoes p { margin: 0 0 var(--esp-2); overflow-wrap: anywhere; } /* nome impresso longo sem espaço não estoura 360 px */
 .lista-cartoes__titulo { font-weight: 700; }
 
 /* ---------- Tabelas ---------- */

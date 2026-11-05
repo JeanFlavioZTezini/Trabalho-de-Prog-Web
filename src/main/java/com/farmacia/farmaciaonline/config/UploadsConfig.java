@@ -1,7 +1,10 @@
 package com.farmacia.farmaciaonline.config;
 
+import java.time.Duration;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.http.CacheControl;
 import org.springframework.web.servlet.config.annotation.ResourceHandlerRegistry;
 import org.springframework.web.servlet.config.annotation.WebMvcConfigurer;
 
@@ -20,6 +23,8 @@ public class UploadsConfig implements WebMvcConfigurer {
 
     @Override
     public void addResourceHandlers(ResourceHandlerRegistry registry) {
-        registry.addResourceHandler(ArmazenamentoImagem.URL_BASE + "**").addResourceLocations(local);
+        // Cada foto tem nome UUID e nunca é sobrescrita (trocar a foto gera outro arquivo): pode ficar um ano no navegador.
+        registry.addResourceHandler(ArmazenamentoImagem.URL_BASE + "**").addResourceLocations(local)
+                .setCacheControl(CacheControl.maxAge(Duration.ofDays(365)).cachePublic());
     }
 }

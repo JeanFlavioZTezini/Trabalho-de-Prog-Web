@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<!--
+    Página dos demais erros 4xx (403 e 404 têm a sua). O Spring Boot usa este arquivo para, por exemplo, 400 (parâmetro
+    em formato errado: /produtos?precoMin=abc, /pedidos/abc) e 405 (endereço que só aceita envio de formulário). Sem ele,
+    a pessoa via a página de erro padrão do Spring, em inglês e fora do layout.
+-->
+<html th:replace="~{fragments/layout :: layout(~{::title}, ~{::#pagina})}">
+<head>
+    <title>Não foi possível abrir a página | Farma++</title>
+</head>
+<body>
+<div id="pagina" class="pagina-texto">
+
+    <h1>Não foi possível abrir a página</h1>
+    <div class="estado-vazio">
+        <p>O endereço ou os dados enviados não estão num formato que o site entende. Se você chegou aqui por um link, volte e tente de novo pela página.</p>
+        <div class="acoes">
+            <a class="btn-primario" th:href="@{/}">Ir para a página inicial</a>
+            <a class="btn-secundario" th:href="@{/produtos}">Ver produtos</a>
+        </div>
+    </div>
+
+</div>
+</body>
+</html>

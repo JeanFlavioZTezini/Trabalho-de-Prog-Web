@@ -60,7 +60,8 @@ public class ProdutoService {
     /** @param status "ativos", "inativos" ou qualquer outro valor para todos */
     @Transactional(readOnly = true)
     public Page<Produto> buscar(String q, String status, Pageable pageable) {
-        String termo = "%" + (q == null ? "" : q.trim().toLowerCase()) + "%";
+        // % e _ digitados são texto comum (mesmo escape da busca de clientes).
+        String termo = ClienteAdminService.padraoDeTexto(q == null ? "" : q.trim());
         List<Boolean> estados = switch (status == null ? "" : status) {
             case "ativos" -> List.of(true);
             case "inativos" -> List.of(false);

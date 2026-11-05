@@ -36,6 +36,7 @@ public class SecurityConfig {
             "/images/**",
             "/uploads/**", // fotos enviadas pelo admin (UC12)
             "/js/**",
+            "/robots.txt", // orientação para buscadores (static/robots.txt)
             "/error" // o Spring Boot mostra aqui as páginas de erro, incluindo templates/error/403.html
     };
 

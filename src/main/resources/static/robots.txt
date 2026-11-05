@@ -1,0 +1,13 @@
+# Catálogo e páginas institucionais abertos; áreas de conta, compra e administração fora dos buscadores.
+User-agent: *
+Disallow: /admin
+Disallow: /conta
+Disallow: /enderecos
+Disallow: /pedidos
+Disallow: /checkout
+Disallow: /carrinho
+Disallow: /caixa-demo
+Disallow: /login
+Disallow: /cadastro
+Disallow: /confirmar-conta
+Disallow: /recuperar-senha

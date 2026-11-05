@@ -154,9 +154,17 @@ class SeedDemonstracaoTest {
     }
 
     @Test
-    void medicamentoSobPrescricaoContinuaSemFotoDaCaixa() {
-        assertThat(contar("SELECT count(*) FROM imagem_produto i JOIN produto p ON p.id = i.produto_id "
-                + "WHERE p.exige_receita AND i.arquivo <> '/images/produtos/placeholder.svg'")).isZero();
+    void v13DaFotoParaOsTresQueFaltavamETrocaAsMarcasParaAsDasCaixas() {
+        assertThat(jdbc.queryForList("SELECT p.nome || ' | ' || p.marca || ' | ' || i.arquivo FROM imagem_produto i "
+                + "JOIN produto p ON p.id = i.produto_id WHERE p.id IN (6, 7, 8) ORDER BY p.id", String.class))
+                .containsExactly(
+                        "Omeprazol 20mg | Avivia | /images/produtos/omeprazol-20mg-avivia-14-capsulas.webp",
+                        "Amoxicilina 500mg | Mintlab | /images/produtos/amoxicilina-500mg-mintlab-21-capsulas.webp",
+                        "Clonazepam 2mg | Milab | /images/produtos/clonazepam-2mg-milab-30-comprimidos.webp");
+        // Nenhum produto do seed fica no placeholder; os SKUs do seed continuam os mesmos.
+        assertThat(contar("SELECT count(*) FROM imagem_produto WHERE arquivo = '/images/produtos/placeholder.svg'")).isZero();
+        assertThat(jdbc.queryForList("SELECT sku FROM apresentacao WHERE produto_id IN (7, 8) ORDER BY id", String.class))
+                .containsExactly("MED-AMOX500-21", "EUR-CLON2-30");
     }
 
     @Test
@@ -167,10 +175,6 @@ class SeedDemonstracaoTest {
                         "/images/produtos/neo-dipirona-500mg-neo-quimica.webp");
         assertThat(jdbc.queryForObject("SELECT marca FROM produto WHERE nome = 'Loratadina 10mg'", String.class))
                 .isEqualTo("Cimed");
-        // Sobram no placeholder só Omeprazol e os dois sob prescrição.
-        assertThat(jdbc.queryForList("SELECT p.nome FROM imagem_produto i JOIN produto p ON p.id = i.produto_id "
-                + "WHERE i.arquivo = '/images/produtos/placeholder.svg' ORDER BY p.nome", String.class))
-                .containsExactly("Amoxicilina 500mg", "Clonazepam 2mg", "Omeprazol 20mg");
     }
 
     @Test

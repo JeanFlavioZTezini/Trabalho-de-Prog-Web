@@ -78,8 +78,8 @@ class CatalogoBuscaToleranteTest {
     @Test
     @DisplayName("filtros por marca, forma, tipo, princípio ativo e receita funcionam isolados")
     void filtrosIsolados() {
-        assertThat(nomes(filtro("medley", null, null, null, null), OrdenacaoCatalogo.NOME))
-                .containsExactly("Amoxicilina 500mg", "Omeprazol 20mg");
+        assertThat(nomes(filtro("mintlab", null, null, null, null), OrdenacaoCatalogo.NOME))
+                .containsExactly("Amoxicilina 500mg");
         assertThat(nomes(filtro(null, null, null, "CAPSULA", null), OrdenacaoCatalogo.NOME))
                 .contains("Omeprazol 20mg", "Amoxicilina 500mg");
         assertThat(nomes(filtro(null, "Dipirona Monoidratada", null, null, null), OrdenacaoCatalogo.NOME))
@@ -93,9 +93,10 @@ class CatalogoBuscaToleranteTest {
     @Test
     @DisplayName("filtros novos compõem entre si e com o termo")
     void filtrosCompostos() {
-        assertThat(nomes(filtro("Medley", null, null, "cápsula", true), OrdenacaoCatalogo.NOME))
+        assertThat(nomes(filtro("Mintlab", null, null, "cápsula", true), OrdenacaoCatalogo.NOME))
                 .containsExactly("Amoxicilina 500mg");
-        assertThat(nomes(new FiltroCatalogo("omeprazol", null, null, null, null, false, "Medley", null, null,
+        assertThat(nomes(filtro("Mintlab", null, null, "cápsula", false), OrdenacaoCatalogo.NOME)).isEmpty();
+        assertThat(nomes(new FiltroCatalogo("omeprazol", null, null, null, null, false, "Avivia", null, null,
                 null, true), OrdenacaoCatalogo.NOME)).isEmpty();
     }
 
@@ -166,15 +167,16 @@ class CatalogoBuscaToleranteTest {
             assertThat(html).contains("<label for=\"" + campo + "\"").contains("id=\"" + campo + "\"");
         }
         assertThat(html.split("<h1").length - 1).isEqualTo(1);
-        assertThat(html).contains("<option value=\"Medley\"").contains("value=\"MAIS_VENDIDOS\"");
+        assertThat(html).contains("<option value=\"Mintlab\"").contains("value=\"MAIS_VENDIDOS\"");
     }
 
     @Test
     @DisplayName("tela filtra por marca + receita e mantém a seleção nos campos")
     void telaFiltra() throws Exception {
-        String html = pagina("marca", "Medley", "receita", "sim");
+        String html = pagina("marca", "Mintlab", "receita", "sim");
 
         assertThat(html).contains("Amoxicilina 500mg").doesNotContain("Omeprazol 20mg");
+        assertThat(pagina("marca", "Mintlab", "receita", "nao")).doesNotContain("Amoxicilina 500mg");
         assertThat(html).containsPattern("<option value=\"sim\"\\s+selected");
     }
 

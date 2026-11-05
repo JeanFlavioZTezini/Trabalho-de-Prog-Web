@@ -143,9 +143,9 @@ class LayoutTest {
         String html = pagina("/");
 
         assertThat(html).contains("href=\"/conta\"")
-                .contains("href=\"/enderecos\"")
                 .contains("href=\"/admin\">Painel admin");
-        assertThat(html).doesNotContain("href=\"/pedidos\"");
+        // Endereço e pedido são de quem compra: o administrador não tem esses atalhos (e recebe 403 nas rotas).
+        assertThat(html).doesNotContain("href=\"/pedidos\"").doesNotContain("href=\"/enderecos\"");
         // Administrador não compra: sem link nem contador do carrinho no cabeçalho.
         assertThat(html).doesNotContain("class=\"topo__carrinho\"").doesNotContain("id=\"carrinho-contagem\"");
     }

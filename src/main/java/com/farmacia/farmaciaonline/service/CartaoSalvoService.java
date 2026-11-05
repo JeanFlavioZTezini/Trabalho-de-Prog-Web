@@ -9,6 +9,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.farmacia.farmaciaonline.gateway.dto.TokenCartao;
 import com.farmacia.farmaciaonline.model.CartaoSalvo;
+import com.farmacia.farmaciaonline.model.enums.Perfil;
 import com.farmacia.farmaciaonline.repository.CartaoSalvoRepository;
 import com.farmacia.farmaciaonline.repository.PagamentoRepository;
 import com.farmacia.farmaciaonline.repository.UsuarioRepository;
@@ -30,11 +31,13 @@ public class CartaoSalvoService {
 
     @Transactional(readOnly = true)
     public List<CartaoSalvo> listar(Long usuarioId) {
+        exigirCliente(usuarioId);
         return repository.findByUsuarioIdOrderByCriadoEmDesc(usuarioId);
     }
 
     @Transactional(readOnly = true)
     public CartaoSalvo doUsuario(Long usuarioId, Long cartaoId) {
+        exigirCliente(usuarioId);
         return repository.findByIdAndUsuarioId(cartaoId, usuarioId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND));
     }
@@ -69,5 +72,12 @@ public class CartaoSalvoService {
     public void vincularAoPagamento(Long pagamentoId, Long cartaoId) {
         pagamentoRepository.findById(pagamentoId)
                 .ifPresent(pagamento -> pagamento.setCartaoSalvo(repository.getReferenceById(cartaoId)));
+    }
+
+    /** Cartão salvo é de quem compra: o administrador recebe 403, como no checkout. */
+    private void exigirCliente(Long usuarioId) {
+        if (usuarioRepository.findById(usuarioId).map(u -> u.getPerfil() != Perfil.CLIENTE).orElse(true)) {
+            throw new ResponseStatusException(HttpStatus.FORBIDDEN);
+        }
     }
 }

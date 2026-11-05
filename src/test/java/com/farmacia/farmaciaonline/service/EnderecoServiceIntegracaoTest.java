@@ -4,7 +4,10 @@ import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.assertThatThrownBy;
 
 import java.math.BigDecimal;
+import java.time.Instant;
+import java.time.LocalDate;
 
+import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -22,6 +25,9 @@ import com.farmacia.farmaciaonline.model.EnderecoForm;
 import com.farmacia.farmaciaonline.model.ItemPedido;
 import com.farmacia.farmaciaonline.model.Pedido;
 import com.farmacia.farmaciaonline.model.Usuario;
+import com.farmacia.farmaciaonline.model.enums.Genero;
+import com.farmacia.farmaciaonline.model.enums.Perfil;
+import com.farmacia.farmaciaonline.model.enums.StatusUsuario;
 import com.farmacia.farmaciaonline.model.enums.TipoEntrega;
 import com.farmacia.farmaciaonline.repository.ApresentacaoRepository;
 import com.farmacia.farmaciaonline.repository.EnderecoRepository;
@@ -37,7 +43,6 @@ import jakarta.persistence.PersistenceContext;
 class EnderecoServiceIntegracaoTest {
 
     private static final long CLIENTE = 2L;
-    private static final long OUTRO_USUARIO = 1L;
     private static final long PENDENTE = 3L;
 
     @Autowired
@@ -57,6 +62,18 @@ class EnderecoServiceIntegracaoTest {
 
     @PersistenceContext
     private EntityManager em;
+
+    /** Outro cliente ativo (o admin do seed não serve: endereço é só de cliente e ele recebe 403). */
+    private Long outroCliente;
+
+    @BeforeEach
+    void criarOutroCliente() {
+        outroCliente = usuarioRepository.saveAndFlush(Usuario.builder()
+                .nome("Outro Cliente").cpf("12345678909").dataNascimento(LocalDate.of(1990, 1, 1))
+                .genero(Genero.FEMININO).celular("11912345678").email("outro.endereco@teste.com").senhaHash("x")
+                .perfil(Perfil.CLIENTE).status(StatusUsuario.ATIVA).termosVersao("1.0").termosAceitosEm(Instant.now())
+                .build()).getId();
+    }
 
     private static EnderecoForm formPaulista() {
         EnderecoForm form = new EnderecoForm();
@@ -155,7 +172,7 @@ class EnderecoServiceIntegracaoTest {
         Long id = service.salvar(CLIENTE, null, formPaulista());
 
         assertThat(service.listar(CLIENTE)).extracting(Endereco::getId).contains(id);
-        assertThat(service.listar(OUTRO_USUARIO)).extracting(Endereco::getId).doesNotContain(id);
+        assertThat(service.listar(outroCliente)).extracting(Endereco::getId).doesNotContain(id);
     }
 
     @Test
@@ -165,17 +182,17 @@ class EnderecoServiceIntegracaoTest {
         em.flush();
         em.clear();
 
-        assertThatThrownBy(() -> service.buscar(OUTRO_USUARIO, id)).satisfies(e -> assertStatus(e, HttpStatus.NOT_FOUND));
-        assertThatThrownBy(() -> service.formDe(OUTRO_USUARIO, id)).satisfies(e -> assertStatus(e, HttpStatus.NOT_FOUND));
-        assertThatThrownBy(() -> service.copiaParaEntrega(OUTRO_USUARIO, id))
+        assertThatThrownBy(() -> service.buscar(outroCliente, id)).satisfies(e -> assertStatus(e, HttpStatus.NOT_FOUND));
+        assertThatThrownBy(() -> service.formDe(outroCliente, id)).satisfies(e -> assertStatus(e, HttpStatus.NOT_FOUND));
+        assertThatThrownBy(() -> service.copiaParaEntrega(outroCliente, id))
                 .satisfies(e -> assertStatus(e, HttpStatus.NOT_FOUND));
 
         EnderecoForm invasor = formPaulista();
         invasor.setLogradouro("Rua do Invasor");
-        assertThatThrownBy(() -> service.salvar(OUTRO_USUARIO, id, invasor))
+        assertThatThrownBy(() -> service.salvar(outroCliente, id, invasor))
                 .satisfies(e -> assertStatus(e, HttpStatus.NOT_FOUND));
 
-        assertThatThrownBy(() -> service.excluir(OUTRO_USUARIO, id)).satisfies(e -> assertStatus(e, HttpStatus.NOT_FOUND));
+        assertThatThrownBy(() -> service.excluir(outroCliente, id)).satisfies(e -> assertStatus(e, HttpStatus.NOT_FOUND));
 
         em.clear();
         Endereco intacto = enderecoRepository.findById(id).orElseThrow();

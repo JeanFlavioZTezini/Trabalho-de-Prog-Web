@@ -12,6 +12,7 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 
+import com.farmacia.farmaciaonline.model.EnderecoEntrega;
 import com.farmacia.farmaciaonline.model.ItemPedido;
 import com.farmacia.farmaciaonline.model.Pedido;
 import com.farmacia.farmaciaonline.model.Usuario;
@@ -79,5 +80,47 @@ class AdminPedidosServiceTest {
         prontoParaRetirada(true, Instant.now());
 
         assertThat(service.detalhar(1L).proximosStatus()).containsExactly(StatusPedido.ENTREGUE);
+    }
+
+    private void emSeparacaoParaEntrega(String complemento) {
+        Pedido pedido = new Pedido();
+        pedido.setId(1L);
+        pedido.setVersao(0L);
+        pedido.setStatus(StatusPedido.EM_SEPARACAO);
+        pedido.setTipoEntrega(TipoEntrega.ENTREGA);
+        Usuario cliente = new Usuario();
+        cliente.setNome("Cliente");
+        pedido.setUsuario(cliente);
+        EnderecoEntrega endereco = new EnderecoEntrega();
+        endereco.setDestinatario("Maria Silva");
+        endereco.setLogradouro("Rua 14 de Julho");
+        endereco.setNumero("100");
+        endereco.setComplemento(complemento);
+        endereco.setBairro("Centro");
+        endereco.setCidade("Campo Grande");
+        endereco.setUf("MS");
+        endereco.setCep("79002000");
+        pedido.setEnderecoEntrega(endereco);
+        when(pedidos.findById(1L)).thenReturn(Optional.of(pedido));
+    }
+
+    @Test
+    @DisplayName("entrega: o local é a cópia do endereço, com complemento quando houver, e o próximo passo é Enviado")
+    void entregaMostraOEnderecoCopiado() {
+        emSeparacaoParaEntrega("Apto 12");
+
+        AdminPedidosService.Detalhe detalhe = service.detalhar(1L);
+        assertThat(detalhe.local()).isEqualTo(
+                "Maria Silva — Rua 14 de Julho, 100 (Apto 12) — Centro, Campo Grande/MS — CEP 79002000");
+        assertThat(detalhe.proximosStatus()).containsExactly(StatusPedido.ENVIADO, StatusPedido.CANCELADO);
+    }
+
+    @Test
+    @DisplayName("entrega sem complemento: nada de parênteses vazios")
+    void entregaSemComplemento() {
+        emSeparacaoParaEntrega(" ");
+
+        assertThat(service.detalhar(1L).local()).isEqualTo(
+                "Maria Silva — Rua 14 de Julho, 100 — Centro, Campo Grande/MS — CEP 79002000");
     }
 }

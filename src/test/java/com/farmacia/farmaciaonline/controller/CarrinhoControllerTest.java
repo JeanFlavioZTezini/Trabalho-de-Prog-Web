@@ -209,6 +209,25 @@ class CarrinhoControllerTest {
     }
 
     @Test
+    @DisplayName("aceitar o novo preço: aceita no carrinho do cliente logado e volta com a mensagem")
+    void aceitarPrecoDoItem() throws Exception {
+        mvc.perform(post("/carrinho/itens/5/aceitar-preco").with(user(cliente())).with(csrf()))
+                .andExpect(redirectedUrl("/carrinho"))
+                .andExpect(flash().attribute("sucesso", "Novo preço aceito."));
+        verify(carrinhoService).aceitarPreco(argThat(dono -> Long.valueOf(2L).equals(dono.usuarioId())), eq(5L));
+    }
+
+    @Test
+    @DisplayName("aceitar preço de item que não é do carrinho: mensagem de erro, não 500")
+    void aceitarPrecoDeItemAlheio() throws Exception {
+        doThrow(new CarrinhoException("Este item não está no seu carrinho.")).when(carrinhoService).aceitarPreco(any(), eq(99L));
+
+        mvc.perform(post("/carrinho/itens/99/aceitar-preco").with(user(cliente())).with(csrf()))
+                .andExpect(redirectedUrl("/carrinho"))
+                .andExpect(flash().attribute("erro", "Este item não está no seu carrinho."));
+    }
+
+    @Test
     @DisplayName("o POST de esvaziar continua igual: esvazia e volta ao carrinho com a mensagem")
     void esvaziarContinuaPorPost() throws Exception {
         mvc.perform(post("/carrinho/esvaziar").with(csrf()))

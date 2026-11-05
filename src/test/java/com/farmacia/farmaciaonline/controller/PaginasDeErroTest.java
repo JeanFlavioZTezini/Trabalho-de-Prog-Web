@@ -55,6 +55,7 @@ class PaginasDeErroTest {
     @CsvSource({
             "403, Acesso negado",
             "404, Página não encontrada",
+            "4xx, Não foi possível abrir a página",
             "5xx, Algo deu errado"
     })
     void paginaDeErroUsaOLayoutETemUmUnicoTitulo(String pagina, String titulo) throws Exception {

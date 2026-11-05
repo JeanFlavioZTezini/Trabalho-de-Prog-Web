@@ -312,7 +312,7 @@ src/main/resources
 │   ├── admin          (painel do administrador, provisório)
 │   ├── enderecos      (lista, formulário e exclusão dos endereços do cliente)
 │   ├── checkout       (escolha, resumo e tela do pedido)
-│   ├── error          (403.html, 404.html e 5xx.html: o Spring Boot usa sozinho conforme o status)
+│   ├── error          (403, 404, 4xx e 5xx.html: o Spring Boot escolhe pelo status; 4xx cobre 400 e 405)
 │   ├── login.html
 │   └── index.html
 └── application.properties
@@ -1038,6 +1038,8 @@ Fica sob `/admin/**` (só `ADMIN`: visitante vai para `/login`, cliente logado r
   receita; ao menos uma apresentação, cada uma com descrição (até 60), SKU (até 40) e EAN (8 a 14 dígitos) **únicos**, preço
   maior que zero, estoque não negativo e limite por pedido maior que zero. Toda violação volta ao formulário com a mensagem
   no alerta de erro (regras de negócio) ou junto ao campo, com `aria-invalid` (validação do formulário), sem gravar nada.
+  Número que não converte (texto, vírgula no preço, estoque acima de 2.147.483.647) também aparece junto ao campo da
+  apresentação, com a mensagem de `messages.properties` (`typeMismatch.*`), nunca a mensagem técnica do Spring.
 - **Preço e estoque ficam em `Apresentacao`.** Apresentação não é removida: desmarca-se "Ativa". Linhas em branco no fim
   do formulário cadastram novas apresentações.
 - **Estoque e compra concorrente:** cada linha carrega a `versao` lida ao abrir o formulário. Se uma compra (ou
